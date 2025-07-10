@@ -107,6 +107,29 @@ function simple_input_test(argc::Int, argv::Ptr{Ptr{UInt8}})::Int32
     return Int32(0)
 end
 
-# Compile to native binary (run with Julia 1.10.x)
-compile_executable(complete_guess_game, (), ".", "complete_guess_game", cflags=`-L./libs -lSDL2 -lSDL2main sdl_wrapper.c`, demangle=false)
-compile_executable(guessing_game, (Int, Ptr{Ptr{UInt8}}), ".", "guessing_game", cflags=`-L./libs -lSDL2 -lSDL2main sdl_wrapper.c`, demangle=false)
+# PORTABLE COMPILATION OPTIONS:
+
+# Option 1: Portable with bundled libraries (RECOMMENDED)
+# This sets RPATH to look for libraries in the same directory as the executable
+portable_flags = `-L./libs -lSDL2 -lSDL2main -Wl,-rpath,\$ORIGIN/libs -Wl,-rpath,\$ORIGIN`
+
+# Option 2: System libraries (requires SDL2 to be installed on target machine)
+system_flags = `-lSDL2 -lSDL2main`
+
+# Option 3: Try to static link what we can (partial static linking)
+# Note: SDL2 main library can't be statically linked with our current setup
+partial_static_flags = `-L./libs ./libs/libSDL2main.a -lSDL2 -Wl,-rpath,\$ORIGIN/libs -Wl,-rpath,\$ORIGIN`
+
+# Choose your compilation method by uncommenting one of these:
+
+# RECOMMENDED: Portable with bundled libraries
+compile_executable(complete_guess_game, (), ".", "complete_guess_game", cflags=`$(portable_flags) sdl_wrapper.c`, demangle=false)
+compile_executable(guessing_game, (Int, Ptr{Ptr{UInt8}}), ".", "guessing_game", cflags=`$(portable_flags) sdl_wrapper.c`, demangle=false)
+
+# Alternative: System libraries only (smaller but less portable)
+# compile_executable(complete_guess_game, (), ".", "complete_guess_game", cflags=`$(system_flags) sdl_wrapper.c`, demangle=false)
+# compile_executable(guessing_game, (Int, Ptr{Ptr{UInt8}}), ".", "guessing_game", cflags=`$(system_flags) sdl_wrapper.c`, demangle=false)
+
+# Alternative: Partial static linking
+# compile_executable(complete_guess_game, (), ".", "complete_guess_game", cflags=`$(partial_static_flags) sdl_wrapper.c`, demangle=false)
+# compile_executable(guessing_game, (Int, Ptr{Ptr{UInt8}}), ".", "guessing_game", cflags=`$(partial_static_flags) sdl_wrapper.c`, demangle=false)
