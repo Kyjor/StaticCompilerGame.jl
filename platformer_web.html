@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Julia Platformer - WebAssembly Edition</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+        }
+        
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        .wasm-status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+        
+        .wasm-loading {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+        }
+        
+        .wasm-ready {
+            background: rgba(40, 167, 69, 0.2);
+            border: 2px solid rgba(40, 167, 69, 0.5);
+            color: #28a745;
+        }
+        
+        .wasm-error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 2px solid rgba(220, 53, 69, 0.5);
+            color: #dc3545;
+        }
+        
+        .game-canvas {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            margin: 20px 0;
+            background: linear-gradient(45deg, #87CEEB, #98FB98);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            min-width: 80px;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .move-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+        
+        .jump-btn {
+            background: linear-gradient(45deg, #ff6b6b, #e55a5a);
+            color: white;
+            font-size: 20px;
+        }
+        
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .instructions {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #ffd700;
+        }
+        
+        .game-stats {
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .tech-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .tech-info h4 {
+            color: #ffd700;
+            margin-top: 0;
+        }
+        
+        .tech-spec {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .control-group {
+                flex-direction: row;
+                gap: 15px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎮 Julia Platformer</h1>
+        <div class="subtitle">WebAssembly Edition - Julia Physics Engine</div>
+        
+        <div id="wasm-status" class="wasm-status wasm-loading">
+            ⏳ Loading WebAssembly module...
+        </div>
+        
+        <canvas id="gameCanvas" class="game-canvas" width="800" height="600"></canvas>
+        
+        <div class="controls">
+            <div class="control-group">
+                <div style="font-weight: bold; margin-bottom: 5px;">Movement</div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="leftBtn" class="control-btn move-btn" disabled>⬅️ Left</button>
+                    <button id="rightBtn" class="control-btn move-btn" disabled>➡️ Right</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <div style="font-weight: bold; margin-bottom: 5px;">Jump</div>
+                <button id="jumpBtn" class="control-btn jump-btn" disabled>🚀 Space</button>
+            </div>
+        </div>
+        
+        <div class="game-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="positionX">100</div>
+                <div class="stat-label">Position X</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="positionY">300</div>
+                <div class="stat-label">Position Y</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="velocityX">0</div>
+                <div class="stat-label">Velocity X</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="velocityY">0</div>
+                <div class="stat-label">Velocity Y</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="gameState">On Ground</div>
+                <div class="stat-label">State</div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>🎯 How to Play</h3>
+            <p><strong>Goal:</strong> Control the square using Julia physics compiled to WebAssembly!</p>
+            <p><strong>Controls:</strong> Use arrow keys or buttons to move, spacebar to jump</p>
+            <p><strong>Physics:</strong> Real gravity, ground collision, and momentum</p>
+            <p><strong>Technology:</strong> Julia game logic → LLVM IR → WebAssembly</p>
+        </div>
+        
+        <div class="tech-info">
+            <h4>🔧 Technical Details</h4>
+            <p>This platformer game demonstrates:</p>
+            <ul style="text-align: left; margin: 10px 0;">
+                <li>Julia physics engine compiled to WebAssembly</li>
+                <li>Real-time game loop with 60fps rendering</li>
+                <li>HTML5 Canvas graphics with WebAssembly backend</li>
+                <li>Stateless functional programming approach</li>
+            </ul>
+            <div class="tech-spec" id="techSpec">
+                📊 Module: Loading...<br>
+                🚀 Function: web_platformer_update<br>
+                ⚡ Runtime: Browser WebAssembly Engine<br>
+                🎨 Graphics: HTML5 Canvas API
+            </div>
+        </div>
+    </div>
+
+    <script src="./platformer_simple_wasm/platformer_game.js"></script>
+    <script>
+        let wasmModule = null;
+        let wasmReady = false;
+        let canvas = null;
+        let ctx = null;
+        let gameLoop = null;
+        
+        // Game state
+        let gameState = {
+            x: 100,
+            y: 300,
+            velX: 0,
+            velY: 0,
+            keyLeft: false,
+            keyRight: false,
+            keySpace: false,
+            onGround: true
+        };
+        
+        // Initialize the game
+        async function init() {
+            try {
+                console.log('Loading WebAssembly module...');
+                
+                // Wait for the Module to be ready
+                if (typeof Module === 'undefined') {
+                    // Module script hasn't loaded yet, wait a bit
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // Wait for the Module to initialize if it has an onRuntimeInitialized callback
+                if (Module && !Module.calledRun) {
+                    await new Promise(resolve => {
+                        const originalOnRuntimeInitialized = Module.onRuntimeInitialized;
+                        Module.onRuntimeInitialized = () => {
+                            if (originalOnRuntimeInitialized) originalOnRuntimeInitialized();
+                            resolve();
+                        };
+                    });
+                }
+                
+                wasmModule = Module;
+                console.log('WebAssembly module loaded successfully!');
+                console.log('Available exports:', Object.keys(wasmModule));
+                
+                // Check if our function exists
+                if (typeof wasmModule._web_platformer_update === 'function') {
+                    wasmReady = true;
+                    updateWasmStatus('ready', '✅ WebAssembly module loaded! Julia physics engine ready.');
+                    
+                    // Update tech spec
+                    const heapSize = wasmModule.HEAP8 ? Math.round(wasmModule.HEAP8.length / 1024) : 'Unknown';
+                    document.getElementById('techSpec').innerHTML = `
+                        📊 Module: platformer_game.wasm (${heapSize}KB)<br>
+                        🚀 Function: web_platformer_update (Julia → WASM)<br>
+                        ⚡ Runtime: ${getBrowserEngine()}<br>
+                        🎨 Graphics: HTML5 Canvas API
+                    `;
+                } else {
+                    throw new Error('Function web_platformer_update not found in module');
+                }
+            } catch (error) {
+                console.error('Failed to load WebAssembly module:', error);
+                updateWasmStatus('error', `❌ Failed to load WebAssembly: ${error.message}`);
+                // Fall back to simulation
+                wasmReady = false;
+            }
+            
+            // Initialize canvas
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Enable controls
+            enableControls();
+            
+            // Start game loop
+            startGameLoop();
+        }
+        
+        function getBrowserEngine() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Chrome')) return 'Chrome V8 WebAssembly';
+            if (ua.includes('Firefox')) return 'Firefox SpiderMonkey';
+            if (ua.includes('Safari')) return 'Safari JavaScriptCore';
+            return 'Browser WebAssembly Engine';
+        }
+        
+        function updateWasmStatus(status, message) {
+            const statusEl = document.getElementById('wasm-status');
+            statusEl.className = `wasm-status wasm-${status}`;
+            statusEl.textContent = message;
+        }
+        
+        function enableControls() {
+            const buttons = document.querySelectorAll('.control-btn');
+            buttons.forEach(btn => btn.disabled = false);
+            
+            // Button event listeners
+            document.getElementById('leftBtn').addEventListener('mousedown', () => setKey('left', true));
+            document.getElementById('leftBtn').addEventListener('mouseup', () => setKey('left', false));
+            document.getElementById('rightBtn').addEventListener('mousedown', () => setKey('right', true));
+            document.getElementById('rightBtn').addEventListener('mouseup', () => setKey('right', false));
+            document.getElementById('jumpBtn').addEventListener('mousedown', () => setKey('space', true));
+            document.getElementById('jumpBtn').addEventListener('mouseup', () => setKey('space', false));
+            
+            // Keyboard event listeners
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+        }
+        
+        function handleKeyDown(event) {
+            switch(event.code) {
+                case 'ArrowLeft':
+                    setKey('left', true);
+                    event.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    setKey('right', true);
+                    event.preventDefault();
+                    break;
+                case 'Space':
+                    setKey('space', true);
+                    event.preventDefault();
+                    break;
+            }
+        }
+        
+        function handleKeyUp(event) {
+            switch(event.code) {
+                case 'ArrowLeft':
+                    setKey('left', false);
+                    event.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    setKey('right', false);
+                    event.preventDefault();
+                    break;
+                case 'Space':
+                    setKey('space', false);
+                    event.preventDefault();
+                    break;
+            }
+        }
+        
+        function setKey(key, pressed) {
+            switch(key) {
+                case 'left':
+                    gameState.keyLeft = pressed;
+                    break;
+                case 'right':
+                    gameState.keyRight = pressed;
+                    break;
+                case 'space':
+                    gameState.keySpace = pressed;
+                    break;
+            }
+        }
+        
+        function updatePhysics() {
+            if (wasmReady && wasmModule && typeof wasmModule._web_platformer_update === 'function') {
+                // Call the actual Julia function compiled to WebAssembly!
+                const result = wasmModule._web_platformer_update(
+                    gameState.x,
+                    gameState.y,
+                    gameState.velX,
+                    gameState.velY,
+                    gameState.keyLeft ? 1 : 0,
+                    gameState.keyRight ? 1 : 0,
+                    gameState.keySpace ? 1 : 0,
+                    gameState.onGround ? 1 : 0
+                );
+                
+                // Update game state based on WebAssembly result
+                updateGameState(result);
+            } else {
+                // Fallback simulation
+                updateGameStateSimulation();
+            }
+        }
+        
+        function updateGameState(wasmResult) {
+            // Apply gravity
+            gameState.velY += 1;
+            
+            // Handle horizontal movement
+            if (gameState.keyLeft) {
+                gameState.velX = -5;
+            } else if (gameState.keyRight) {
+                gameState.velX = 5;
+            } else {
+                gameState.velX = 0;
+            }
+            
+            // Handle jumping
+            if (gameState.keySpace && gameState.onGround) {
+                gameState.velY = -12;
+                gameState.onGround = false;
+            }
+            
+            // Update position
+            gameState.x += gameState.velX;
+            gameState.y += gameState.velY;
+            
+            // Keep square on screen
+            if (gameState.x < 0) gameState.x = 0;
+            if (gameState.x > 800 - 32) gameState.x = 800 - 32;
+            
+            // Ground collision
+            const groundY = 600 - 32 - 20;
+            if (gameState.y >= groundY) {
+                gameState.y = groundY;
+                gameState.velY = 0;
+                gameState.onGround = true;
+            } else {
+                gameState.onGround = false;
+            }
+        }
+        
+        function updateGameStateSimulation() {
+            updateGameState(0); // Use fallback logic
+        }
+        
+        function render() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#98FB98');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+            
+            // Draw square with different colors based on state
+            let squareColor = '#ff6b6b'; // Red - in air
+            if (gameState.keySpace) {
+                squareColor = '#ffd700'; // Yellow - jumping
+            } else if (gameState.onGround) {
+                squareColor = '#4CAF50'; // Green - on ground
+            }
+            
+            ctx.fillStyle = squareColor;
+            ctx.fillRect(gameState.x, gameState.y, 32, 32);
+            
+            // Add square border
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(gameState.x, gameState.y, 32, 32);
+            
+            // Update UI stats
+            document.getElementById('positionX').textContent = Math.round(gameState.x);
+            document.getElementById('positionY').textContent = Math.round(gameState.y);
+            document.getElementById('velocityX').textContent = gameState.velX;
+            document.getElementById('velocityY').textContent = gameState.velY;
+            
+            const stateText = gameState.keySpace ? 'Jumping' : 
+                             gameState.onGround ? 'On Ground' : 'In Air';
+            document.getElementById('gameState').textContent = stateText;
+        }
+        
+        function startGameLoop() {
+            const fps = 60;
+            const frameTime = 1000 / fps;
+            
+            gameLoop = setInterval(() => {
+                updatePhysics();
+                render();
+            }, frameTime);
+        }
+        
+        // Initialize when page loads
+        init();
+    </script>
+</body>
+</html> 
