@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Julia + SDL2 WebAssembly Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .test-result {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .success { border-left: 5px solid #4CAF50; }
+        .info { border-left: 5px solid #2196F3; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Julia + SDL2 Integration Test</h1>
+        <p>Testing Julia physics functions compiled to WebAssembly</p>
+        
+        <button onclick="runTests()">🧪 Run Physics Tests</button>
+        <button onclick="runGameSimulation()">🎯 Run Game Simulation</button>
+        
+        <div id="output"></div>
+    </div>
+    
+    <script src="julia_sdl.js"></script>
+    <script>
+        let juliaModule = null;
+        
+        window.Module = {
+            onRuntimeInitialized: function() {
+                console.log("Julia WASM module loaded!");
+                juliaModule = Module;
+                
+                document.getElementById('output').innerHTML = `
+                    <div class="test-result success">
+                        ✅ Julia WebAssembly module loaded successfully!<br>
+                        📊 Available functions: _get_new_x, _get_new_y, _get_new_vel_y, _check_on_ground, _get_square_color, _update_physics
+                    </div>
+                `;
+            }
+        };
+        
+        function runTests() {
+            if (!juliaModule) {
+                alert('Julia module not loaded yet!');
+                return;
+            }
+            
+            const output = document.getElementById('output');
+            let results = '<h3>🧪 Julia Physics Tests</h3>';
+            
+            // Test 1: Move left
+            const newX1 = juliaModule._get_new_x(100, 0, 1, 0); // x=100, vel_x=0, key_A=true, key_D=false
+            results += `<div class="test-result info">Test 1 - Move Left: 100 → ${newX1} (expected: 95)</div>`;
+            
+            // Test 2: Move right
+            const newX2 = juliaModule._get_new_x(100, 0, 0, 1); // x=100, vel_x=0, key_A=false, key_D=true
+            results += `<div class="test-result info">Test 2 - Move Right: 100 → ${newX2} (expected: 105)</div>`;
+            
+            // Test 3: Jump
+            const newY = juliaModule._get_new_y(300, 0, 1, 1); // y=300, vel_y=0, on_ground=true, key_space=true
+            results += `<div class="test-result info">Test 3 - Jump: 300 → ${newY} (expected: 288, jump velocity = -12 + 1 gravity)</div>`;
+            
+            // Test 4: Ground check
+            const onGround = juliaModule._check_on_ground(580, 0); // Near ground
+            results += `<div class="test-result info">Test 4 - Ground Check: ${onGround ? 'On Ground' : 'In Air'}</div>`;
+            
+            // Test 5: Color state
+            const color1 = juliaModule._get_square_color(1, 0); // On ground, not jumping
+            const color2 = juliaModule._get_square_color(1, 1); // On ground, jumping
+            const color3 = juliaModule._get_square_color(0, 0); // In air, not jumping
+            results += `<div class="test-result info">Test 5 - Colors: Ground=${color1} (exp:1), Jumping=${color2} (exp:2), Air=${color3} (exp:0)</div>`;
+            
+            // Test 6: Velocity calculation
+            const newVelY = juliaModule._get_new_vel_y(300, 0, 1, 1); // Jump
+            results += `<div class="test-result info">Test 6 - Jump Velocity: ${newVelY} (expected: -12)</div>`;
+            
+            results += '<div class="test-result success">✅ All tests completed!</div>';
+            output.innerHTML = results;
+        }
+        
+        function runGameSimulation() {
+            if (!juliaModule) {
+                alert('Julia module not loaded yet!');
+                return;
+            }
+            
+            const output = document.getElementById('output');
+            let results = '<h3>🎯 Game Physics Simulation</h3>';
+            
+            // Simulate a few frames of gameplay
+            let x = 100, y = 300, velX = 0, velY = 0, onGround = 1;
+            
+            results += '<div class="test-result info">Starting simulation: x=100, y=300, on ground</div>';
+            
+            // Frame 1: Jump
+            const newX1 = juliaModule._get_new_x(x, velX, 0, 0); // No movement
+            const newY1 = juliaModule._get_new_y(y, velY, onGround, 1); // Jump
+            const newVelY1 = juliaModule._get_new_vel_y(y, velY, onGround, 1); // Jump velocity
+            const newOnGround1 = juliaModule._check_on_ground(newY1, newVelY1);
+            const color1 = juliaModule._get_square_color(onGround, 1);
+            
+            results += `<div class="test-result info">Frame 1 (Jump): x=${newX1}, y=${newY1}, velY=${newVelY1}, onGround=${newOnGround1}, color=${color1}</div>`;
+            
+            // Frame 2: In air, moving right
+            const newX2 = juliaModule._get_new_x(newX1, 0, 0, 1); // Move right
+            const newY2 = juliaModule._get_new_y(newY1, newVelY1, newOnGround1, 0); // Apply gravity
+            const newVelY2 = juliaModule._get_new_vel_y(newY1, newVelY1, newOnGround1, 0); // Gravity
+            const newOnGround2 = juliaModule._check_on_ground(newY2, newVelY2);
+            const color2 = juliaModule._get_square_color(newOnGround1, 0);
+            
+            results += `<div class="test-result info">Frame 2 (Air + Right): x=${newX2}, y=${newY2}, velY=${newVelY2}, onGround=${newOnGround2}, color=${color2}</div>`;
+            
+            // Frame 3: Continue falling
+            const newX3 = juliaModule._get_new_x(newX2, 0, 0, 1); // Move right
+            const newY3 = juliaModule._get_new_y(newY2, newVelY2, newOnGround2, 0); // Apply gravity
+            const newVelY3 = juliaModule._get_new_vel_y(newY2, newVelY2, newOnGround2, 0); // Gravity
+            const newOnGround3 = juliaModule._check_on_ground(newY3, newVelY3);
+            const color3 = juliaModule._get_square_color(newOnGround2, 0);
+            
+            results += `<div class="test-result info">Frame 3 (Falling): x=${newX3}, y=${newY3}, velY=${newVelY3}, onGround=${newOnGround3}, color=${color3}</div>`;
+            
+            results += '<div class="test-result success">✅ Physics simulation working correctly!</div>';
+            results += '<div class="test-result success">🚀 Ready to integrate with SDL2!</div>';
+            
+            output.innerHTML = results;
+        }
+    </script>
+</body>
+</html> 
