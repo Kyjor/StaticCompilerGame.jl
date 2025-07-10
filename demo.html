@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebAssembly Guessing Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 50px; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; }
+        #result { margin: 20px 0; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h1>WebAssembly Guessing Game</h1>
+    <p>Guess the number 7!</p>
+    
+    <div id="result">Make your guess!</div>
+    
+    <div>
+        <button onclick="makeGuess(1)">1</button>
+        <button onclick="makeGuess(2)">2</button>
+        <button onclick="makeGuess(3)">3</button>
+        <button onclick="makeGuess(4)">4</button>
+        <button onclick="makeGuess(5)">5</button>
+    </div>
+    <div>
+        <button onclick="makeGuess(6)">6</button>
+        <button onclick="makeGuess(7)">7</button>
+        <button onclick="makeGuess(8)">8</button>
+        <button onclick="makeGuess(9)">9</button>
+        <button onclick="makeGuess(0)">0</button>
+    </div>
+    
+    <script>
+        // This is a placeholder - actual WebAssembly integration 
+        // depends on the output from Emscripten or manual WASM loading
+        function makeGuess(guess) {
+            const result = document.getElementById('result');
+            
+            // Simulate the game logic for demonstration
+            if (guess === 7) {
+                result.innerHTML = '<span style="color: green;">Correct! You win my guy!</span>';
+            } else if (guess < 7) {
+                result.innerHTML = '<span style="color: orange;">Too low!</span>';
+            } else {
+                result.innerHTML = '<span style="color: red;">Too high!</span>';
+            }
+        }
+    </script>
+</body>
+</html>

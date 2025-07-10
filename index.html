@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDL2 Guessing Game - Web Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .game-window {
+            width: 400px;
+            height: 300px;
+            border: 3px solid #333;
+            margin: 20px auto;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.3s ease;
+        }
+        
+        .blue { background-color: #4A90E2; }
+        .green { background-color: #7ED321; }
+        .red { background-color: #D0021B; }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .number-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .number-btn:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .number-btn:active {
+            transform: translateY(0);
+        }
+        
+        .number-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .instructions {
+            margin: 20px 0;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .status {
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .reset-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .reset-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .wasm-status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .wasm-loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .wasm-ready {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .wasm-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎮 SDL2 Guessing Game - WebAssembly Version</h1>
+        
+        <div id="wasm-status" class="wasm-status wasm-loading">
+            ⏳ Loading WebAssembly module...
+        </div>
+        
+        <div class="instructions">
+            <p><strong>Goal:</strong> Guess the number 7!</p>
+            <p><strong>Colors:</strong> Blue = waiting, Red = wrong, Green = correct!</p>
+            <p><strong>Technology:</strong> Julia code compiled to WebAssembly running in your browser!</p>
+        </div>
+        
+        <div id="game-window" class="game-window blue">
+            Loading...
+        </div>
+        
+        <div class="controls">
+            <div>
+                <button class="number-btn" onclick="makeGuess(0)" disabled>0</button>
+                <button class="number-btn" onclick="makeGuess(1)" disabled>1</button>
+                <button class="number-btn" onclick="makeGuess(2)" disabled>2</button>
+                <button class="number-btn" onclick="makeGuess(3)" disabled>3</button>
+                <button class="number-btn" onclick="makeGuess(4)" disabled>4</button>
+            </div>
+            <div>
+                <button class="number-btn" onclick="makeGuess(5)" disabled>5</button>
+                <button class="number-btn" onclick="makeGuess(6)" disabled>6</button>
+                <button class="number-btn" onclick="makeGuess(7)" disabled>7</button>
+                <button class="number-btn" onclick="makeGuess(8)" disabled>8</button>
+                <button class="number-btn" onclick="makeGuess(9)" disabled>9</button>
+            </div>
+        </div>
+        
+        <div id="status" class="status">Loading WebAssembly...</div>
+        
+        <button class="reset-btn" onclick="resetGame()" disabled>Reset Game</button>
+        
+        <div style="margin-top: 40px; font-size: 14px; color: #666;">
+            <p><strong>Technical Details:</strong></p>
+            <p>🚀 This game uses Julia code compiled to WebAssembly (279 bytes)</p>
+            <p>📦 The <code>handle_guess</code> function was compiled from Julia to LLVM IR to WASM</p>
+            <p>⚡ Running at near-native speed in your browser!</p>
+            <div id="tech-info" style="margin-top: 10px; font-family: monospace; font-size: 12px;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Load the actual WebAssembly module generated by Emscripten
+        import Module from './wasm_emscripten/web_guess_game.js';
+        
+        let wasmModule = null;
+        let gameWon = false;
+        let wasmReady = false;
+        
+        // Load WebAssembly module
+        async function loadWasm() {
+            try {
+                console.log('Loading WebAssembly module...');
+                wasmModule = await Module();
+                console.log('WebAssembly module loaded successfully!');
+                console.log('Available exports:', Object.keys(wasmModule));
+                
+                // Check if our function exists
+                if (typeof wasmModule._web_guess_game === 'function') {
+                    wasmReady = true;
+                    updateWasmStatus('ready', '✅ WebAssembly module loaded! Julia function ready.');
+                    enableGame();
+                    
+                    // Update tech info
+                    document.getElementById('tech-info').innerHTML = `
+                        📊 Module size: 279 bytes<br>
+                        🔧 Exported function: _web_guess_game<br>
+                        💻 Compiled from: Julia → LLVM IR → WebAssembly<br>
+                        🌐 Runtime: ${navigator.userAgent.includes('Chrome') ? 'Chrome V8' : 
+                                     navigator.userAgent.includes('Firefox') ? 'Firefox SpiderMonkey' : 
+                                     'Browser WebAssembly Engine'}
+                    `;
+                } else {
+                    throw new Error('Function _web_guess_game not found in module');
+                }
+                
+            } catch (error) {
+                console.error('Failed to load WebAssembly module:', error);
+                updateWasmStatus('error', `❌ Failed to load WebAssembly: ${error.message}`);
+                // Fall back to simulation
+                wasmReady = false;
+                enableGame();
+            }
+        }
+        
+        function updateWasmStatus(status, message) {
+            const statusEl = document.getElementById('wasm-status');
+            statusEl.className = `wasm-status wasm-${status}`;
+            statusEl.textContent = message;
+        }
+        
+        function enableGame() {
+            // Enable all buttons
+            document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+            
+            // Update game window
+            const gameWindow = document.getElementById('game-window');
+            gameWindow.textContent = 'Press a number to guess!';
+            
+            // Update status
+            document.getElementById('status').textContent = 'Make your guess!';
+        }
+        
+        // Call the actual WebAssembly function or fall back to simulation
+        function callWasmFunction(guess) {
+            if (wasmReady && wasmModule && typeof wasmModule._web_guess_game === 'function') {
+                try {
+                    // Call the actual Julia function compiled to WebAssembly!
+                    const result = wasmModule._web_guess_game(guess);
+                    console.log(`WASM call: _web_guess_game(${guess}) = ${result}`);
+                    return result;
+                } catch (error) {
+                    console.error('Error calling WebAssembly function:', error);
+                    // Fall back to simulation
+                    return simulateJuliaFunction(guess);
+                }
+            } else {
+                // Fall back to simulation if WASM not available
+                console.log(`Simulation call: simulateJuliaFunction(${guess})`);
+                return simulateJuliaFunction(guess);
+            }
+        }
+        
+        // Fallback simulation (same logic as the Julia function)
+        function simulateJuliaFunction(guess) {
+            const target = 7;
+            
+            if (guess === target) {
+                return 1; // Green - correct
+            } else if (guess >= 0 && guess <= 9) {
+                return 2; // Red - wrong
+            } else {
+                return 0; // Blue - invalid
+            }
+        }
+        
+        function makeGuess(guess) {
+            if (gameWon) return;
+            
+            // Call the actual WebAssembly function!
+            const result = callWasmFunction(guess);
+            
+            const gameWindow = document.getElementById('game-window');
+            const status = document.getElementById('status');
+            
+            // Reset classes
+            gameWindow.className = 'game-window';
+            
+            if (result === 1) {
+                // Green - correct
+                gameWindow.classList.add('green');
+                gameWindow.textContent = '🎉 Correct! You win!';
+                status.innerHTML = wasmReady ? 
+                    'Congratulations! 🚀 WebAssembly function says you guessed 7!' :
+                    'Congratulations! You guessed the number 7!';
+                gameWon = true;
+                
+                // Auto-reset after 3 seconds
+                setTimeout(() => {
+                    resetGame();
+                }, 3000);
+                
+            } else if (result === 2) {
+                // Red - wrong
+                gameWindow.classList.add('red');
+                gameWindow.textContent = `❌ Wrong! You guessed ${guess}`;
+                status.innerHTML = wasmReady ?
+                    'Try again! 🧮 WebAssembly says the number is 7.' :
+                    'Try again! The number is 7.';
+                
+                // Back to blue after 1 second
+                setTimeout(() => {
+                    gameWindow.className = 'game-window blue';
+                    gameWindow.textContent = 'Press a number to guess!';
+                    status.textContent = 'Make your guess!';
+                }, 1000);
+                
+            } else {
+                // Blue - invalid (shouldn't happen with buttons)
+                gameWindow.classList.add('blue');
+                gameWindow.textContent = 'Invalid guess!';
+                status.textContent = 'Please guess a number between 0-9.';
+            }
+        }
+        
+        function resetGame() {
+            gameWon = false;
+            const gameWindow = document.getElementById('game-window');
+            const status = document.getElementById('status');
+            
+            gameWindow.className = 'game-window blue';
+            gameWindow.textContent = 'Press a number to guess!';
+            status.textContent = 'Make your guess!';
+        }
+        
+        // Keyboard support
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            if (key >= '0' && key <= '9') {
+                makeGuess(parseInt(key));
+            } else if (key === 'Escape') {
+                resetGame();
+            }
+        });
+        
+        // Make functions global for onclick handlers
+        window.makeGuess = makeGuess;
+        window.resetGame = resetGame;
+        
+        // Initialize the game by loading WebAssembly
+        loadWasm();
+    </script>
+</body>
+</html> 
