@@ -1,7 +1,7 @@
 ; ModuleID = 'start'
 source_filename = "start"
-target datalayout = "e-m:o-i64:64-i128:128-n32:64-S128"
-target triple = "aarch64-apple-darwin"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-linux-gnu"
 
 define i32 @init_sdl() local_unnamed_addr {
 top:

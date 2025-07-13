@@ -27,7 +27,7 @@ window.onModuleReady = function() {
         //console.log(`JS Main Loop Frame ${frameCount}`);
         //Module._create_entities_if_needed();
         // Call the C/C++ main_loop function
-        Module._draw_game_frame(999, 10, 1);
+        let x = Module._draw_game_frame(999, 10, 1);
         Module._main_loop();
         
         // Continue the loop

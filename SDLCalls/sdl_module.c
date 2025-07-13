@@ -135,7 +135,7 @@ int create_entities_if_needed() {
     // Create enemies at random positions within the visible screen area
     for (int i = 0; i < 10; i++) {  // Reduced to 10 entities for testing
         if (entity_count < MAX_ENTITIES) {
-            printf("Creating entity %d\n", entity_count);
+            // printf("Creating entity %d\n", entity_count);
             entities[entity_count].x = (float)(i * 1);  // Spread horizontally
             entities[entity_count].y = 6.0f;  // Position within screen bounds
             entity_count++;
@@ -155,7 +155,8 @@ void deinitialize_the_game() {
 }
 
 EMSCRIPTEN_KEEPALIVE
-int update_input() {
+int update_input(int x) {
+    //printf("Updating input %d\n", x);
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
@@ -175,9 +176,6 @@ int update_input() {
                 case SDLK_SPACE:
                     input_state.key_Space = pressed;
                     return 3;
-                    break;
-                case SDLK_ESCAPE:
-                    deinitialize_the_game();
                     break;
             }
         }
@@ -215,11 +213,11 @@ void main_loop() {
     static int frame_count = 0;
     frame_count++;
     if (frame_count % 60 == 0) {
-        printf("Frame %d: Drawing %d entities\n", frame_count, entity_count);
+        //printf("Frame %d: Drawing %d entities\n", frame_count, entity_count);
     }
     
     // Handle SDL events (e.g., input)
-    update_input();
+    //update_input(1);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -237,7 +235,7 @@ const char* get_square_position() {
 
 EMSCRIPTEN_KEEPALIVE
 int draw_rect(int x) {
-    printf("Drawing rect at x=%d\n", x);
+    //printf("Drawing rect at x=%d\n", x);
     
     if (!renderer) {
         printf("Renderer is NULL in draw_rect!\n");
