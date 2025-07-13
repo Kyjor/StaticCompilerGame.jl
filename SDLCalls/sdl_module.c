@@ -30,7 +30,7 @@ int test_value = 1;
 
 // Separate initialization function that doesn't set up main loop
 EMSCRIPTEN_KEEPALIVE
-int init_sdl() {
+int init_sdl_drawing() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
         return 0;
