@@ -5,7 +5,7 @@ target triple = "aarch64-apple-darwin"
 
 define i32 @create_entities() local_unnamed_addr {
 top:
-  ret i32 3
+  ret i32 0
 }
 
 !llvm.module.flags = !{!0, !1}

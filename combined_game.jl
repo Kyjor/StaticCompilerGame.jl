@@ -2,6 +2,32 @@
 using StaticTools
 using StaticCompiler
 
+# Function to call the C draw_rect function using llvmcall
+function call_draw_rect(x::Int32)::Int32
+    Base.llvmcall(("""
+    ; External declaration of the draw_rect function
+    declare i32 @draw_rect(i32) nounwind
+
+    define i32 @main(i32) {
+    entry:
+       %result = call i32 (i32) @draw_rect(i32 %0)
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32}, x)
+end
+
+function call_update_input()::Int32
+    Base.llvmcall(("""
+    ; External declaration of the update_input function
+    declare i32 @update_input() nounwind
+    define i32 @main() {
+    entry:
+       %result = call i32 @update_input()
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32}, x)
+end
+
 # Julia functions that will call C functions
 # These are just stubs - the actual implementation is in C
 function init_sdl_drawing()::Int32
@@ -15,16 +41,7 @@ function clear_screen(color::Int32)::Nothing
 end
 
 function create_entities_if_needed()::Int32
-    return Int32(0)
-end
-
-# function draw_rect(x::Int32, y::Int32, w::Int32, h::Int32, color::Int32)::Int32
-#     # This will be linked to the C function draw_rect(x, y, w, h, color)
-#     return Int32(0)
-# end
-
-function draw_rect()::Int32
-    return Int32(0)
+    return Int32(3)
 end
 
 function present_frame()::Nothing
@@ -84,21 +101,11 @@ function update_physics(x::Int32, y::Int32, vel_x::Int32, vel_y::Int32,
     return new_x
 end
 
-# Simple drawing function (calls SDL2)
+# Simple drawing function - calls C draw_rect function using llvmcall
 function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
-    # Clear screen
-    #clear_screen(0)
-    
-    # # Draw player
-    #color = on_ground != Int32(0) ? Int32(3) : Int32(2)  # Green if on ground, red if in air
-    #draw_rect(x, y, 32, 32, Int32(2))
-    draw_rect()
-    create_entities_if_needed()
-    # # # Present frame
-    # draw_entities()
-    # print_entities()
-
-    return Int32(0)
+    # Call the C draw_rect function using llvmcall
+    result = call_draw_rect(x)
+    return result
 end
 
 function create_entities()::Int32

@@ -136,8 +136,8 @@ int create_entities_if_needed() {
     for (int i = 0; i < 10; i++) {  // Reduced to 10 entities for testing
         if (entity_count < MAX_ENTITIES) {
             printf("Creating entity %d\n", entity_count);
-            entities[entity_count].x = (float)(i * 2);  // Spread horizontally
-            entities[entity_count].y = 2.0f;  // Position within screen bounds
+            entities[entity_count].x = (float)(i * 1);  // Spread horizontally
+            entities[entity_count].y = 6.0f;  // Position within screen bounds
             entity_count++;
         }
     }
@@ -155,7 +155,7 @@ void deinitialize_the_game() {
 }
 
 EMSCRIPTEN_KEEPALIVE
-void update_input() {
+int update_input() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
@@ -166,12 +166,15 @@ void update_input() {
             switch (e.key.keysym.sym) {
                 case SDLK_a:
                     input_state.key_A = pressed;
+                    return 1;
                     break;
                 case SDLK_d:
                     input_state.key_D = pressed;
+                    return 2;
                     break;
                 case SDLK_SPACE:
                     input_state.key_Space = pressed;
+                    return 3;
                     break;
                 case SDLK_ESCAPE:
                     deinitialize_the_game();
@@ -232,6 +235,23 @@ const char* get_square_position() {
     return position;
 }
 
+EMSCRIPTEN_KEEPALIVE
+int draw_rect(int x) {
+    printf("Drawing rect at x=%d\n", x);
+    
+    if (!renderer) {
+        printf("Renderer is NULL in draw_rect!\n");
+        return 0;
+    }
+    
+    // Draw a green rectangle at the specified x position
+    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);  // Green color
+    SDL_Rect rect = { x, 200, 50, 50 };  // x, y, width, height
+    SDL_RenderFillRect(renderer, &rect);
+    
+    return 1;
+}
+
 // Original main function - kept for compatibility but not used
 int main(void) {
     // Initialize SDL
@@ -258,7 +278,7 @@ int main(void) {
     printf("SDL initialized successfully in main!\n");
     
     // Set up the main loop using requestAnimationFrame
-    emscripten_set_main_loop(main_loop, 0, 1);
+    // emscripten_set_main_loop(main_loop, 0, 1);
 
     return 0;
 }
