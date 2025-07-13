@@ -11,15 +11,15 @@ top:
   %.sub = getelementptr inbounds [2 x {}*], [2 x {}*]* %0, i64 0, i64 0
   %gcframe = call {}** @julia.new_gc_frame(i32 1)
   call void @julia.push_gc_frame({}** nonnull %gcframe, i32 1)
-  %square_x = load atomic {}*, {}** inttoptr (i64 139926547664176 to {}**) unordered, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  %square_x = load atomic {}*, {}** inttoptr (i64 139807058168512 to {}**) unordered, align 64, !tbaa !2, !alias.scope !7, !noalias !10
   %1 = call {}** @julia.get_gc_frame_slot({}** nonnull %gcframe, i32 0)
   store {}* %square_x, {}** %1, align 8
   store {}* %square_x, {}** %.sub, align 8
-  %2 = call nonnull {}* @ijl_apply_generic({}* inttoptr (i64 139926365497024 to {}*), {}** nonnull %.sub, i32 1)
+  %2 = call nonnull {}* @ijl_apply_generic({}* inttoptr (i64 139806876067520 to {}*), {}** nonnull %.sub, i32 1)
   %3 = call {}** @julia.get_gc_frame_slot({}** nonnull %gcframe, i32 0)
   store {}* %2, {}** %3, align 8
   store {}* %2, {}** %.sub, align 8
-  %4 = call nonnull {}* @ijl_apply_generic({}* inttoptr (i64 139926422240608 to {}*), {}** nonnull %.sub, i32 1)
+  %4 = call nonnull {}* @ijl_apply_generic({}* inttoptr (i64 139806932811104 to {}*), {}** nonnull %.sub, i32 1)
   %5 = bitcast {}* %4 to i64*
   %6 = getelementptr inbounds i64, i64* %5, i64 -1
   %7 = load atomic i64, i64* %6 unordered, align 8, !tbaa !15, !range !17
@@ -31,10 +31,10 @@ top:
 L7:                                               ; preds = %top
   %10 = call {}** @julia.get_gc_frame_slot({}** nonnull %gcframe, i32 0)
   store {}* %4, {}** %10, align 8
-  store {}* inttoptr (i64 139926422240608 to {}*), {}** %.sub, align 8
+  store {}* inttoptr (i64 139806932811104 to {}*), {}** %.sub, align 8
   %11 = getelementptr inbounds [2 x {}*], [2 x {}*]* %0, i64 0, i64 1
   store {}* %4, {}** %11, align 8
-  %12 = call nonnull {}* @ijl_apply_generic({}* inttoptr (i64 139926351357312 to {}*), {}** nonnull %.sub, i32 2)
+  %12 = call nonnull {}* @ijl_apply_generic({}* inttoptr (i64 139806861927808 to {}*), {}** nonnull %.sub, i32 2)
   %13 = bitcast {}* %12 to i64*
   %14 = getelementptr inbounds i64, i64* %13, i64 -1
   %15 = load atomic i64, i64* %14 unordered, align 8, !tbaa !15, !range !17
@@ -51,7 +51,7 @@ L10:                                              ; preds = %L7, %top
   ret i32 %unbox
 
 fail:                                             ; preds = %L7
-  call void @ijl_type_error(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @_j_str1, i64 0, i64 0), {}* inttoptr (i64 139926422240608 to {}*), {}* %12)
+  call void @ijl_type_error(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @_j_str1, i64 0, i64 0), {}* inttoptr (i64 139806932811104 to {}*), {}* %12)
   unreachable
 }
 

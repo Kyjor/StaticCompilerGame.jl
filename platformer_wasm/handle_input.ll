@@ -13,18 +13,18 @@ top:
   ]
 
 L5:                                               ; preds = %top
-  %2 = select i1 %.not5, {}* inttoptr (i64 139926490197360 to {}*), {}* inttoptr (i64 139926490197344 to {}*)
-  store atomic {}* %2, {}** inttoptr (i64 139926547665376 to {}**) release, align 32, !tbaa !2, !alias.scope !7, !noalias !10
+  %2 = select i1 %.not5, {}* inttoptr (i64 139807000767856 to {}*), {}* inttoptr (i64 139807000767840 to {}*)
+  store atomic {}* %2, {}** inttoptr (i64 139807058169808 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
   br label %L17
 
 L10:                                              ; preds = %top
-  %3 = select i1 %.not5, {}* inttoptr (i64 139926490197360 to {}*), {}* inttoptr (i64 139926490197344 to {}*)
-  store atomic {}* %3, {}** inttoptr (i64 139926547665616 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  %3 = select i1 %.not5, {}* inttoptr (i64 139807000767856 to {}*), {}* inttoptr (i64 139807000767840 to {}*)
+  store atomic {}* %3, {}** inttoptr (i64 139807058170048 to {}**) release, align 64, !tbaa !2, !alias.scope !7, !noalias !10
   br label %L17
 
 L15:                                              ; preds = %top
-  %4 = select i1 %.not5, {}* inttoptr (i64 139926490197360 to {}*), {}* inttoptr (i64 139926490197344 to {}*)
-  store atomic {}* %4, {}** inttoptr (i64 139926547665904 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  %4 = select i1 %.not5, {}* inttoptr (i64 139807000767856 to {}*), {}* inttoptr (i64 139807000767840 to {}*)
+  store atomic {}* %4, {}** inttoptr (i64 139807058170288 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
   br label %L17
 
 L17:                                              ; preds = %L15, %L10, %L5, %top

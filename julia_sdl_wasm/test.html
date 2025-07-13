@@ -59,7 +59,7 @@
             onRuntimeInitialized: function() {
                 console.log("Julia WASM module loaded!");
                 juliaModule = Module;
-                
+                console.log(juliaModule);
                 document.getElementById('output').innerHTML = `
                     <div class="test-result success">
                         ✅ Julia WebAssembly module loaded successfully!<br>

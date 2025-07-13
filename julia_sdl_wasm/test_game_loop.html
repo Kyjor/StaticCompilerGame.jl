@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Loop Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .start { background: #28a745; color: white; }
+        .stop { background: #dc3545; color: white; }
+        .pause { background: #ffc107; color: black; }
+        .resume { background: #17a2b8; color: white; }
+        button:hover { opacity: 0.8; }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .running { background: #d4edda; color: #155724; }
+        .stopped { background: #f8d7da; color: #721c24; }
+        .paused { background: #fff3cd; color: #856404; }
+        .game-data {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Game Loop Test</h1>
+        <p>This page tests the game loop functionality without requiring the full SDL2 WebAssembly module.</p>
+        
+        <div class="controls">
+            <h3>Game Controls</h3>
+            <button class="start" onclick="startGameLoop()">Start Game Loop</button>
+            <button class="stop" onclick="stopGameLoop()">Stop Game Loop</button>
+            <button class="pause" onclick="pauseGameLoop()">Pause</button>
+            <button class="resume" onclick="resumeGameLoop()">Resume</button>
+            <button onclick="testGameData()">Test Game Data</button>
+        </div>
+        
+        <div id="status" class="status stopped">Status: Stopped</div>
+        <div id="fps-display">FPS: --</div>
+        
+        <div class="game-data">
+            <h4>Game Data</h4>
+            <pre id="game-data-display">Waiting for game data...</pre>
+        </div>
+        
+        <div class="game-data">
+            <h4>Console Output</h4>
+            <pre id="console-output"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Mock Module for testing
+        window.Module = {
+            ready: true,
+            _run_game_loop: function() {
+                console.log('Mock game loop iteration');
+                return 0;
+            },
+            _main: function() {
+                console.log('Mock SDL initialization');
+                return 0;
+            }
+        };
+
+        // Override console.log to capture output
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const output = document.getElementById('console-output');
+            if (output) {
+                output.textContent += args.join(' ') + '\n';
+                output.scrollTop = output.scrollHeight;
+            }
+        };
+
+        // Test function to simulate game data
+        function testGameData() {
+            const testData = {
+                timestamp: Date.now(),
+                entities: [
+                    { id: 1, x: Math.random() * 100, y: Math.random() * 100, type: 'player' },
+                    { id: 2, x: Math.random() * 100, y: Math.random() * 100, type: 'enemy' }
+                ],
+                score: Math.floor(Math.random() * 1000),
+                level: Math.floor(Math.random() * 10) + 1
+            };
+            
+            // Dispatch custom event to simulate Julia sending data
+            document.dispatchEvent(new CustomEvent('game-data-update', { 
+                detail: testData 
+            }));
+        }
+
+        // Update status display
+        function updateStatus(status, className) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = `Status: ${status}`;
+            statusElement.className = `status ${className}`;
+        }
+
+        // Override game loop functions to update status
+        const originalStart = window.startGameLoop;
+        const originalStop = window.stopGameLoop;
+        const originalPause = window.pauseGameLoop;
+        const originalResume = window.resumeGameLoop;
+
+        window.startGameLoop = function() {
+            if (originalStart) originalStart();
+            updateStatus('Running', 'running');
+        };
+
+        window.stopGameLoop = function() {
+            if (originalStop) originalStop();
+            updateStatus('Stopped', 'stopped');
+        };
+
+        window.pauseGameLoop = function() {
+            if (originalPause) originalPause();
+            updateStatus('Paused', 'paused');
+        };
+
+        window.resumeGameLoop = function() {
+            if (originalResume) originalResume();
+            updateStatus('Running', 'running');
+        };
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Test page loaded');
+            updateStatus('Ready', 'stopped');
+        });
+    </script>
+    
+    <script src="game_loop.js"></script>
+</body>
+</html> 

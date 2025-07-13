@@ -5,14 +5,14 @@ target triple = "x86_64-linux-gnu"
 
 define i32 @init_platformer_game() local_unnamed_addr {
 top:
-  store atomic {}* inttoptr (i64 139926411058608 to {}*), {}** inttoptr (i64 139926547664176 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
-  store atomic {}* inttoptr (i64 139924562662560 to {}*), {}** inttoptr (i64 139926547664416 to {}**) release, align 32, !tbaa !2, !alias.scope !7, !noalias !10
-  store atomic {}* inttoptr (i64 139926410342048 to {}*), {}** inttoptr (i64 139926547664656 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
-  store atomic {}* inttoptr (i64 139926410342048 to {}*), {}** inttoptr (i64 139926547664896 to {}**) release, align 4096, !tbaa !2, !alias.scope !7, !noalias !10
-  store atomic {}* inttoptr (i64 139926490197360 to {}*), {}** inttoptr (i64 139926547665136 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
-  store atomic {}* inttoptr (i64 139926490197360 to {}*), {}** inttoptr (i64 139926547665376 to {}**) release, align 32, !tbaa !2, !alias.scope !7, !noalias !10
-  store atomic {}* inttoptr (i64 139926490197360 to {}*), {}** inttoptr (i64 139926547665616 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
-  store atomic {}* inttoptr (i64 139926490197360 to {}*), {}** inttoptr (i64 139926547665904 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  store atomic {}* inttoptr (i64 139806921629104 to {}*), {}** inttoptr (i64 139807058168512 to {}**) release, align 64, !tbaa !2, !alias.scope !7, !noalias !10
+  store atomic {}* inttoptr (i64 139805075255984 to {}*), {}** inttoptr (i64 139807058168752 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  store atomic {}* inttoptr (i64 139806920912544 to {}*), {}** inttoptr (i64 139807058168992 to {}**) release, align 32, !tbaa !2, !alias.scope !7, !noalias !10
+  store atomic {}* inttoptr (i64 139806920912544 to {}*), {}** inttoptr (i64 139807058169280 to {}**) release, align 64, !tbaa !2, !alias.scope !7, !noalias !10
+  store atomic {}* inttoptr (i64 139807000767856 to {}*), {}** inttoptr (i64 139807058169520 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  store atomic {}* inttoptr (i64 139807000767856 to {}*), {}** inttoptr (i64 139807058169808 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  store atomic {}* inttoptr (i64 139807000767856 to {}*), {}** inttoptr (i64 139807058170048 to {}**) release, align 64, !tbaa !2, !alias.scope !7, !noalias !10
+  store atomic {}* inttoptr (i64 139807000767856 to {}*), {}** inttoptr (i64 139807058170288 to {}**) release, align 16, !tbaa !2, !alias.scope !7, !noalias !10
   ret i32 0
 }
 

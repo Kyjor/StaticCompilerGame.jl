@@ -1,0 +1,3 @@
+/home/kyjor/Projects/C/SDLCalls/cmake-build-debug/CMakeFiles/SDLCalls.dir
+/home/kyjor/Projects/C/SDLCalls/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/kyjor/Projects/C/SDLCalls/cmake-build-debug/CMakeFiles/rebuild_cache.dir

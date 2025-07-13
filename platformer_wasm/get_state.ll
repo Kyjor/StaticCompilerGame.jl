@@ -7,7 +7,7 @@ target triple = "x86_64-linux-gnu"
 
 define i32 @get_square_state() local_unnamed_addr {
 top:
-  %key_space = load atomic {}*, {}** inttoptr (i64 139926547665904 to {}**) unordered, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  %key_space = load atomic {}*, {}** inttoptr (i64 139807058170288 to {}**) unordered, align 16, !tbaa !2, !alias.scope !7, !noalias !10
   %0 = bitcast {}* %key_space to i64*
   %1 = getelementptr inbounds i64, i64* %0, i64 -1
   %2 = load atomic i64, i64* %1 unordered, align 8, !tbaa !15, !range !17
@@ -21,7 +21,7 @@ common.ret:                                       ; preds = %pass4, %pass
   ret i32 %common.ret.op
 
 L5:                                               ; preds = %pass
-  %on_ground = load atomic {}*, {}** inttoptr (i64 139926547665136 to {}**) unordered, align 16, !tbaa !2, !alias.scope !7, !noalias !10
+  %on_ground = load atomic {}*, {}** inttoptr (i64 139807058169520 to {}**) unordered, align 16, !tbaa !2, !alias.scope !7, !noalias !10
   %5 = bitcast {}* %on_ground to i64*
   %6 = getelementptr inbounds i64, i64* %5, i64 -1
   %7 = load atomic i64, i64* %6 unordered, align 8, !tbaa !15, !range !17
@@ -31,19 +31,19 @@ L5:                                               ; preds = %pass
   br i1 %exactly_isa2, label %pass4, label %fail3
 
 fail:                                             ; preds = %top
-  call void @ijl_type_error(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_j_str1, i64 0, i64 0), {}* inttoptr (i64 139926422240480 to {}*), {}* %key_space)
+  call void @ijl_type_error(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_j_str1, i64 0, i64 0), {}* inttoptr (i64 139806932810976 to {}*), {}* %key_space)
   unreachable
 
 pass:                                             ; preds = %top
-  %10 = icmp eq {}* %key_space, inttoptr (i64 139926490197360 to {}*)
+  %10 = icmp eq {}* %key_space, inttoptr (i64 139807000767856 to {}*)
   br i1 %10, label %L5, label %common.ret
 
 fail3:                                            ; preds = %L5
-  call void @ijl_type_error(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_j_str1, i64 0, i64 0), {}* inttoptr (i64 139926422240480 to {}*), {}* %on_ground)
+  call void @ijl_type_error(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @_j_str1, i64 0, i64 0), {}* inttoptr (i64 139806932810976 to {}*), {}* %on_ground)
   unreachable
 
 pass4:                                            ; preds = %L5
-  %11 = icmp ne {}* %on_ground, inttoptr (i64 139926490197360 to {}*)
+  %11 = icmp ne {}* %on_ground, inttoptr (i64 139807000767856 to {}*)
   %spec.select = zext i1 %11 to i32
   br label %common.ret
 }
