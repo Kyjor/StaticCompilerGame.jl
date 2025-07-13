@@ -59,7 +59,7 @@ try
     println(" Linking files: $ll_files_str")
     
     # Link Julia LLVM IR with SDL2 C code
-    cmd = `emcc $ll_files SDLCalls/sdl_module.c -s USE_SDL=2 -O2 -s WASM=1 -s EXPORTED_FUNCTIONS="['_update_physics','_draw_game_frame','_init_sdl','_create_entities', '_draw_entities', '_init_sdl_drawing', '_main_loop', '_test_sdl_working', '_test_rendering', '_create_entities_if_needed', '_update_entities', '_print_entities', '_update_input', '_get_input_state', '_update_square_position', '_get_square_position', '_deinitialize_the_game']" -s EXPORTED_RUNTIME_METHODS="['cwrap']" -s MAIN_MODULE=1 -o $wasm_dir/combined_game.js -o sdl2.html`
+    cmd = `emcc $ll_files SDLCalls/sdl_module.c -s USE_SDL=2 -O2 -s WASM=1 -s EXPORTED_FUNCTIONS="['_update_physics','_draw_game_frame','_init_sdl','_create_entities', '_draw_entities', '_init_sdl_drawing', '_main_loop', '_test_sdl_working', '_test_rendering', '_create_entities_if_needed', '_update_entities', '_print_entities', '_update_input', '_get_input_state', '_update_square_position', '_get_square_position', '_deinitialize_the_game']" -s EXPORTED_RUNTIME_METHODS="['cwrap']" -o $wasm_dir/combined_game.js`
     
     run(cmd)
     println("✅ Combined WebAssembly module created!")

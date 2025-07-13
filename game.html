@@ -122,6 +122,7 @@ canvas.emscripten { border: 0px none; background-color: black; }
 
     <div class="emscripten_border">
       <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+      <textarea id="output" rows="8"></textarea>
     </div>
 
     <script type='text/javascript'>
@@ -155,6 +156,13 @@ canvas.emscripten { border: 0px none; background-color: black; }
           }
         },
         canvas: canvasElement,
+        onRuntimeInitialized() {
+          console.log("WASM runtime initialized");
+          // The WASM module is now ready
+          if (window.onModuleReady) {
+            window.onModuleReady();
+          }
+        },
         setStatus(text) {
           Module.setStatus.last ??= { time: Date.now(), text: '' };
           if (text === Module.setStatus.last.text) return;
