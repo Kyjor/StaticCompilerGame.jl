@@ -28,15 +28,60 @@ int game_is_still_running = 1;
 int square_x = 375, square_y = 275; // Initial position of the red square
 int test_value = 1;
 
+// Function to test rendering by drawing a simple rectangle
+EMSCRIPTEN_KEEPALIVE
+int test_rendering() {
+    if (!renderer) {
+        printf("Renderer is NULL in test_rendering!\n");
+        return 0;
+    }
+    
+    // Clear to blue background
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_RenderClear(renderer);
+    
+    // Draw a red rectangle
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_Rect rect = { 100, 100, 200, 200 };
+    SDL_RenderFillRect(renderer, &rect);
+    
+    // Present the renderer
+    SDL_RenderPresent(renderer);
+    
+    printf("Test rendering completed!\n");
+    return 1;
+}
+
+// Function to test if SDL is working
+EMSCRIPTEN_KEEPALIVE
+int test_sdl_working() {
+    printf("Testing SDL...\n");
+    if (!window) {
+        printf("Window is NULL!\n");
+        return 0;
+    }
+    if (!renderer) {
+        printf("Renderer is NULL!\n");
+        return 0;
+    }
+    printf("SDL window and renderer are valid!\n");
+    return 1;
+}
+
 // Separate initialization function that doesn't set up main loop
 EMSCRIPTEN_KEEPALIVE
 int init_sdl_drawing() {
+    printf("Initializing SDL...\n");
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
         return 0;
     }
     
-    window = SDL_CreateWindow("SDL2 + Emscripten", 0, 0, 640, 480, 0);
+    // In Emscripten, we need to use SDL_CreateWindow with SDL_WINDOW_OPENGL flag
+    // and let SDL use the existing HTML canvas
+    window = SDL_CreateWindow("SDL2 + Emscripten", 
+                             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
+                             640, 480, SDL_WINDOW_OPENGL);
     if (!window) {
         printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
         return 0;
@@ -48,6 +93,7 @@ int init_sdl_drawing() {
         return 0;
     }
     
+    printf("SDL initialized successfully!\n");
     return 1; // Success
 }
 
@@ -71,7 +117,7 @@ void print_entities() {
 }
 
 // Draw all entity squares
-void draw_entities() {
+int draw_entities() {
     for (int i = 0; i < entity_count; i++) {
         int screen_x = (int)(entities[i].x * UNIT_SIZE);
         int screen_y = (int)(entities[i].y * UNIT_SIZE);
@@ -80,7 +126,26 @@ void draw_entities() {
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);  // Red color
         SDL_RenderFillRect(renderer, &rect);
     }
+
+    return 1110;
 }
+
+EMSCRIPTEN_KEEPALIVE
+int create_entities_if_needed() {
+    // Create enemies at random positions
+    for (int i = 0; i < 10; i++) {
+        if (entity_count < 10) {
+            printf("Creating entity %d\n", entity_count);
+            entities[entity_count].x = 10.0f;
+            entities[entity_count].y = 10.0f;
+            entity_count++;
+        }
+    }
+    
+    return 2;
+}
+
+
 
 EMSCRIPTEN_KEEPALIVE
 void deinitialize_the_game() {
@@ -135,10 +200,16 @@ void main_loop() {
     // SDL_RenderFillRect(renderer, &rect);
     draw_entities(); // Draw all entity positions
 
-
     // Present the renderer 
     SDL_RenderPresent(renderer);
-    // printf("test value: %d", test_value);
+    
+    // Debug output (only print occasionally to avoid spam)
+    static int frame_count = 0;
+    frame_count++;
+    if (frame_count % 60 == 0) {
+        printf("Frame %d: Drawing %d entities\n", frame_count, entity_count);
+    }
+    
     // Handle SDL events (e.g., input)
     update_input();
 }
@@ -158,10 +229,29 @@ const char* get_square_position() {
 
 // Original main function - kept for compatibility but not used
 int main(void) {
-    SDL_Init(SDL_INIT_VIDEO);
-    window = SDL_CreateWindow("SDL2 + Emscripten", 0, 0, 640, 480, 0);
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    
+    // Create window with proper flags for Emscripten
+    window = SDL_CreateWindow("SDL2 + Emscripten", 
+                             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
+                             640, 480, SDL_WINDOW_OPENGL);
+    if (!window) {
+        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+        return 1;
+    }
 
+    printf("SDL initialized successfully in main!\n");
+    
     // Set up the main loop using requestAnimationFrame
     emscripten_set_main_loop(main_loop, 0, 1);
 

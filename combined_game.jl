@@ -14,9 +14,17 @@ function clear_screen(color::Int32)::Nothing
     return nothing
 end
 
-function draw_rect(x::Int32, y::Int32, w::Int32, h::Int32, color::Int32)::Nothing
-    # This will be linked to the C function draw_rect(x, y, w, h, color)
-    return nothing
+function create_entities_if_needed()::Int32
+    return Int32(0)
+end
+
+# function draw_rect(x::Int32, y::Int32, w::Int32, h::Int32, color::Int32)::Int32
+#     # This will be linked to the C function draw_rect(x, y, w, h, color)
+#     return Int32(0)
+# end
+
+function draw_rect()::Int32
+    return Int32(0)
 end
 
 function present_frame()::Nothing
@@ -82,13 +90,19 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     #clear_screen(0)
     
     # # Draw player
-    color = on_ground != 0 ? 3 : 2  # Green if on ground, red if in air
-    # draw_rect(x, y, 32, 32, color)
-    
-    # # Present frame
-    # present_frame()
-    
+    #color = on_ground != Int32(0) ? Int32(3) : Int32(2)  # Green if on ground, red if in air
+    #draw_rect(x, y, 32, 32, Int32(2))
+    draw_rect()
+    create_entities_if_needed()
+    # # # Present frame
+    # draw_entities()
+    # print_entities()
+
     return Int32(0)
+end
+
+function create_entities()::Int32
+    return create_entities_if_needed()
 end
 
 # Initialize SDL (simple wrapper)
