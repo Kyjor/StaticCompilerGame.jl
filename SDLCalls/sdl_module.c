@@ -123,7 +123,7 @@ int draw_entities() {
         int screen_y = (int)(entities[i].y * UNIT_SIZE);
 
         SDL_Rect rect = { screen_x, screen_y, UNIT_SIZE, UNIT_SIZE };
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);  // Red color
+        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);  // Blue color
         SDL_RenderFillRect(renderer, &rect);
     }
 
@@ -132,12 +132,12 @@ int draw_entities() {
 
 EMSCRIPTEN_KEEPALIVE
 int create_entities_if_needed() {
-    // Create enemies at random positions
-    for (int i = 0; i < 10; i++) {
-        if (entity_count < 10) {
+    // Create enemies at random positions within the visible screen area
+    for (int i = 0; i < 10; i++) {  // Reduced to 10 entities for testing
+        if (entity_count < MAX_ENTITIES) {
             printf("Creating entity %d\n", entity_count);
-            entities[entity_count].x = 10.0f;
-            entities[entity_count].y = 10.0f;
+            entities[entity_count].x = (float)(i * 2);  // Spread horizontally
+            entities[entity_count].y = 2.0f;  // Position within screen bounds
             entity_count++;
         }
     }
@@ -190,8 +190,13 @@ InputState* get_input_state() {
 EMSCRIPTEN_KEEPALIVE
 void main_loop() {
     // Clear the screen
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderClear(renderer);
+
+    // Create entities if we don't have any yet
+    if (entity_count == 0) {
+        create_entities_if_needed();
+    }
 
     // Draw or update your game/app here
      // Draw a red square
