@@ -62,12 +62,21 @@ class GameLoop {
     
     checkJuliaFunctions() {
         const juliaFunctions = [
+            // SDL Drawing functions
+            '_run_game_frame',
+            '_init_game',
+            '_test_sdl_drawing',
+            // Physics functions (fallback)
             '_update_physics',
             '_get_new_x',
             '_get_new_y', 
             '_get_new_vel_y',
             '_check_on_ground',
-            '_get_square_color'
+            '_get_square_color',
+            // SDL Drawing state functions
+            '_get_square_x',
+            '_get_square_y',
+            '_get_square_state'
         ];
         
         const availableFunctions = juliaFunctions.filter(func => 
@@ -76,10 +85,12 @@ class GameLoop {
         
         console.log('Available Julia functions:', availableFunctions);
         
-        if (availableFunctions.length > 0) {
-            console.log('Julia integration detected');
+        if (availableFunctions.includes('_run_game_frame')) {
+            console.log('SDL Drawing integration detected');
+        } else if (availableFunctions.length > 0) {
+            console.log('Julia physics integration detected');
         } else {
-            console.log('No Julia functions found, running SDL only');
+            console.log('No Julia functions found');
         }
     }
     
@@ -130,8 +141,16 @@ class GameLoop {
     
     updateGame() {
         try {
-            // Call Julia physics functions if available
-            if (typeof Module._update_physics === 'function') {
+            // Call Julia game frame function if available
+            if (typeof Module._run_game_frame === 'function') {
+                const result = Module._run_game_frame();
+                if (result === -1) {
+                    console.log('Game quit requested');
+                    this.stop();
+                    return;
+                }
+            } else if (typeof Module._update_physics === 'function') {
+                // Fallback to physics-only if no SDL drawing
                 Module._update_physics();
             }
             
@@ -154,16 +173,22 @@ class GameLoop {
                 physics: {}
             };
             
-            // Get physics data if functions are available
-            if (typeof Module._get_new_x === 'function') {
+            // Get SDL drawing state if available
+            if (typeof Module._get_square_x === 'function') {
+                gameState.physics.x = Module._get_square_x();
+            } else if (typeof Module._get_new_x === 'function') {
                 gameState.physics.x = Module._get_new_x();
             }
             
-            if (typeof Module._get_new_y === 'function') {
+            if (typeof Module._get_square_y === 'function') {
+                gameState.physics.y = Module._get_square_y();
+            } else if (typeof Module._get_new_y === 'function') {
                 gameState.physics.y = Module._get_new_y();
             }
             
-            if (typeof Module._get_new_vel_y === 'function') {
+            if (typeof Module._get_square_state === 'function') {
+                gameState.physics.state = Module._get_square_state();
+            } else if (typeof Module._get_new_vel_y === 'function') {
                 gameState.physics.velY = Module._get_new_vel_y();
             }
             
@@ -297,22 +322,45 @@ window.resumeGameLoop = () => {
 window.testJuliaFunctions = () => {
     console.log('Testing Julia functions...');
     
+    // Test SDL drawing functions
+    if (typeof Module._test_sdl_drawing === 'function') {
+        console.log('Calling _test_sdl_drawing...');
+        const result = Module._test_sdl_drawing();
+        console.log('test_sdl_drawing result:', result);
+    }
+    
+    if (typeof Module._init_game === 'function') {
+        console.log('Calling _init_game...');
+        const result = Module._init_game();
+        console.log('init_game result:', result);
+    }
+    
+    // Test physics functions (fallback)
     if (typeof Module._update_physics === 'function') {
         console.log('Calling _update_physics...');
         Module._update_physics();
     }
     
-    if (typeof Module._get_new_x === 'function') {
+    if (typeof Module._get_square_x === 'function') {
+        const x = Module._get_square_x();
+        console.log('get_square_x result:', x);
+    } else if (typeof Module._get_new_x === 'function') {
         const x = Module._get_new_x();
         console.log('get_new_x result:', x);
     }
     
-    if (typeof Module._get_new_y === 'function') {
+    if (typeof Module._get_square_y === 'function') {
+        const y = Module._get_square_y();
+        console.log('get_square_y result:', y);
+    } else if (typeof Module._get_new_y === 'function') {
         const y = Module._get_new_y();
         console.log('get_new_y result:', y);
     }
     
-    if (typeof Module._check_on_ground === 'function') {
+    if (typeof Module._get_square_state === 'function') {
+        const state = Module._get_square_state();
+        console.log('get_square_state result:', state);
+    } else if (typeof Module._check_on_ground === 'function') {
         const onGround = Module._check_on_ground();
         console.log('check_on_ground result:', onGround);
     }
