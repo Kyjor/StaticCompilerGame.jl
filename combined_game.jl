@@ -43,12 +43,11 @@ end
 
 function call_set_game_state(key::Ptr{UInt8}, value::Int32)::Int32
     Base.llvmcall(("""
-    ; External declaration of the set_game_state function
     declare i32 @set_game_state(i8*, i32) nounwind
-    define i32 @main(i8*, i32) {
+    define i32 @main(i8* %0, i32 %1) {
     entry:
-       %result = call i32 @set_game_state(i8* %0, i32 %1)
-       ret i32 %result
+        %result = call i32 @set_game_state(i8* %0, i32 %1)
+        ret i32 %result
     }
     """, "main"), Int32, Tuple{Ptr{UInt8}, Int32}, key, value)
 end
@@ -113,6 +112,68 @@ function call_get_game_state_count()::Int32
     """, "main"), Int32, Tuple{}, ())
 end
 
+function call_test_game_state()::Int32
+    Base.llvmcall(("""
+    ; External declaration of the test_game_state function
+    declare i32 @test_game_state() nounwind
+    define i32 @main() {
+    entry:
+       %result = call i32 @test_game_state()
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{}, ())
+end
+
+# Simplified game state LLVM calls (using integer keys instead of strings)
+function call_set_game_state_simple(key_id::Int32, value::Int32)::Int32
+    printf(c"=== LLVM call_set_game_state_simple: key_id=%d, value=%d ===\n", key_id, value)
+    Base.llvmcall(("""
+    ; External declaration of the set_game_state_simple function
+    declare i32 @set_game_state_simple(i32, i32) nounwind
+    define i32 @main(i32, i32) {
+    entry:
+       %result = call i32 @set_game_state_simple(i32 %0, i32 %1)
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32, Int32}, key_id, value)
+end
+
+function call_get_game_state_simple(key_id::Int32)::Int32
+    Base.llvmcall(("""
+    ; External declaration of the get_game_state_simple function
+    declare i32 @get_game_state_simple(i32) nounwind
+    define i32 @main(i32) {
+    entry:
+       %result = call i32 @get_game_state_simple(i32 %0)
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32}, key_id)
+end
+
+function call_has_game_state_simple(key_id::Int32)::Int32
+    Base.llvmcall(("""
+    ; External declaration of the has_game_state_simple function
+    declare i32 @has_game_state_simple(i32) nounwind
+    define i32 @main(i32) {
+    entry:
+       %result = call i32 @has_game_state_simple(i32 %0)
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32}, key_id)
+end
+
+function call_remove_game_state_simple(key_id::Int32)::Int32
+    Base.llvmcall(("""
+    ; External declaration of the remove_game_state_simple function
+    declare i32 @remove_game_state_simple(i32) nounwind
+    define i32 @main(i32) {
+    entry:
+       %result = call i32 @remove_game_state_simple(i32 %0)
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32}, key_id)
+end
+
 # Julia functions that will call C functions
 # These are just stubs - the actual implementation is in C
 function init_sdl_drawing()::Int32
@@ -121,28 +182,37 @@ function init_sdl_drawing()::Int32
 end
 
 # Convenient Julia wrapper functions for game state management
-function init_game_state()::Int32
-    return call_init_game_state()
+function j_init_game_state()::Int32
+    printf(c"Initializing game state\n")
+    call_init_game_state()
+    
+    # Initialize default game state values
+    result = set_game_state_simple(Int32(1), Int32(320))  # player_x
+    result = set_game_state_simple(Int32(2), Int32(448))  # player_y
+    result = set_game_state_simple(Int32(3), Int32(0))    # player_vel_x
+    result = set_game_state_simple(Int32(4), Int32(0))    # player_vel_y
+    result = set_game_state_simple(Int32(5), Int32(1))    # on_ground
+    
+    return result
 end
 
-function set_game_state(key::String, value::Int32)::Int32
-    key_ptr = pointer(key)
-    return call_set_game_state(key_ptr, value)
+# Simplified game state functions that avoid Julia runtime dependencies
+function set_game_state_simple(key_id::Int32, value::Int32)::Int32
+    # Use numeric keys instead of strings to avoid Julia runtime
+    printf(c"=== Julia set_game_state_simple called: key_id=%d, value=%d ===\n", key_id, value)
+    return call_set_game_state_simple(key_id, value)
 end
 
-function get_game_state(key::String)::Int32
-    key_ptr = pointer(key)
-    return call_get_game_state(key_ptr)
+function get_game_state_simple(key_id::Int32)::Int32
+    return call_get_game_state_simple(key_id)
 end
 
-function has_game_state(key::String)::Bool
-    key_ptr = pointer(key)
-    return call_has_game_state(key_ptr) != 0
+function has_game_state_simple(key_id::Int32)::Int32
+    return call_has_game_state_simple(key_id)
 end
 
-function remove_game_state(key::String)::Int32
-    key_ptr = pointer(key)
-    return call_remove_game_state(key_ptr)
+function remove_game_state_simple(key_id::Int32)::Int32
+    return call_remove_game_state_simple(key_id)
 end
 
 function print_game_state()
@@ -151,6 +221,10 @@ end
 
 function get_game_state_count()::Int32
     return call_get_game_state_count()
+end
+
+function test_game_state()::Int32
+    return call_test_game_state()
 end
 
 function create_entities_if_needed()::Int32
@@ -203,11 +277,29 @@ end
 function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     # Call the C draw_rect function using llvmcall
     result = call_draw_rect(x)
-    result = call_update_input(x)
-    if result != 0
+    input = call_update_input(x)
+    # Use simple integer keys: 1=player_x, 2=player_y, 3=player_vel_x, 4=player_vel_y, 5=on_ground
+    player_x = get_game_state_simple(Int32(1))
+    player_y = get_game_state_simple(Int32(2))
+    player_vel_x = get_game_state_simple(Int32(3))
+    player_vel_y = get_game_state_simple(Int32(4))
+    on_ground = get_game_state_simple(Int32(5))
+    printf(c"Player x: %d, y: %d, vel_x: %d, vel_y: %d, on_ground: %d\n", player_x, player_y, player_vel_x, player_vel_y, on_ground)
+    # if input == Int32(1)
+    #     set_game_state_simple(Int32(1), Int32(player_x - 1))
+    # elseif input == Int32(2)
+    #     set_game_state_simple(Int32(1), Int32(player_x + 1))
+    # elseif input == Int32(3)
+    #     set_game_state_simple(Int32(2), Int32(player_y - 1))
+    # elseif input == Int32(4)
+    #     set_game_state_simple(Int32(2), Int32(player_y + 1))
+    # elseif input == Int32(5)
+    #     set_game_state_simple(Int32(5), Int32(1))
+    # end
+    if input != 0
         printf(c"Input: %d\n", result)
     end
-    return result
+    return Int32(0)
 end
 
 function create_entities()::Int32

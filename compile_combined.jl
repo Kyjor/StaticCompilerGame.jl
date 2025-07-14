@@ -29,6 +29,7 @@ functions_to_compile = [
     (init_sdl, (), "init_sdl"),
     #(call_update_input, (), "call_update_input"),
     (create_entities, (), "create_entities"),
+    (j_init_game_state, (), "j_init_game_state"),
 ]
 
 for (func, types, name) in functions_to_compile
@@ -77,8 +78,21 @@ try
     '_update_square_position', 
     '_get_square_position', 
     '_deinitialize_the_game', 
-    '_draw_rect'
-    ]" -s EXPORTED_RUNTIME_METHODS="['cwrap']" -o $wasm_dir/combined_game.js`
+    '_draw_rect',
+    '_j_init_game_state',
+    '_set_game_state_simple',
+    '_get_game_state_simple',
+    '_has_game_state_simple',
+    '_remove_game_state_simple',
+    '_print_game_state',
+    '_get_game_state_count',
+    '_test_game_state'
+    ]" 
+    -s EXPORTED_RUNTIME_METHODS="['cwrap']" 
+    -o $wasm_dir/combined_game.js
+    `
+    # -s ENVIRONMENT=web
+    # -s ALLOW_MEMORY_GROWTH=1
     
     run(cmd)
     println("✅ Combined WebAssembly module created!")

@@ -37,7 +37,7 @@ int square_x = 375, square_y = 275; // Initial position of the red square
 int test_value = 1;
 
 // Game state storage
-GameStateEntry game_state[MAX_GAME_STATE_KEYS];
+GameStateEntry game_state[MAX_GAME_STATE_KEYS] = {0};  // Zero-initialize the entire array
 int game_state_count = 0;
 
 // Function to test rendering by drawing a simple rectangle
@@ -267,21 +267,36 @@ int draw_rect(int x) {
 // Initialize game state storage
 EMSCRIPTEN_KEEPALIVE
 int init_game_state() {
+    printf("Initializing game state\n");
+    
+    // Safety check - ensure the array is accessible
+    if (sizeof(game_state) == 0) {
+        printf("Error: game_state array is not properly declared\n");
+        return 0;
+    }
+    
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
         game_state[i].is_used = 0;
         game_state[i].key[0] = '\0';
         game_state[i].value = 0;
     }
     game_state_count = 0;
-    printf("Game state initialized with %d slots\n", MAX_GAME_STATE_KEYS);
+    printf("Game state initialized with %d slots (array size: %zu)\n", MAX_GAME_STATE_KEYS, sizeof(game_state));
     return 1;
 }
 
 // Set a game state value by key
 EMSCRIPTEN_KEEPALIVE
 int set_game_state(const char* key, int value) {
+    printf("Setting game state: %s = %d\n", key, value);
     if (!key) {
         printf("Error: NULL key provided to set_game_state\n");
+        return 0;
+    }
+    
+    // Safety check - ensure game_state array is accessible
+    if (game_state_count < 0 || game_state_count > MAX_GAME_STATE_KEYS) {
+        printf("Error: Invalid game_state_count: %d\n", game_state_count);
         return 0;
     }
     
@@ -316,6 +331,12 @@ EMSCRIPTEN_KEEPALIVE
 int get_game_state(const char* key) {
     if (!key) {
         printf("Error: NULL key provided to get_game_state\n");
+        return 0;
+    }
+    
+    // Safety check - ensure game_state array is accessible
+    if (game_state_count < 0 || game_state_count > MAX_GAME_STATE_KEYS) {
+        printf("Error: Invalid game_state_count: %d\n", game_state_count);
         return 0;
     }
     
@@ -383,6 +404,128 @@ void print_game_state() {
 EMSCRIPTEN_KEEPALIVE
 int get_game_state_count() {
     return game_state_count;
+}
+
+// Test function to verify game state is working
+EMSCRIPTEN_KEEPALIVE
+int test_game_state() {
+    printf("Testing game state functionality...\n");
+    
+    // Test setting a value
+    int result = set_game_state("test_key", 42);
+    if (result != 1) {
+        printf("Failed to set test value\n");
+        return 0;
+    }
+    
+    // Test getting the value
+    int value = get_game_state("test_key");
+    if (value != 42) {
+        printf("Failed to get test value, got %d instead of 42\n", value);
+        return 0;
+    }
+    
+    // Test checking if key exists
+    if (!has_game_state("test_key")) {
+        printf("Failed to find test key\n");
+        return 0;
+    }
+    
+    // Test removing the key
+    result = remove_game_state("test_key");
+    if (result != 1) {
+        printf("Failed to remove test key\n");
+        return 0;
+    }
+    
+    printf("Game state test passed!\n");
+    return 1;
+}
+
+// ===== SIMPLIFIED GAME STATE FUNCTIONS (using integer keys) =====
+
+// Simplified game state storage using integer keys
+typedef struct {
+    int key_id;     // Integer key
+    int value;      // Integer value
+    int is_used;    // Flag to indicate if this slot is used
+} SimpleGameStateEntry;
+
+// Simplified game state storage
+SimpleGameStateEntry simple_game_state[MAX_GAME_STATE_KEYS] = {0};
+int simple_game_state_count = 0;
+
+// Set a game state value by integer key
+EMSCRIPTEN_KEEPALIVE
+int set_game_state_simple(int key_id, int value) {
+    printf("=== C set_game_state_simple called: key_id=%d, value=%d ===\n", key_id, value);
+    
+    // First, try to find existing key
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (simple_game_state[i].is_used && simple_game_state[i].key_id == key_id) {
+            simple_game_state[i].value = value;
+            // printf("Updated simple game state: key_id=%d, value=%d\n", key_id, value);
+            return 1;
+        }
+    }
+    
+    // If not found, find first unused slot
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (!simple_game_state[i].is_used) {
+            simple_game_state[i].key_id = key_id;
+            simple_game_state[i].value = value;
+            simple_game_state[i].is_used = 1;
+            simple_game_state_count++;
+            // printf("Set simple game state: key_id=%d, value=%d (slot %d)\n", key_id, value, i);
+            return 1;
+        }
+    }
+    
+    printf("Error: No free slots for simple game state key_id: %d\n", key_id);
+    return 0;
+}
+
+// Get a game state value by integer key
+EMSCRIPTEN_KEEPALIVE
+int get_game_state_simple(int key_id) {
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (simple_game_state[i].is_used && simple_game_state[i].key_id == key_id) {
+            printf("Retrieved simple game state: key_id=%d, value=%d\n", key_id, simple_game_state[i].value);
+            return simple_game_state[i].value;
+        }
+    }
+    
+    //printf("Warning: Key_id not found in simple game state: %d\n", key_id);
+    return 0;
+}
+
+// Check if a key exists in simple game state
+EMSCRIPTEN_KEEPALIVE
+int has_game_state_simple(int key_id) {
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (simple_game_state[i].is_used && simple_game_state[i].key_id == key_id) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// Remove a key from simple game state
+EMSCRIPTEN_KEEPALIVE
+int remove_game_state_simple(int key_id) {
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (simple_game_state[i].is_used && simple_game_state[i].key_id == key_id) {
+            simple_game_state[i].is_used = 0;
+            simple_game_state[i].key_id = 0;
+            simple_game_state[i].value = 0;
+            simple_game_state_count--;
+            printf("Removed simple game state: key_id=%d\n", key_id);
+            return 1;
+        }
+    }
+    
+    printf("Warning: Key_id not found for removal: %d\n", key_id);
+    return 0;
 }
 
 // Original main function - kept for compatibility but not used

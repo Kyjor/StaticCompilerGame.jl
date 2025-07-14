@@ -26,7 +26,7 @@ window.onModuleReady = function() {
     function runMainLoop() {
         frameCount++;
         if (!is_initialized) {
-            
+            Module._j_init_game_state();
             is_initialized = true;
         }
         //console.log(`JS Main Loop Frame ${frameCount}`);

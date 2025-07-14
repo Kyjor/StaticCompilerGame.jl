@@ -6,7 +6,7 @@ target triple = "x86_64-linux-gnu"
 @_j_const1 = private unnamed_addr constant [19 x i8] c"Inexact conversion\00", align 1
 
 ; Function Attrs: noinline
-define internal fastcc void @_throw_inexacterror_1017() unnamed_addr #0 {
+define internal fastcc void @_throw_inexacterror_1018() unnamed_addr #0 {
 top:
   %0 = alloca [19 x i8], align 16
   %.sub = getelementptr inbounds [19 x i8], [19 x i8]* %0, i64 0, i64 0
@@ -23,14 +23,14 @@ declare i32 @puts(i8* nocapture) local_unnamed_addr #1
 
 declare void @exit(i32) local_unnamed_addr
 
-define internal fastcc i32 @julia_checked_trunc_sint_1014(i64 signext %0) unnamed_addr {
+define internal fastcc i32 @julia_checked_trunc_sint_1015(i64 signext %0) unnamed_addr {
 top:
   %1 = add i64 %0, -2147483648
   %2 = icmp ult i64 %1, -4294967296
   br i1 %2, label %L6, label %L7
 
 L6:                                               ; preds = %top
-  call fastcc void @_throw_inexacterror_1017()
+  call fastcc void @_throw_inexacterror_1018()
   br label %L7
 
 L7:                                               ; preds = %L6, %top
@@ -38,9 +38,9 @@ L7:                                               ; preds = %L6, %top
   ret i32 %3
 }
 
-define internal fastcc i32 @julia_toInt32_1011(i64 signext %0) unnamed_addr {
+define internal fastcc i32 @julia_toInt32_1012(i64 signext %0) unnamed_addr {
 top:
-  %1 = call fastcc i32 @julia_checked_trunc_sint_1014(i64 signext %0)
+  %1 = call fastcc i32 @julia_checked_trunc_sint_1015(i64 signext %0)
   ret i32 %1
 }
 
@@ -54,7 +54,7 @@ top:
   %9 = add nsw i64 %value_phi1, %8
   %10 = call i64 @llvm.smin.i64(i64 %9, i64 768)
   %11 = call i64 @llvm.smax.i64(i64 %10, i64 0)
-  %12 = call fastcc i32 @julia_toInt32_1011(i64 signext %11)
+  %12 = call fastcc i32 @julia_toInt32_1012(i64 signext %11)
   ret i32 %12
 }
 
