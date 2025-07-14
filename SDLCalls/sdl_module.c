@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <emscripten.h>
 #include <stdint.h>
+#include <string.h>
 
 #define MAX_ENTITIES 100
 #define UNIT_SIZE 64  // Each entity's "1.0" unit corresponds to 64 pixels
+#define MAX_GAME_STATE_KEYS 100  // Maximum number of game state keys
 
 typedef struct {
     uint8_t key_A;
@@ -18,6 +20,12 @@ typedef struct {
     float y;
 } EntityPosition;
 
+// Game state storage structure
+typedef struct {
+    char key[64];  // Key name (max 63 chars + null terminator)
+    int value;     // Integer value
+    int is_used;   // Flag to indicate if this slot is used
+} GameStateEntry;
 
 // Global variables
 EntityPosition entities[MAX_ENTITIES]; // Storage for entities
@@ -27,6 +35,10 @@ SDL_Renderer *renderer;
 int game_is_still_running = 1;
 int square_x = 375, square_y = 275; // Initial position of the red square
 int test_value = 1;
+
+// Game state storage
+GameStateEntry game_state[MAX_GAME_STATE_KEYS];
+int game_state_count = 0;
 
 // Function to test rendering by drawing a simple rectangle
 EMSCRIPTEN_KEEPALIVE
@@ -248,6 +260,129 @@ int draw_rect(int x) {
     SDL_RenderFillRect(renderer, &rect);
     
     return 1;
+}
+
+// ===== GAME STATE MANAGEMENT FUNCTIONS =====
+
+// Initialize game state storage
+EMSCRIPTEN_KEEPALIVE
+int init_game_state() {
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        game_state[i].is_used = 0;
+        game_state[i].key[0] = '\0';
+        game_state[i].value = 0;
+    }
+    game_state_count = 0;
+    printf("Game state initialized with %d slots\n", MAX_GAME_STATE_KEYS);
+    return 1;
+}
+
+// Set a game state value by key
+EMSCRIPTEN_KEEPALIVE
+int set_game_state(const char* key, int value) {
+    if (!key) {
+        printf("Error: NULL key provided to set_game_state\n");
+        return 0;
+    }
+    
+    // First, try to find existing key
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (game_state[i].is_used && strcmp(game_state[i].key, key) == 0) {
+            game_state[i].value = value;
+            printf("Updated game state: %s = %d\n", key, value);
+            return 1;
+        }
+    }
+    
+    // If not found, find first unused slot
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (!game_state[i].is_used) {
+            strncpy(game_state[i].key, key, 63);
+            game_state[i].key[63] = '\0';  // Ensure null termination
+            game_state[i].value = value;
+            game_state[i].is_used = 1;
+            game_state_count++;
+            printf("Set game state: %s = %d (slot %d)\n", key, value, i);
+            return 1;
+        }
+    }
+    
+    printf("Error: No free slots for game state key: %s\n", key);
+    return 0;
+}
+
+// Get a game state value by key
+EMSCRIPTEN_KEEPALIVE
+int get_game_state(const char* key) {
+    if (!key) {
+        printf("Error: NULL key provided to get_game_state\n");
+        return 0;
+    }
+    
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (game_state[i].is_used && strcmp(game_state[i].key, key) == 0) {
+            printf("Retrieved game state: %s = %d\n", key, game_state[i].value);
+            return game_state[i].value;
+        }
+    }
+    
+    printf("Warning: Key not found in game state: %s\n", key);
+    return 0;
+}
+
+// Check if a key exists in game state
+EMSCRIPTEN_KEEPALIVE
+int has_game_state(const char* key) {
+    if (!key) {
+        return 0;
+    }
+    
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (game_state[i].is_used && strcmp(game_state[i].key, key) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// Remove a key from game state
+EMSCRIPTEN_KEEPALIVE
+int remove_game_state(const char* key) {
+    if (!key) {
+        printf("Error: NULL key provided to remove_game_state\n");
+        return 0;
+    }
+    
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (game_state[i].is_used && strcmp(game_state[i].key, key) == 0) {
+            game_state[i].is_used = 0;
+            game_state[i].key[0] = '\0';
+            game_state[i].value = 0;
+            game_state_count--;
+            printf("Removed game state: %s\n", key);
+            return 1;
+        }
+    }
+    
+    printf("Warning: Key not found for removal: %s\n", key);
+    return 0;
+}
+
+// Print all game state keys and values (for debugging)
+EMSCRIPTEN_KEEPALIVE
+void print_game_state() {
+    printf("Game State (%d entries):\n", game_state_count);
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (game_state[i].is_used) {
+            printf("  %s = %d\n", game_state[i].key, game_state[i].value);
+        }
+    }
+}
+
+// Get the number of game state entries
+EMSCRIPTEN_KEEPALIVE
+int get_game_state_count() {
+    return game_state_count;
 }
 
 // Original main function - kept for compatibility but not used

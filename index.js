@@ -22,8 +22,13 @@ window.onModuleReady = function() {
     }
     
     let frameCount = 0;
+    let is_initialized = false;
     function runMainLoop() {
         frameCount++;
+        if (!is_initialized) {
+            
+            is_initialized = true;
+        }
         //console.log(`JS Main Loop Frame ${frameCount}`);
         //Module._create_entities_if_needed();
         // Call the C/C++ main_loop function
