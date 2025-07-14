@@ -284,20 +284,20 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     player_vel_x = get_game_state_simple(Int32(3))
     player_vel_y = get_game_state_simple(Int32(4))
     on_ground = get_game_state_simple(Int32(5))
-    printf(c"Player x: %d, y: %d, vel_x: %d, vel_y: %d, on_ground: %d\n", player_x, player_y, player_vel_x, player_vel_y, on_ground)
-    # if input == Int32(1)
-    #     set_game_state_simple(Int32(1), Int32(player_x - 1))
-    # elseif input == Int32(2)
-    #     set_game_state_simple(Int32(1), Int32(player_x + 1))
-    # elseif input == Int32(3)
-    #     set_game_state_simple(Int32(2), Int32(player_y - 1))
-    # elseif input == Int32(4)
-    #     set_game_state_simple(Int32(2), Int32(player_y + 1))
-    # elseif input == Int32(5)
-    #     set_game_state_simple(Int32(5), Int32(1))
-    # end
+    # printf(c"Player x: %d, y: %d, vel_x: %d, vel_y: %d, on_ground: %d\n", player_x, player_y, player_vel_x, player_vel_y, on_ground)
+    if input == Int32(1) # A
+        set_game_state_simple(Int32(1), Int32(player_x - 1))
+    elseif input == Int32(2) # D
+        set_game_state_simple(Int32(1), Int32(player_x + 1))
+    elseif input == Int32(3)
+        set_game_state_simple(Int32(2), Int32(player_y - 1))
+    elseif input == Int32(4)
+        set_game_state_simple(Int32(2), Int32(player_y + 1))
+    elseif input == Int32(5)
+        set_game_state_simple(Int32(5), Int32(1))
+    end
     if input != 0
-        printf(c"Input: %d\n", result)
+        printf(c"Input: %d\n", input)
     end
     return Int32(0)
 end

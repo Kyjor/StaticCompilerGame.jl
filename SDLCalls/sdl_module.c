@@ -185,6 +185,12 @@ int update_input(int x) {
                     input_state.key_D = pressed;
                     return 2;
                     break;
+                case SDLK_w:
+                    return 3;
+                    break;
+                case SDLK_s:
+                    return 4;
+                    break;
                 case SDLK_SPACE:
                     input_state.key_Space = pressed;
                     return 3;
@@ -490,7 +496,7 @@ EMSCRIPTEN_KEEPALIVE
 int get_game_state_simple(int key_id) {
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
         if (simple_game_state[i].is_used && simple_game_state[i].key_id == key_id) {
-            printf("Retrieved simple game state: key_id=%d, value=%d\n", key_id, simple_game_state[i].value);
+            // printf("Retrieved simple game state: key_id=%d, value=%d\n", key_id, simple_game_state[i].value);
             return simple_game_state[i].value;
         }
     }
