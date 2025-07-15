@@ -219,18 +219,46 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     player_vel_x = get_game_state_simple(Int32(3))
     player_vel_y = get_game_state_simple(Int32(4))
     on_ground = get_game_state_simple(Int32(5))
-    # printf(c"Player x: %d, y: %d, vel_x: %d, vel_y: %d, on_ground: %d\n", player_x, player_y, player_vel_x, player_vel_y, on_ground)
+
+    # --- Platformer Physics ---
+    gravity = Int32(1)  # Gravity strength (positive is down)
+    jump_velocity = Int32(-2)  # Negative is up (since positive y is down)
+    ground_y = Int32(5)
+
+    # Horizontal movement
     if input == Int32(1) # A
         set_game_state_simple(Int32(1), Int32(player_x - 1))
     elseif input == Int32(2) # D
         set_game_state_simple(Int32(1), Int32(player_x + 1))
-    elseif input == Int32(3)
-        set_game_state_simple(Int32(2), Int32(player_y - 1))
-    elseif input == Int32(4)
-        set_game_state_simple(Int32(2), Int32(player_y + 1))
-    elseif input == Int32(5)
-        set_game_state_simple(Int32(5), Int32(1))
     end
+
+    # Jumping
+    if input == Int32(5) && on_ground == Int32(1)
+        player_vel_y = jump_velocity
+        set_game_state_simple(Int32(4), player_vel_y)
+        set_game_state_simple(Int32(5), Int32(0))  # Not on ground after jump
+    end
+
+    # Apply gravity if not on ground
+    if on_ground == Int32(0)
+        player_vel_y = player_vel_y + gravity
+        set_game_state_simple(Int32(4), player_vel_y)
+    end
+
+    # Update player_y by velocity
+    player_y = player_y + player_vel_y
+
+    # Ground collision
+    if player_y >= ground_y
+        player_y = ground_y
+        player_vel_y = Int32(0)
+        set_game_state_simple(Int32(5), Int32(1))  # On ground
+        set_game_state_simple(Int32(4), player_vel_y)
+    else
+        set_game_state_simple(Int32(5), Int32(0))  # In air
+    end
+
+    set_game_state_simple(Int32(2), player_y)
 
     val = call_render_rect(Int32(255), Int32(0), Int32(0), Int32(255), player_x, player_y, Int32(64), Int32(64))
     printf(c"val: %d\n", val)

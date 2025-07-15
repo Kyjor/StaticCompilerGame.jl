@@ -24,11 +24,9 @@ end
 
 # Only compile functions that don't conflict with C functions
 functions_to_compile = [
-    (update_physics, (Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32), "update_physics"),
     (draw_game_frame, (Int32, Int32, Int32), "draw_game_frame"),
     (init_sdl, (), "init_sdl"),
     #(call_update_input, (), "call_update_input"),
-    (create_entities, (), "create_entities"),
     (j_init_game_state, (), "j_init_game_state"),
 ]
 
@@ -62,14 +60,12 @@ try
     # Link Julia LLVM IR with SDL2 C code
     cmd = `emcc $ll_files SDLCalls/sdl_module.c -s USE_SDL=2 -O2 -s WASM=1 -s 
     EXPORTED_FUNCTIONS="[
-    '_update_physics',
     '_draw_game_frame',
     '_init_sdl',
-    '_create_entities', 
     '_draw_entities', 
     '_init_sdl_drawing', 
-    '_main_loop', '_test_sdl_working', 
-    '_create_entities_if_needed', 
+    '_main_loop', 
+    '_test_sdl_working', 
     '_update_entities', 
     '_print_entities', 
     '_update_input', 
@@ -83,8 +79,7 @@ try
     '_has_game_state_simple',
     '_remove_game_state_simple',
     '_print_game_state',
-    '_get_game_state_count',
-    '_test_game_state'
+    '_get_game_state_count'
     ]" 
     -s EXPORTED_RUNTIME_METHODS="['cwrap']" 
     -o $wasm_dir/combined_game.js
