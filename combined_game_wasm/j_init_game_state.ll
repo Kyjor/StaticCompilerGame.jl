@@ -13,18 +13,21 @@ top:
   call void @llvm.memcpy.p0i8.p0i8.i64(i8* noundef nonnull align 16 dereferenceable(25) %.sub, i8* noundef nonnull align 1 dereferenceable(25) getelementptr inbounds ([25 x i8], [25 x i8]* @_j_const1, i64 0, i64 0), i64 25, i1 false)
   %status.i = call i32 (i8*, ...) @printf(i8* noundef nonnull %.sub) #0
   call void @llvm.lifetime.end.p0i8(i64 25, i8* nonnull %.sub)
-  call fastcc void @julia_j_init_game_state_1611u1614()
-  call fastcc void @julia_j_init_game_state_1611u1615(i32 1, i32 5)
-  call fastcc void @julia_j_init_game_state_1611u1615(i32 2, i32 5)
-  call fastcc void @julia_j_init_game_state_1611u1615(i32 3, i32 0)
-  call fastcc void @julia_j_init_game_state_1611u1615(i32 4, i32 0)
-  %1 = call fastcc i32 @julia_j_init_game_state_1611u1619(i32 5, i32 1)
+  call fastcc void @julia_j_init_game_state_1557u1560()
+  call fastcc void @julia_j_init_game_state_1557u1561(i32 1, float 5.000000e+00)
+  call fastcc void @julia_j_init_game_state_1557u1561(i32 2, float 5.000000e+00)
+  call fastcc void @julia_j_init_game_state_1557u1561(i32 3, float 0.000000e+00)
+  call fastcc void @julia_j_init_game_state_1557u1561(i32 4, float 0.000000e+00)
+  call fastcc void @julia_j_init_game_state_1557u1565(i32 5, i32 1)
+  call fastcc void @julia_j_init_game_state_1557u1561(i32 6, float 0.000000e+00)
+  call fastcc void @julia_j_init_game_state_1557u1561(i32 7, float 0.000000e+00)
+  %1 = call fastcc i32 @julia_j_init_game_state_1557u1568(i32 8, i32 0)
   ret i32 %1
 }
 
 declare i32 @printf(i8* noalias nocapture, ...) local_unnamed_addr
 
-define internal fastcc void @julia_j_init_game_state_1611u1614() unnamed_addr {
+define internal fastcc void @julia_j_init_game_state_1557u1560() unnamed_addr {
 entry:
   %result = call i32 @init_game_state()
   ret void
@@ -33,7 +36,16 @@ entry:
 ; Function Attrs: nounwind
 declare i32 @init_game_state() local_unnamed_addr #0
 
-define internal fastcc void @julia_j_init_game_state_1611u1615(i32 %0, i32 %1) unnamed_addr {
+define internal fastcc void @julia_j_init_game_state_1557u1561(i32 %0, float %1) unnamed_addr {
+entry:
+  %result = call i32 @set_game_state_simple_float(i32 %0, float %1)
+  ret void
+}
+
+; Function Attrs: nounwind
+declare i32 @set_game_state_simple_float(i32, float) local_unnamed_addr #0
+
+define internal fastcc void @julia_j_init_game_state_1557u1565(i32 %0, i32 %1) unnamed_addr {
 entry:
   %result = call i32 @set_game_state_simple(i32 %0, i32 %1)
   ret void
@@ -42,7 +54,7 @@ entry:
 ; Function Attrs: nounwind
 declare i32 @set_game_state_simple(i32, i32) local_unnamed_addr #0
 
-define internal fastcc i32 @julia_j_init_game_state_1611u1619(i32 %0, i32 %1) unnamed_addr {
+define internal fastcc i32 @julia_j_init_game_state_1557u1568(i32 %0, i32 %1) unnamed_addr {
 entry:
   %result = call i32 @set_game_state_simple(i32 %0, i32 %1)
   ret i32 %result
