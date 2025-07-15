@@ -24,16 +24,15 @@ window.onModuleReady = function() {
     let frameCount = 0;
     let is_initialized = false;
     function runMainLoop() {
-        frameCount++;
         if (!is_initialized) {
             Module._j_init_game_state();
             is_initialized = true;
         }
-        //console.log(`JS Main Loop Frame ${frameCount}`);
+
+        frameCount++;
         // Call the C/C++ main_loop function
         let x = Module._draw_game_frame(999, 10, 1);
         Module._main_loop();
-        
         // Continue the loop
         requestAnimationFrame(runMainLoop);
     }

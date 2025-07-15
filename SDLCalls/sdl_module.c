@@ -36,6 +36,10 @@ int game_is_still_running = 1;
 int square_x = 375, square_y = 275; // Initial position of the red square
 int test_value = 1;
 
+Uint64 NOW = 0;
+Uint64 LAST = 0;
+float delta_time = 0.0f; // in seconds  
+
 // Game state storage
 GameStateEntry game_state[MAX_GAME_STATE_KEYS] = {0};  // Zero-initialize the entire array
 int game_state_count = 0;
@@ -185,7 +189,17 @@ InputState* get_input_state() {
 }
 
 EMSCRIPTEN_KEEPALIVE
+float get_delta_time() {
+    //printf("delta_time2: %f\n", delta_time);
+    return delta_time;
+}
+
+EMSCRIPTEN_KEEPALIVE
 void main_loop() {
+    NOW = SDL_GetPerformanceCounter();
+    delta_time = (float)(NOW - LAST) / (float)SDL_GetPerformanceFrequency();
+    LAST = NOW;
+    //printf("delta_time1: %f\n", delta_time);
     // Create entities if we don't have any yet
     if (entity_count == 0) {
         create_entities_if_needed();
@@ -381,7 +395,7 @@ int simple_game_state_count = 0;
 // Set a game state value by integer key
 EMSCRIPTEN_KEEPALIVE
 int set_game_state_simple(int key_id, int value) {
-    printf("=== C set_game_state_simple called: key_id=%d, value=%d ===\n", key_id, value);
+    //printf("=== C set_game_state_simple called: key_id=%d, value=%d ===\n", key_id, value);
     
     // First, try to find existing key
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
@@ -451,6 +465,47 @@ int remove_game_state_simple(int key_id) {
     return 0;
 }
 
+// ===== FLOAT GAME STATE FUNCTIONS (using integer keys) =====
+typedef struct {
+    int key_id;
+    float value;
+    int is_used;
+} SimpleGameStateFloatEntry;
+
+SimpleGameStateFloatEntry simple_game_state_float[MAX_GAME_STATE_KEYS] = {0};
+int simple_game_state_float_count = 0;
+
+EMSCRIPTEN_KEEPALIVE
+int set_game_state_simple_float(int key_id, float value) {
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (simple_game_state_float[i].is_used && simple_game_state_float[i].key_id == key_id) {
+            simple_game_state_float[i].value = value;
+            return 1;
+        }
+    }
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (!simple_game_state_float[i].is_used) {
+            simple_game_state_float[i].key_id = key_id;
+            simple_game_state_float[i].value = value;
+            simple_game_state_float[i].is_used = 1;
+            simple_game_state_float_count++;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+float get_game_state_simple_float(int key_id) {
+    for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
+        if (simple_game_state_float[i].is_used && simple_game_state_float[i].key_id == key_id) {
+            return simple_game_state_float[i].value;
+        }
+    }
+    return 0.0f;
+}
+
 // Generic rectangle rendering function
 EMSCRIPTEN_KEEPALIVE
 int render_rect(int r, int g, int b, int a, int x, int y, int w, int h) {
@@ -458,7 +513,7 @@ int render_rect(int r, int g, int b, int a, int x, int y, int w, int h) {
         printf("Renderer is NULL in render_rect!\n");
         return 0;
     }
-    printf("position: %d, %d, %d, %d\n", x, y, w, h);
+    //printf("position: %d, %d, %d, %d\n", x, y, w, h);
     SDL_Color current_render_color;
     SDL_GetRenderDrawColor(renderer, &current_render_color.r, &current_render_color.g, &current_render_color.b, &current_render_color.a);
     SDL_SetRenderDrawColor(renderer, r, g, b, a);
