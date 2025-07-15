@@ -40,30 +40,6 @@ int test_value = 1;
 GameStateEntry game_state[MAX_GAME_STATE_KEYS] = {0};  // Zero-initialize the entire array
 int game_state_count = 0;
 
-// Function to test rendering by drawing a simple rectangle
-EMSCRIPTEN_KEEPALIVE
-int test_rendering() {
-    if (!renderer) {
-        printf("Renderer is NULL in test_rendering!\n");
-        return 0;
-    }
-    
-    // Clear to blue background
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-    SDL_RenderClear(renderer);
-    
-    // Draw a red rectangle
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_Rect rect = { 100, 100, 200, 200 };
-    SDL_RenderFillRect(renderer, &rect);
-    
-    // Present the renderer
-    SDL_RenderPresent(renderer);
-    
-    printf("Test rendering completed!\n");
-    return 1;
-}
-
 // Function to test if SDL is working
 EMSCRIPTEN_KEEPALIVE
 int test_sdl_working() {
@@ -168,8 +144,9 @@ void deinitialize_the_game() {
 
 EMSCRIPTEN_KEEPALIVE
 int update_input(int x) {
-    //printf("Updating input %d\n", x);
     SDL_Event e;
+    int result = 0; // 0 = no input, 1 = A, 2 = D, 3 = W, 4 = S, 5 = SPACE
+
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
             emscripten_cancel_main_loop();
@@ -179,25 +156,26 @@ int update_input(int x) {
             switch (e.key.keysym.sym) {
                 case SDLK_a:
                     input_state.key_A = pressed;
-                    return 1;
+                    if (pressed) result = 1;
                     break;
                 case SDLK_d:
                     input_state.key_D = pressed;
-                    return 2;
+                    if (pressed) result = 2;
                     break;
                 case SDLK_w:
-                    return 3;
+                    if (pressed) result = 3;
                     break;
                 case SDLK_s:
-                    return 4;
+                    if (pressed) result = 4;
                     break;
                 case SDLK_SPACE:
                     input_state.key_Space = pressed;
-                    return 3;
+                    if (pressed) result = 5;
                     break;
             }
         }
     }
+    return result;
 }
 
 // Function to get key state as a pointer
@@ -208,20 +186,12 @@ InputState* get_input_state() {
 
 EMSCRIPTEN_KEEPALIVE
 void main_loop() {
-    // Clear the screen
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
     // Create entities if we don't have any yet
     if (entity_count == 0) {
         create_entities_if_needed();
     }
 
-    // Draw or update your game/app here
-     // Draw a red square
-    // SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red
-    // SDL_Rect rect = { square_x, square_y, 50, 50 };
-    // SDL_RenderFillRect(renderer, &rect);
+    // Draw other entities
     draw_entities(); // Draw all entity positions
 
     // Present the renderer 
@@ -249,23 +219,6 @@ const char* get_square_position() {
     static char position[64]; // Buffer to store the position string
     snprintf(position, sizeof(position), "{\"x\": %d, \"y\": %d}", square_x, square_y);
     return position;
-}
-
-EMSCRIPTEN_KEEPALIVE
-int draw_rect(int x) {
-    //printf("Drawing rect at x=%d\n", x);
-    
-    if (!renderer) {
-        printf("Renderer is NULL in draw_rect!\n");
-        return 0;
-    }
-    
-    // Draw a green rectangle at the specified x position
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);  // Green color
-    SDL_Rect rect = { x, 200, 50, 50 };  // x, y, width, height
-    SDL_RenderFillRect(renderer, &rect);
-    
-    return 1;
 }
 
 // ===== GAME STATE MANAGEMENT FUNCTIONS =====
@@ -412,42 +365,6 @@ int get_game_state_count() {
     return game_state_count;
 }
 
-// Test function to verify game state is working
-EMSCRIPTEN_KEEPALIVE
-int test_game_state() {
-    printf("Testing game state functionality...\n");
-    
-    // Test setting a value
-    int result = set_game_state("test_key", 42);
-    if (result != 1) {
-        printf("Failed to set test value\n");
-        return 0;
-    }
-    
-    // Test getting the value
-    int value = get_game_state("test_key");
-    if (value != 42) {
-        printf("Failed to get test value, got %d instead of 42\n", value);
-        return 0;
-    }
-    
-    // Test checking if key exists
-    if (!has_game_state("test_key")) {
-        printf("Failed to find test key\n");
-        return 0;
-    }
-    
-    // Test removing the key
-    result = remove_game_state("test_key");
-    if (result != 1) {
-        printf("Failed to remove test key\n");
-        return 0;
-    }
-    
-    printf("Game state test passed!\n");
-    return 1;
-}
-
 // ===== SIMPLIFIED GAME STATE FUNCTIONS (using integer keys) =====
 
 // Simplified game state storage using integer keys
@@ -532,6 +449,23 @@ int remove_game_state_simple(int key_id) {
     
     printf("Warning: Key_id not found for removal: %d\n", key_id);
     return 0;
+}
+
+// Generic rectangle rendering function
+EMSCRIPTEN_KEEPALIVE
+int render_rect(int r, int g, int b, int a, int x, int y, int w, int h) {
+    if (!renderer) {
+        printf("Renderer is NULL in render_rect!\n");
+        return 0;
+    }
+    printf("position: %d, %d, %d, %d\n", x, y, w, h);
+    SDL_Color current_render_color;
+    SDL_GetRenderDrawColor(renderer, &current_render_color.r, &current_render_color.g, &current_render_color.b, &current_render_color.a);
+    SDL_SetRenderDrawColor(renderer, r, g, b, a);
+    SDL_Rect rect = { x * UNIT_SIZE, y * UNIT_SIZE, w, h };
+    SDL_RenderFillRect(renderer, &rect);
+   // SDL_SetRenderDrawColor(renderer, current_render_color.r, current_render_color.g, current_render_color.b, current_render_color.a);
+    return 1;
 }
 
 // Original main function - kept for compatibility but not used

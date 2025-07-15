@@ -2,19 +2,7 @@
 using StaticTools
 using StaticCompiler
 
-# Function to call the C draw_rect function using llvmcall
-function call_draw_rect(x::Int32)::Int32
-    Base.llvmcall(("""
-    ; External declaration of the draw_rect function
-    declare i32 @draw_rect(i32) nounwind
 
-    define i32 @main(i32) {
-    entry:
-       %result = call i32 (i32) @draw_rect(i32 %0)
-       ret i32 %result
-    }
-    """, "main"), Int32, Tuple{Int32}, x)
-end
 
 function call_update_input(x::Int32)::Int32
     Base.llvmcall(("""
@@ -112,18 +100,6 @@ function call_get_game_state_count()::Int32
     """, "main"), Int32, Tuple{}, ())
 end
 
-function call_test_game_state()::Int32
-    Base.llvmcall(("""
-    ; External declaration of the test_game_state function
-    declare i32 @test_game_state() nounwind
-    define i32 @main() {
-    entry:
-       %result = call i32 @test_game_state()
-       ret i32 %result
-    }
-    """, "main"), Int32, Tuple{}, ())
-end
-
 # Simplified game state LLVM calls (using integer keys instead of strings)
 function call_set_game_state_simple(key_id::Int32, value::Int32)::Int32
     printf(c"=== LLVM call_set_game_state_simple: key_id=%d, value=%d ===\n", key_id, value)
@@ -174,6 +150,18 @@ function call_remove_game_state_simple(key_id::Int32)::Int32
     """, "main"), Int32, Tuple{Int32}, key_id)
 end
 
+# Function to call the C render_rect function using llvmcall
+function call_render_rect(r::Int32, g::Int32, b::Int32, a::Int32, x::Int32, y::Int32, w::Int32, h::Int32)::Int32
+    Base.llvmcall(("""
+    declare i32 @render_rect(i32, i32, i32, i32, i32, i32, i32, i32) nounwind
+    define i32 @main(i32, i32, i32, i32, i32, i32, i32, i32) {
+    entry:
+        %result = call i32 @render_rect(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, i32 %5, i32 %6, i32 %7)
+        ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32,Int32,Int32,Int32,Int32,Int32,Int32,Int32}, r,g,b,a,x,y,w,h)
+end
+
 # Julia functions that will call C functions
 # These are just stubs - the actual implementation is in C
 function init_sdl_drawing()::Int32
@@ -187,8 +175,8 @@ function j_init_game_state()::Int32
     call_init_game_state()
     
     # Initialize default game state values
-    result = set_game_state_simple(Int32(1), Int32(320))  # player_x
-    result = set_game_state_simple(Int32(2), Int32(448))  # player_y
+    result = set_game_state_simple(Int32(1), Int32(5))  # player_x
+    result = set_game_state_simple(Int32(2), Int32(5))  # player_y
     result = set_game_state_simple(Int32(3), Int32(0))    # player_vel_x
     result = set_game_state_simple(Int32(4), Int32(0))    # player_vel_y
     result = set_game_state_simple(Int32(5), Int32(1))    # on_ground
@@ -223,60 +211,7 @@ function get_game_state_count()::Int32
     return call_get_game_state_count()
 end
 
-function test_game_state()::Int32
-    return call_test_game_state()
-end
-
-function create_entities_if_needed()::Int32
-    return Int32(3)
-end
-
-# Your Julia physics engine
-function update_physics(x::Int32, y::Int32, vel_x::Int32, vel_y::Int32, 
-                       key_left::Int32, key_right::Int32, key_space::Int32, on_ground::Int32)::Int32
-    # Apply gravity
-    new_vel_y = vel_y + 1
-    
-    # Handle jumping
-    if key_space != 0 && on_ground != 0
-        new_vel_y = -12
-    end
-    
-    # Handle horizontal movement
-    new_vel_x = 0
-    if key_left != 0
-        new_vel_x = -5
-    elseif key_right != 0
-        new_vel_x = 5
-    end
-    
-    # Update position
-    new_x = x + new_vel_x
-    new_y = y + new_vel_y
-    
-    # Ground collision
-    if new_y > 548
-        new_y = 548
-        new_vel_y = 0
-        on_ground = 1
-    else
-        on_ground = 0
-    end
-    
-    # Keep on screen
-    if new_x < 0
-        new_x = 0
-    elseif new_x > 768
-        new_x = 768
-    end
-    
-    return new_x
-end
-
-# Simple drawing function - calls C draw_rect function using llvmcall
 function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
-    # Call the C draw_rect function using llvmcall
-    result = call_draw_rect(x)
     input = call_update_input(x)
     # Use simple integer keys: 1=player_x, 2=player_y, 3=player_vel_x, 4=player_vel_y, 5=on_ground
     player_x = get_game_state_simple(Int32(1))
@@ -296,14 +231,13 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     elseif input == Int32(5)
         set_game_state_simple(Int32(5), Int32(1))
     end
+
+    val = call_render_rect(Int32(255), Int32(0), Int32(0), Int32(255), player_x, player_y, Int32(64), Int32(64))
+    printf(c"val: %d\n", val)
     if input != 0
         printf(c"Input: %d\n", input)
     end
     return Int32(0)
-end
-
-function create_entities()::Int32
-    return create_entities_if_needed()
 end
 
 # Initialize SDL (simple wrapper)

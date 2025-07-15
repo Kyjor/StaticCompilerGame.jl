@@ -30,7 +30,6 @@ window.onModuleReady = function() {
             is_initialized = true;
         }
         //console.log(`JS Main Loop Frame ${frameCount}`);
-        //Module._create_entities_if_needed();
         // Call the C/C++ main_loop function
         let x = Module._draw_game_frame(999, 10, 1);
         Module._main_loop();
