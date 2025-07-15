@@ -16,12 +16,12 @@ function j_init_game_state()::Int32
     printf(c"Initializing game state\n")
     call_init_game_state()
     
-    # Initialize default game state values
-    result = set_game_state_simple(Int32(1), Int32(5))  # player_x
-    result = set_game_state_simple(Int32(2), Int32(5))  # player_y
-    result = set_game_state_simple(Int32(3), Int32(0))    # player_vel_x
-    result = set_game_state_simple(Int32(4), Int32(0))    # player_vel_y
-    result = set_game_state_simple(Int32(5), Int32(1))    # on_ground
+    # Initialize default game state values (use Float32 for position/velocity)
+    result = set_game_state_simple(Int32(1), Float32(5.0))  # player_x
+    result = set_game_state_simple(Int32(2), Float32(5.0))  # player_y
+    result = set_game_state_simple(Int32(3), Float32(0.0))  # player_vel_x
+    result = set_game_state_simple(Int32(4), Float32(0.0))  # player_vel_y
+    result = set_game_state_simple(Int32(5), Int32(1))      # on_ground
     
     return result
 end
@@ -56,58 +56,69 @@ function get_delta_time()::Float64
     return call_get_delta_time()
 end 
 
+function get_game_state_simple_float(key_id::Int32)::Float64
+    return call_get_game_state_simple_float(key_id)
+end
+
 function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     delta_time::Float64 = get_delta_time()
-    printf(c"delta_time: %f\n", delta_time)
+    #printf(c"delta_time: %f\n", delta_time)
     input = call_update_input(x)
-    # Use simple integer keys: 1=player_x, 2=player_y, 3=player_vel_x, 4=player_vel_y, 5=on_ground
-    player_x = get_game_state_simple(Int32(1))
-    player_y = get_game_state_simple(Int32(2))
-    player_vel_x = get_game_state_simple(Int32(3))
-    player_vel_y = get_game_state_simple(Int32(4))
+    # # Use simple integer keys: 1=player_x, 2=player_y, 3=player_vel_x, 4=player_vel_y, 5=on_ground
+    player_x = get_game_state_simple_float(Int32(1))
+    player_y = get_game_state_simple_float(Int32(2))
+    player_vel_x = get_game_state_simple_float(Int32(3))
+    player_vel_y = get_game_state_simple_float(Int32(4))
     on_ground = get_game_state_simple(Int32(5))
-    set_game_state_simple(Int32(1), Float32(player_x))
+    
     # --- Platformer Physics ---
-    gravity = Int32(1)  # Gravity strength (positive is down)
-    jump_velocity = Int32(-2)  # Negative is up (since positive y is down)
-    ground_y = Int32(5)
+    gravity = 8.0f0  # Gravity strength (positive is down)
+    jump_velocity = -10.0f0  # Negative is up (since positive y is down)
+    ground_y = 5.0f0
+    move_speed = 100.0f0  # Units per second
 
     # Horizontal movement
     if input == Int32(1) # A
-        set_game_state_simple(Int32(1), Int32(player_x - 1))
+        player_vel_x = -move_speed
     elseif input == Int32(2) # D
-        set_game_state_simple(Int32(1), Int32(player_x + 1))
+        player_vel_x = move_speed
+    else
+        player_vel_x = 0.0f0
     end
+    set_game_state_simple(Int32(3), Float32(player_vel_x))
 
     # Jumping
     if input == Int32(5) && on_ground == Int32(1)
         player_vel_y = jump_velocity
-        set_game_state_simple(Int32(4), player_vel_y)
+        set_game_state_simple(Int32(4), Float32(player_vel_y))
         set_game_state_simple(Int32(5), Int32(0))  # Not on ground after jump
     end
 
     # Apply gravity if not on ground
     if on_ground == Int32(0)
-        player_vel_y = player_vel_y + gravity
-        set_game_state_simple(Int32(4), player_vel_y)
+        player_vel_y = player_vel_y + gravity * delta_time
+        set_game_state_simple(Int32(4), Float32(player_vel_y))
     end
 
-    # Update player_y by velocity
-    player_y = player_y + player_vel_y
+    # Update positions by velocity * delta_time
+    player_x = player_x + player_vel_x * delta_time
+    player_y = player_y + player_vel_y * delta_time
 
     # Ground collision
     if player_y >= ground_y
         player_y = ground_y
-        player_vel_y = Int32(0)
+        player_vel_y = 0.0f0
         set_game_state_simple(Int32(5), Int32(1))  # On ground
-        set_game_state_simple(Int32(4), player_vel_y)
+        set_game_state_simple(Int32(4), Float32(player_vel_y))
     else
         set_game_state_simple(Int32(5), Int32(0))  # In air
     end
 
-    set_game_state_simple(Int32(2), player_y)
+    set_game_state_simple(Int32(1), Float32(player_x))
+    set_game_state_simple(Int32(2), Float32(player_y))
 
-    val = call_render_rect(Int32(255), Int32(0), Int32(0), Int32(255), player_x, player_y, Int32(64), Int32(64))
+    printf(c"player_x: %f, player_y: %f\n", player_x, player_y)
+    val = call_render_rect(Int32(255), Int32(0), Int32(0), Int32(255), Float32(player_x), Float32(player_y), Int32(64), Int32(64))
     #if input != 0
     #    printf(c"Input: %d\n", input)
     #end

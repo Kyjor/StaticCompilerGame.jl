@@ -508,7 +508,7 @@ float get_game_state_simple_float(int key_id) {
 
 // Generic rectangle rendering function
 EMSCRIPTEN_KEEPALIVE
-int render_rect(int r, int g, int b, int a, int x, int y, int w, int h) {
+int render_rect(int r, int g, int b, int a, float x, float y, int w, int h) {
     if (!renderer) {
         printf("Renderer is NULL in render_rect!\n");
         return 0;
@@ -517,9 +517,9 @@ int render_rect(int r, int g, int b, int a, int x, int y, int w, int h) {
     SDL_Color current_render_color;
     SDL_GetRenderDrawColor(renderer, &current_render_color.r, &current_render_color.g, &current_render_color.b, &current_render_color.a);
     SDL_SetRenderDrawColor(renderer, r, g, b, a);
-    SDL_Rect rect = { x * UNIT_SIZE, y * UNIT_SIZE, w, h };
+    SDL_Rect rect = { (int)(x * UNIT_SIZE), (int)(y * UNIT_SIZE), w, h };
     SDL_RenderFillRect(renderer, &rect);
-   // SDL_SetRenderDrawColor(renderer, current_render_color.r, current_render_color.g, current_render_color.b, current_render_color.a);
+    SDL_SetRenderDrawColor(renderer, current_render_color.r, current_render_color.g, current_render_color.b, current_render_color.a);
     return 1;
 }
 

@@ -177,13 +177,13 @@ function call_remove_game_state_simple(key_id::Int32)::Int32
 end
 
 # Function to call the C render_rect function using llvmcall
-function call_render_rect(r::Int32, g::Int32, b::Int32, a::Int32, x::Int32, y::Int32, w::Int32, h::Int32)::Int32
+function call_render_rect(r::Int32, g::Int32, b::Int32, a::Int32, x::Float32, y::Float32, w::Int32, h::Int32)::Int32
     Base.llvmcall(("""
-    declare i32 @render_rect(i32, i32, i32, i32, i32, i32, i32, i32) nounwind
-    define i32 @main(i32, i32, i32, i32, i32, i32, i32, i32) {
+    declare i32 @render_rect(i32, i32, i32, i32, float, float, i32, i32) nounwind
+    define i32 @main(i32, i32, i32, i32, float, float, i32, i32) {
     entry:
-        %result = call i32 @render_rect(i32 %0, i32 %1, i32 %2, i32 %3, i32 %4, i32 %5, i32 %6, i32 %7)
+        %result = call i32 @render_rect(i32 %0, i32 %1, i32 %2, i32 %3, float %4, float %5, i32 %6, i32 %7)
         ret i32 %result
     }
-    """, "main"), Int32, Tuple{Int32,Int32,Int32,Int32,Int32,Int32,Int32,Int32}, r,g,b,a,x,y,w,h)
+    """, "main"), Int32, Tuple{Int32,Int32,Int32,Int32,Float32,Float32,Int32,Int32}, r,g,b,a,x,y,w,h)
 end
