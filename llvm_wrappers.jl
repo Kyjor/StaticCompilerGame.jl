@@ -1,3 +1,25 @@
+function call_print_string(ptr::Ptr{UInt8})::Int32
+    Base.llvmcall(("""
+    declare i32 @print_string(i8*) nounwind
+    define i32 @main(i8*) {
+    entry:
+       %result = call i32 @print_string(i8* %0)
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Ptr{UInt8}}, ptr)
+end
+
+function call_print_string(str::Cstring)::Int32
+    Base.llvmcall(("""
+    declare i32 @print_string(i8*) nounwind
+    define i32 @main(i8*) {
+    entry:
+       %result = call i32 @print_string(i8* %0)
+       ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Cstring}, str)
+end
+
 function call_get_delta_time()::Float32
     Base.llvmcall(("""
     declare float @get_delta_time() nounwind

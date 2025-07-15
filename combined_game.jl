@@ -62,6 +62,15 @@ end
 function get_game_state_simple_float(key_id::Int32)::Float64
     return call_get_game_state_simple_float(key_id)
 end
+
+function print_string(str::StaticString)::Int32
+    call_print_string(pointer(str))
+    call_print_string(pointer(str))
+
+    #call_print_string(Cstring(pointer(str)))
+    return Int32(0)
+end
+
 function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     delta_time::Float64 = get_delta_time()
     input = call_update_input(x)
@@ -132,7 +141,9 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     
     # Jump if button pressed and either can jump now or has buffered jump
     if (can_jump && input == Int32(5)) || (on_ground == Int32(1) && jump_buffer > 0.0f0)
-        printf(c"Jumping\n")
+        print_string(c"Jumping\n")
+        
+        #print_string(ptr)
         player_vel_y = jump_velocity
         set_game_state_simple(Int32(4), Float32(player_vel_y))
         set_game_state_simple(Int32(5), Int32(0))  # Not on ground

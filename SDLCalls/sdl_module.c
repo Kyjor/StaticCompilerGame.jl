@@ -235,6 +235,15 @@ const char* get_square_position() {
     return position;
 }
 
+EMSCRIPTEN_KEEPALIVE
+int print_string(const char* str) {
+    // don't print null or empty strings
+    if (str && str[0] != '\0' && str[0] != '\n' && str[0] != '\r' && str[0] != '\t' && str[0] != ' ' && str[0] != '\v' && str[0] != '\f' && str[0] != '\b') {
+        printf("%s\n", str);
+    }
+    return 1;
+}
+
 // ===== GAME STATE MANAGEMENT FUNCTIONS =====
 
 // Initialize game state storage
