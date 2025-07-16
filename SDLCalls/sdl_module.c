@@ -122,6 +122,13 @@ int draw_entities() {
     return 1110;
 }
 
+// EMSCRIPTEN_KEEPALIVE
+// int draw_rect_1(SDL_Rect * rect) {
+//     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);  // Blue color
+//     SDL_RenderFillRect(renderer, rect);
+//     return 1;
+// }
+
 EMSCRIPTEN_KEEPALIVE
 int create_entities_if_needed() {
     // Create enemies at random positions within the visible screen area

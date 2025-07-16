@@ -9,17 +9,6 @@ function call_print_string(ptr::Ptr{UInt8})::Int32
     """, "main"), Int32, Tuple{Ptr{UInt8}}, ptr)
 end
 
-function call_print_string(str::Cstring)::Int32
-    Base.llvmcall(("""
-    declare i32 @print_string(i8*) nounwind
-    define i32 @main(i8*) {
-    entry:
-       %result = call i32 @print_string(i8* %0)
-       ret i32 %result
-    }
-    """, "main"), Int32, Tuple{Cstring}, str)
-end
-
 function call_get_delta_time()::Float32
     Base.llvmcall(("""
     declare float @get_delta_time() nounwind
@@ -125,30 +114,6 @@ function call_remove_game_state(key::Ptr{UInt8})::Int32
     """, "main"), Int32, Tuple{Ptr{UInt8}}, key)
 end
 
-function call_print_game_state()
-    Base.llvmcall(("""
-    ; External declaration of the print_game_state function
-    declare void @print_game_state() nounwind
-    define void @main() {
-    entry:
-       call void @print_game_state()
-       ret void
-    }
-    """, "main"), Nothing, Tuple{}, ())
-end
-
-function call_get_game_state_count()::Int32
-    Base.llvmcall(("""
-    ; External declaration of the get_game_state_count function
-    declare i32 @get_game_state_count() nounwind
-    define i32 @main() {
-    entry:
-       %result = call i32 @get_game_state_count()
-       ret i32 %result
-    }
-    """, "main"), Int32, Tuple{}, ())
-end
-
 # Simplified game state LLVM calls (using integer keys instead of strings)
 function call_set_game_state_simple(key_id::Int32, value::Int32)::Int32
     Base.llvmcall(("""
@@ -209,3 +174,14 @@ function call_render_rect(r::Int32, g::Int32, b::Int32, a::Int32, x::Float32, y:
     }
     """, "main"), Int32, Tuple{Int32,Int32,Int32,Int32,Float32,Float32,Int32,Int32}, r,g,b,a,x,y,w,h)
 end
+
+# function call_draw_rect(rect::SDL_Rect)::Int32
+#     Base.llvmcall(("""
+#     declare i32 @draw_rect_1(%struct.SDL_Rect*) nounwind
+#     define i32 @main(%struct.SDL_Rect*) {
+#     entry:
+#         %result = call i32 @draw_rect_1(%struct.SDL_Rect* %0)
+#         ret i32 %result
+#     }
+#     """, "main"), Int32, Tuple{Ptr{SDL_Rect}}, Ref(rect))
+# end

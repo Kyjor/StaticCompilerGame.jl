@@ -2,6 +2,7 @@
 using StaticTools
 using StaticCompiler
 
+include("structs.jl")
 include("llvm_wrappers.jl") 
 
 # Julia functions that will call C functions
@@ -47,14 +48,6 @@ function remove_game_state_simple(key_id::Int32)::Int32
     return call_remove_game_state_simple(key_id)
 end
 
-function print_game_state()
-    call_print_game_state()
-end
-
-function get_game_state_count()::Int32
-    return call_get_game_state_count()
-end
-
 function get_delta_time()::Float64
     return call_get_delta_time()
 end 
@@ -64,16 +57,20 @@ function get_game_state_simple_float(key_id::Int32)::Float64
 end
 
 function print_string(str::StaticString)::Int32
+    # No idea why this is needed twice. TODO: figure out why.
     call_print_string(pointer(str))
     call_print_string(pointer(str))
 
-    #call_print_string(Cstring(pointer(str)))
     return Int32(0)
 end
 
 function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     delta_time::Float64 = get_delta_time()
     input = call_update_input(x)
+
+    test_rect = SDL_Rect(Int32(0), Int32(0), Int32(100), Int32(100))    
+    #call_draw_rect(test_rect)
+    printf(c"test_rect: %d, %d, %d, %d\n", test_rect.x, test_rect.y, test_rect.w, test_rect.h)
 
     # Game state variables
     player_x::Float32 = get_game_state_simple_float(Int32(1))
@@ -89,10 +86,10 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     gravity::Float64 = 15.0             # Gravity strength
     jump_velocity::Float32 = -12.0f0    # Initial jump velocity
     ground_y::Float32 = 5.0f0           # Ground level
-    move_accel::Float32 = 2000.0f0        # Horizontal acceleration
-    ground_decel::Float32 = 80.0f0      # Ground deceleration
-    air_decel::Float32 = 30.0f0         # Air deceleration
-    max_speed::Float32 = 2000.0f0         # Max horizontal speed
+    move_accel::Float32 = 800.0f0         # Horizontal acceleration
+    ground_decel::Float32 = 800.0f0       # Ground deceleration
+    air_decel::Float32 = 400.0f0          # Air deceleration
+    max_speed::Float32 = 400.0f0          # Max horizontal speed
     coyote_duration::Float32 = 0.1f0    # Time window for coyote time
     jump_buffer_duration::Float32 = 0.1f0 # Time window for jump buffering
     jump_cancel_gravity_scale::Float32 = 0.5f0 # Reduce gravity when jump button released
@@ -111,7 +108,7 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
         jump_buffer -= delta_time
     end
 
-    # --- Horizontal movement (smooth acceleration) ---
+    # --- Horizontal movement (simplified) ---
     target_vel_x::Float32 = 0.0f0
     if input == Int32(1)      # A
         target_vel_x = -max_speed
@@ -119,17 +116,10 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
         target_vel_x = max_speed
     end
 
-    # Apply acceleration/deceleration
+    # Apply movement (simplified logic)
     if on_ground == Int32(1)
-        if target_vel_x != 0.0f0 && sign(target_vel_x) == sign(player_vel_x)
-            # Accelerating in same direction
-            player_vel_x = move_toward(player_vel_x, target_vel_x, Float32(move_accel * delta_time))
-        else
-            # Decelerating or changing direction
-            player_vel_x = move_toward(player_vel_x, target_vel_x, Float32(ground_decel * delta_time))
-        end
+        player_vel_x = move_toward(player_vel_x, target_vel_x, Float32(move_accel * delta_time))
     else
-        # Air control
         player_vel_x = move_toward(player_vel_x, target_vel_x, Float32(air_decel * delta_time))
     end
 
