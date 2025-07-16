@@ -69,8 +69,7 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     input = call_update_input(x)
 
     test_rect = SDL_Rect(Int32(0), Int32(0), Int32(100), Int32(100))    
-    #call_draw_rect(test_rect)
-    printf(c"test_rect: %d, %d, %d, %d\n", test_rect.x, test_rect.y, test_rect.w, test_rect.h)
+    call_draw_rect(Int32(0), Int32(0), Int32(100), Int32(100))
 
     # Game state variables
     player_x::Float32 = get_game_state_simple_float(Int32(1))

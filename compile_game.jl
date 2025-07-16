@@ -82,7 +82,7 @@ if build_type == "web"
         println(" Linking files: $ll_files_str")
         
         # Link Julia LLVM IR with SDL2 C code
-        cmd = `emcc $ll_files SDLCalls/sdl_module.c -s USE_SDL=2 -O2 -s WASM=1 -s 
+        cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_draw_game_frame',
         '_init_sdl',

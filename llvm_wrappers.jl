@@ -175,13 +175,76 @@ function call_render_rect(r::Int32, g::Int32, b::Int32, a::Int32, x::Float32, y:
     """, "main"), Int32, Tuple{Int32,Int32,Int32,Int32,Float32,Float32,Int32,Int32}, r,g,b,a,x,y,w,h)
 end
 
-# function call_draw_rect(rect::SDL_Rect)::Int32
-#     Base.llvmcall(("""
-#     declare i32 @draw_rect_1(%struct.SDL_Rect*) nounwind
-#     define i32 @main(%struct.SDL_Rect*) {
-#     entry:
-#         %result = call i32 @draw_rect_1(%struct.SDL_Rect* %0)
-#         ret i32 %result
-#     }
-#     """, "main"), Int32, Tuple{Ptr{SDL_Rect}}, Ref(rect))
+function wasm_malloc(size::UInt32)::Ptr{Cvoid}
+    Base.llvmcall(("""
+        declare noalias i8* @malloc(i32) nounwind
+
+        define i8* @my_malloc(i32 %size) {
+        entry:
+            %ptr = call noalias i8* @malloc(i32 %size)
+            ret i8* %ptr
+        }
+    """, "my_malloc"), Ptr{Cvoid}, Tuple{UInt32}, size)
+end
+
+function wasm_free(ptr::Ptr{Cvoid})
+    Base.llvmcall(("""
+        declare void @free(i8*) nounwind
+
+        define void @my_free(i8* %ptr) {
+        entry:
+            call void @free(i8* %ptr)
+            ret void
+        }
+    """, "my_free"), Nothing, Tuple{Ptr{Cvoid}}, ptr)
+end
+
+function call_draw_rect(rect::SDL_Rect)::Int32
+    printf(c"call_draw_rect wasm_malloc: %d, %d, %d, %d\n", rect.x, rect.y, rect.w, rect.h)
+    ptr = wasm_malloc(UInt32(16))
+    unsafe_store!(Ptr{Int32}(ptr + 0), rect.x)
+    unsafe_store!(Ptr{Int32}(ptr + 4), rect.y)
+    unsafe_store!(Ptr{Int32}(ptr + 8), rect.w)
+    unsafe_store!(Ptr{Int32}(ptr + 12), rect.h)
+
+    result = Base.llvmcall(("""
+        %struct.SDL_Rect = type { i32, i32, i32, i32 }
+        declare i32 @draw_rect_1(%struct.SDL_Rect*) nounwind
+        define i32 @main(%struct.SDL_Rect*) {
+        entry:
+            %result = call i32 @draw_rect_1(%struct.SDL_Rect* %0)
+            ret i32 %result
+        }
+    """, "main"), Int32, Tuple{Ptr{Nothing}}, ptr)
+
+    wasm_free(ptr)
+    printf(c"call_draw_rect wasm_free")
+    return Int32(0)
+end
+
+
+# function call_draw_rect(x::Int32, y::Int32, w::Int32, h::Int32)::Int32
+#     printf(c"call_draw_rect: %d, %d, %d, %d\n", x, y, w, h)
+#     ptr = ccall(:malloc, Ptr{Cvoid}, (Csize_t,), 16)
+#     unsafe_store!(Ptr{Int32}(ptr + 0), x)
+#     unsafe_store!(Ptr{Int32}(ptr + 4), y)
+#     unsafe_store!(Ptr{Int32}(ptr + 8), w)
+#     unsafe_store!(Ptr{Int32}(ptr + 12), h)
+
+#     result = Base.llvmcall(("""
+#         %struct.SDL_Rect = type { i32, i32, i32, i32 }
+#         declare i32 @draw_rect_1(%struct.SDL_Rect*) nounwind
+#         define i32 @main(%struct.SDL_Rect*) {
+#         entry:
+#             %result = call i32 @draw_rect_1(%struct.SDL_Rect* %0)
+#             ret i32 %result
+#         }
+#     """, "main"), Int32, Tuple{Ptr{Nothing}}, ptr)
+
+#     ccall(:free, Cvoid, (Ptr{Cvoid},), ptr)
+#     return result
 # end
+
+
+
+
