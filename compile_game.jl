@@ -45,6 +45,7 @@ functions_to_compile = [
     (draw_game_frame, (Int32, Int32, Int32), "draw_game_frame"),
     #(call_update_input, (), "call_update_input"),
     (j_init_game_state, (), "j_init_game_state"),
+    (pc_main, (), "pc_main"),
 ]
 
 for (func, types, name) in functions_to_compile
@@ -95,6 +96,7 @@ if build_type == "web"
         '_get_square_position', 
         '_deinitialize_the_game', 
         '_j_init_game_state',
+        '_pc_main',
         '_set_game_state_simple',
         '_get_game_state_simple',
         '_has_game_state_simple',
@@ -152,7 +154,7 @@ else
         end
         
         # Link Julia object files with SDL2 C code
-        cmd = `gcc $o_files SDLCalls/sdl_module.c walloc.c $sdl_flags -o $output_dir/$output_name -O2`
+        cmd = `gcc $o_files SDLCalls/sdl_module.c pc_main.c $sdl_flags -o $output_dir/$output_name -O2`
         
         run(cmd)
         println("✅ Desktop executable created!")

@@ -307,3 +307,16 @@ const SDL_WINDOW_OPENGL = Cint(0x00000002)
             }
         """, "main"), Int32, Tuple{Ptr{SDL_Window}}, window)
     end
+
+    function llvm_SDL_Delay(ms::Int32)
+        Base.llvmcall(("""
+            declare void @SDL_Delay(i32) nounwind
+    
+            define void @main(i32 %ms) {
+            entry:
+                call void @SDL_Delay(i32 %ms)
+                ret void
+            }
+        """, "main"), Cvoid, Tuple{Int32}, ms)
+    end
+    

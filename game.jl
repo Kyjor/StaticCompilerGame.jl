@@ -111,6 +111,7 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
 
     # --- Jump Buffering Update ---
     if input == Int32(5)  # Jump button pressed
+        return Int32(-1)
         jump_buffer = jump_buffer_duration
     else
         jump_buffer -= delta_time
@@ -202,4 +203,28 @@ function move_toward(current::Float32, target::Float32, max_delta::Float32)::Flo
     else
         return target
     end
+end
+
+# PC Entry Point - Main function for desktop builds
+function pc_main()::Int32
+    
+    # Initialize game state
+    printf(c"Initializing game state...\n")
+    result = j_init_game_state()
+    if result != Int32(0)
+        printf(c"Failed to initialize game state\n")
+        return Int32(1)
+    end
+    
+    draw_result = Int32(0)
+    while draw_result == Int32(0)
+        
+        # Call the main game frame function
+        # Pass dummy values for x, y, on_ground (these are handled internally now)
+        draw_result = draw_game_frame(Int32(0), Int32(0), Int32(0))
+        llvm_SDL_Delay(Int32(17))
+        printf("frame_count")
+    end
+    
+    return Int32(0)
 end

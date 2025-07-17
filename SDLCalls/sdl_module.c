@@ -1,8 +1,12 @@
 #include "SDL2-2.30.11/include/SDL.h"
 #include <stdio.h>
-#include <emscripten.h>
 #include <stdint.h>
 #include <string.h>
+
+// Emscripten-specific includes and macros
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #define MAX_ENTITIES 100
 #define UNIT_SIZE 64  // Each entity's "1.0" unit corresponds to 64 pixels
@@ -45,7 +49,9 @@ GameStateEntry game_state[MAX_GAME_STATE_KEYS] = {0};  // Zero-initialize the en
 int game_state_count = 0;
 
 // Function to test if SDL is working
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int test_sdl_working() {
     printf("Testing SDL...\n");
     if (!window) {
@@ -61,7 +67,9 @@ int test_sdl_working() {
 }
 
 // Separate initialization function that doesn't set up main loop
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int init_sdl_drawing() {
     return 1;
     printf("Initializing SDL...\n");
@@ -91,7 +99,9 @@ int init_sdl_drawing() {
 }
 
 // Function to receive and update entity positions from JavaScript
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 void update_entities(EntityPosition *data, int count) {
     if (count > MAX_ENTITIES) count = MAX_ENTITIES; // Limit entities stored
     for (int i = 0; i < count; i++) {
@@ -102,7 +112,9 @@ void update_entities(EntityPosition *data, int count) {
 }
 
 // Function to print entity positions (for debugging)
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 void print_entities() {
     for (int i = 0; i < entity_count; i++) {
         printf("Entity %d: x = %f, y = %f\n", i, entities[i].x, entities[i].y);
@@ -123,7 +135,9 @@ int draw_entities() {
     return 1110;
 }
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int draw_rect_1(SDL_Rect *rect) {
     //printf("draw_rect_1: %d, %d, %d, %d\n", rect->x, rect->y, rect->w, rect->h);
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);  // Blue color
@@ -131,7 +145,9 @@ int draw_rect_1(SDL_Rect *rect) {
     return 1;
 }
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int create_entities_if_needed() {
     // Create enemies at random positions within the visible screen area
     for (int i = 0; i < 10; i++) {  // Reduced to 10 entities for testing
@@ -148,21 +164,29 @@ int create_entities_if_needed() {
 
 
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 void deinitialize_the_game() {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int update_input(int x) {
     SDL_Event e;
     int result = 0; // 0 = no input, 1 = A, 2 = D, 3 = W, 4 = S, 5 = SPACE
 
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
+#ifdef __EMSCRIPTEN__
             emscripten_cancel_main_loop();
+#else
+            game_is_still_running = 0;
+#endif
         } else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
             uint8_t pressed = (e.type == SDL_KEYDOWN) ? 1 : 0;
 
@@ -192,19 +216,25 @@ int update_input(int x) {
 }
 
 // Function to get key state as a pointer
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 InputState* get_input_state() {
     return &input_state;
 }
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 float get_delta_time() {
     //printf("delta_time2: %f\n", delta_time);
     return delta_time;
 }
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
-void main_loop() {
+#endif
+int main_loop() {
     NOW = SDL_GetPerformanceCounter();
     delta_time = (float)(NOW - LAST) / (float)SDL_GetPerformanceFrequency();
     LAST = NOW;
@@ -229,22 +259,31 @@ void main_loop() {
     
     // Handle SDL events (e.g., input)
     //update_input(1);
+    
+    // Return whether the game should continue running
+    return game_is_still_running;
 }
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 void update_square_position(int x, int y) {
     test_value = x;
 }
 
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 const char* get_square_position() {
     static char position[64]; // Buffer to store the position string
     snprintf(position, sizeof(position), "{\"x\": %d, \"y\": %d}", square_x, square_y);
     return position;
 }
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int print_string(const char* str) {
     // don't print null or empty strings
     if (str && str[0] != '\0' && str[0] != '\n' && str[0] != '\r' && str[0] != '\t' && str[0] != ' ' && str[0] != '\v' && str[0] != '\f' && str[0] != '\b') {
@@ -256,7 +295,9 @@ int print_string(const char* str) {
 // ===== GAME STATE MANAGEMENT FUNCTIONS =====
 
 // Initialize game state storage
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int init_game_state() {
     printf("Initializing game state\n");
     
@@ -277,7 +318,9 @@ int init_game_state() {
 }
 
 // Set a game state value by key
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int set_game_state(const char* key, int value) {
     printf("Setting game state: %s = %d\n", key, value);
     if (!key) {
@@ -318,7 +361,9 @@ int set_game_state(const char* key, int value) {
 }
 
 // Get a game state value by key
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int get_game_state(const char* key) {
     if (!key) {
         printf("Error: NULL key provided to get_game_state\n");
@@ -343,7 +388,9 @@ int get_game_state(const char* key) {
 }
 
 // Check if a key exists in game state
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int has_game_state(const char* key) {
     if (!key) {
         return 0;
@@ -358,7 +405,9 @@ int has_game_state(const char* key) {
 }
 
 // Remove a key from game state
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int remove_game_state(const char* key) {
     if (!key) {
         printf("Error: NULL key provided to remove_game_state\n");
@@ -381,7 +430,9 @@ int remove_game_state(const char* key) {
 }
 
 // Print all game state keys and values (for debugging)
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 void print_game_state() {
     printf("Game State (%d entries):\n", game_state_count);
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
@@ -392,7 +443,9 @@ void print_game_state() {
 }
 
 // Get the number of game state entries
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int get_game_state_count() {
     return game_state_count;
 }
@@ -411,7 +464,9 @@ SimpleGameStateEntry simple_game_state[MAX_GAME_STATE_KEYS] = {0};
 int simple_game_state_count = 0;
 
 // Set a game state value by integer key
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int set_game_state_simple(int key_id, int value) {
     //printf("=== C set_game_state_simple called: key_id=%d, value=%d ===\n", key_id, value);
     
@@ -441,7 +496,9 @@ int set_game_state_simple(int key_id, int value) {
 }
 
 // Get a game state value by integer key
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int get_game_state_simple(int key_id) {
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
         if (simple_game_state[i].is_used && simple_game_state[i].key_id == key_id) {
@@ -455,7 +512,9 @@ int get_game_state_simple(int key_id) {
 }
 
 // Check if a key exists in simple game state
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int has_game_state_simple(int key_id) {
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
         if (simple_game_state[i].is_used && simple_game_state[i].key_id == key_id) {
@@ -466,7 +525,9 @@ int has_game_state_simple(int key_id) {
 }
 
 // Remove a key from simple game state
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int remove_game_state_simple(int key_id) {
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
         if (simple_game_state[i].is_used && simple_game_state[i].key_id == key_id) {
@@ -493,7 +554,9 @@ typedef struct {
 SimpleGameStateFloatEntry simple_game_state_float[MAX_GAME_STATE_KEYS] = {0};
 int simple_game_state_float_count = 0;
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int set_game_state_simple_float(int key_id, float value) {
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
         if (simple_game_state_float[i].is_used && simple_game_state_float[i].key_id == key_id) {
@@ -514,7 +577,9 @@ int set_game_state_simple_float(int key_id, float value) {
     return 0;
 }
 
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 float get_game_state_simple_float(int key_id) {
     for (int i = 0; i < MAX_GAME_STATE_KEYS; i++) {
         if (simple_game_state_float[i].is_used && simple_game_state_float[i].key_id == key_id) {
@@ -525,7 +590,9 @@ float get_game_state_simple_float(int key_id) {
 }
 
 // Generic rectangle rendering function
+#ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
+#endif
 int render_rect(int r, int g, int b, int a, float x, float y, int w, int h) {
     if (!renderer) {
         //printf("Renderer is NULL in render_rect!\n");
@@ -542,7 +609,8 @@ int render_rect(int r, int g, int b, int a, float x, float y, int w, int h) {
 }
 
 // Original main function - kept for compatibility but not used
-int main(void) {
+// Renamed to avoid conflict with pc_main.c
+int sdl_main(void) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
