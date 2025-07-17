@@ -155,7 +155,7 @@ else
         end
         
         # Link Julia object files with SDL2 C code
-        cmd = `gcc $o_files SDLCalls/sdl_module.c $sdl_flags -o $output_dir/$output_name -O2`
+        cmd = `gcc $o_files SDLCalls/sdl_module.c walloc.c $sdl_flags -o $output_dir/$output_name -O2`
         
         run(cmd)
         println("✅ Desktop executable created!")

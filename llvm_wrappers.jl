@@ -246,9 +246,11 @@ const SDL_WINDOW_OPENGL = Cint(0x00000002)
 #     return Int32(0)
 # end
 
-Base.@inline Base.@assume_effects :nothrow :foldable function SDL_CreateWindow()::Int32
+mutable struct SDL_Window end
+
+function SDL_CreateWindow()::Ptr{SDL_Window}
     printf(c"SDL_CreateWindoadafssadfsfew\n")
-        Base.llvmcall(("""
+        result = Base.llvmcall(("""
             %SDL_Window = type opaque
             declare %SDL_Window* @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32)
     
@@ -267,8 +269,8 @@ Base.@inline Base.@assume_effects :nothrow :foldable function SDL_CreateWindow()
                 )
                 ret %SDL_Window* %win
             }
-        """, "main"), Ptr{Nothing}, Tuple{})
-        return Int32(0)
+        """, "main"), Ptr{SDL_Window}, Tuple{})
+        return result
     end
 
 
@@ -286,4 +288,30 @@ Base.@inline Base.@assume_effects :nothrow :foldable function SDL_CreateWindow()
     end
     
     
+    
+    function llvm_SDL_GetTicks()::Int32
+        Base.llvmcall(("""
+            declare i32 @SDL_GetTicks() nounwind
+            define i32 @main() {
+            entry:
+                %result = call i32 @SDL_GetTicks()
+                ret i32 %result
+            }
+        """, "main"), Int32, Tuple{}, ())
+    end
+    
+    function llvm_create_window()::Ptr{SDL_Window}
+        Base.llvmcall(("""
+            @title = private unnamed_addr constant [6 x i8] c"It me\\00", align 1
+    
+            declare i8* @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32) nounwind
+    
+            define i8* @main() {
+            entry:
+                %title_ptr = getelementptr inbounds [6 x i8], [6 x i8]* @title, i32 0, i32 0
+                %win = call i8* @SDL_CreateWindow(i8* %title_ptr, i32 100, i32 100, i32 640, i32 480, i32 2)
+                ret i8* %win
+            }
+        """, "main"), Ptr{Cvoid}, Tuple{}, ())
+    end
     
