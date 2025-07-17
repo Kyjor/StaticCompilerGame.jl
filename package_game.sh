@@ -59,6 +59,50 @@ if [ "$build_type" = "desktop" ]; then
         echo "   julia compile_game.jl desktop"
         exit 1
     fi
+
+    # Copy SDL2 and SDL2_image .so files from libs/ and libs/image/ if not already present
+    SDL_SO_FILES=(
+        "libSDL2.so"
+        "libSDL2-2.0.so.0"
+        "libSDL2-2.0.so.0.2400.2"
+        "libSDL2_image.so"
+        "libSDL2_image-2.0.so"
+        "libSDL2_image-2.0.so.0"
+        "libSDL2_image-2.0.so.0.600.2"
+        "libiconv.so.2"
+        "libiconv.so.2.6.1"
+        "libiconv.so"
+        "libcharset.so.1"
+        "libcharset.so.1.0.0"
+        "libcharset.so"
+    )
+    for sofile in "${SDL_SO_FILES[@]}"; do
+        # Check in libs/
+        if [ -f "libs/$sofile" ] && [ ! -f "$GAME_DIR/$sofile" ]; then
+            cp "libs/$sofile" "$GAME_DIR/"
+        fi
+        # Check in libs/image/
+        if [ -f "libs/image/$sofile" ] && [ ! -f "$GAME_DIR/$sofile" ]; then
+            cp "libs/image/$sofile" "$GAME_DIR/"
+        fi
+    done
+
+    # Create a launcher script that sets LD_LIBRARY_PATH
+    cat > "$GAME_DIR/run_game.sh" << 'EOF'
+#!/bin/bash
+# Launcher script for the game
+# This script sets LD_LIBRARY_PATH to find the SDL2 libraries
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Set LD_LIBRARY_PATH to include the script directory
+export LD_LIBRARY_PATH="$SCRIPT_DIR:$LD_LIBRARY_PATH"
+
+# Run the game
+exec "$SCRIPT_DIR/game" "$@"
+EOF
+    chmod +x "$GAME_DIR/run_game.sh"
 fi
 
 # Remove old zip if it exists
@@ -95,9 +139,10 @@ if [ $? -eq 0 ]; then
         echo "      python3 -m http.server 8000"
         echo "      Then visit: http://localhost:8000"
     else
-        echo "   2. Make the game executable: chmod +x game_desktop/game"
-        echo "   3. Run the game: ./game_desktop/game"
-        echo "   4. Or double-click the game file in your file manager"
+        echo "   2. Run the game using the launcher script:"
+        echo "      ./game_desktop/run_game.sh"
+        echo "   3. Or manually: LD_LIBRARY_PATH=./game_desktop ./game_desktop/game"
+        echo "   4. Or double-click run_game.sh in your file manager"
     fi
 else
     echo "❌ Error: Failed to create package!"

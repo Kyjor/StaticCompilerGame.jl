@@ -142,19 +142,23 @@ else
         if Sys.islinux()
             sdl_flags = `-lSDL2 -lSDL2main`
             output_name = "game"
+            rpath_flag = `-Wl,-rpath,$(raw"$ORIGIN")`
         elseif Sys.iswindows()
             sdl_flags = `-lSDL2 -lSDL2main`
             output_name = "game.exe"
+            rpath_flag = ``
         elseif Sys.isapple()
             sdl_flags = `-framework SDL2`
             output_name = "game"
+            rpath_flag = `-Wl,-rpath,@loader_path`
         else
             sdl_flags = `-lSDL2 -lSDL2main`
             output_name = "game"
+            rpath_flag = ``
         end
         
         # Link Julia object files with SDL2 C code
-        cmd = `gcc $o_files SDLCalls/sdl_module.c pc_main.c $sdl_flags -o $output_dir/$output_name -O2`
+        cmd = `gcc $o_files SDLCalls/sdl_module.c pc_main.c $sdl_flags $rpath_flag -o $output_dir/$output_name -O2`
         
         run(cmd)
         println("✅ Desktop executable created!")

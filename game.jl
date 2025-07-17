@@ -223,7 +223,6 @@ function pc_main()::Int32
         # Pass dummy values for x, y, on_ground (these are handled internally now)
         draw_result = draw_game_frame(Int32(0), Int32(0), Int32(0))
         llvm_SDL_Delay(Int32(17))
-        printf("frame_count")
     end
     
     return Int32(0)

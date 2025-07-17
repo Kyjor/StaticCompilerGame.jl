@@ -53,6 +53,7 @@ function main()
         "libSDL2-2.0.so.0",
         "libSDL2-2.0.so.0.2400.2", 
         "libSDL2.so",
+        "libSDL2main.so",
         # iconv libraries (dependency)
         "libiconv.so.2",
         "libiconv.so.2.6.1",
