@@ -27,8 +27,8 @@ if [ ! -f "index.js" ]; then
     exit 1
 fi
 
-if [ ! -d "combined_game_wasm" ]; then
-    echo "❌ Error: combined_game_wasm directory not found!"
+if [ ! -d "game_wasm" ]; then
+    echo "❌ Error: game_wasm directory not found!"
     exit 1
 fi
 
@@ -40,7 +40,7 @@ fi
 
 # Create the zip file
 echo "📦 Creating package: $OUTPUT_DIR/$ZIP_NAME"
-zip -r "$OUTPUT_DIR/$ZIP_NAME" index.html index.js combined_game_wasm/
+zip -r "$OUTPUT_DIR/$ZIP_NAME" index.html index.js game_wasm/
 
 # Check if zip was created successfully
 if [ $? -eq 0 ]; then

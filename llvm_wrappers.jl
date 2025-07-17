@@ -200,7 +200,6 @@ function wasm_free(ptr::Ptr{Cvoid})
 end
 
 function call_draw_rect(rect::SDL_Rect)::Int32
-    printf(c"call_draw_rect wasm_malloc: %d, %d, %d, %d\n", rect.x, rect.y, rect.w, rect.h)
     ptr = wasm_malloc(UInt32(16))
     unsafe_store!(Ptr{Int32}(ptr + 0), rect.x)
     unsafe_store!(Ptr{Int32}(ptr + 4), rect.y)
@@ -218,33 +217,73 @@ function call_draw_rect(rect::SDL_Rect)::Int32
     """, "main"), Int32, Tuple{Ptr{Nothing}}, ptr)
 
     wasm_free(ptr)
-    printf(c"call_draw_rect wasm_free")
     return Int32(0)
 end
 
+const SDL_WINDOWPOS_UNDEFINED = Cint(0x1FFF0000)
+const SDL_WINDOW_OPENGL = Cint(0x00000002)
 
-# function call_draw_rect(x::Int32, y::Int32, w::Int32, h::Int32)::Int32
-#     printf(c"call_draw_rect: %d, %d, %d, %d\n", x, y, w, h)
-#     ptr = ccall(:malloc, Ptr{Cvoid}, (Csize_t,), 16)
-#     unsafe_store!(Ptr{Int32}(ptr + 0), x)
-#     unsafe_store!(Ptr{Int32}(ptr + 4), y)
-#     unsafe_store!(Ptr{Int32}(ptr + 8), w)
-#     unsafe_store!(Ptr{Int32}(ptr + 12), h)
+# function SDL_CreateWindow()::Int32
+#     title::String = c"SDL2 + Emscripten"
+#     title_bytes::Base.CodeUnits{UInt8, String} = codeunits(title)
+#     title_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(length(title_bytes) + 1))
 
-#     result = Base.llvmcall(("""
-#         %struct.SDL_Rect = type { i32, i32, i32, i32 }
-#         declare i32 @draw_rect_1(%struct.SDL_Rect*) nounwind
-#         define i32 @main(%struct.SDL_Rect*) {
-#         entry:
-#             %result = call i32 @draw_rect_1(%struct.SDL_Rect* %0)
-#             ret i32 %result
-#         }
-#     """, "main"), Int32, Tuple{Ptr{Nothing}}, ptr)
+#     # Write bytes and null-terminate
+#     unsafe_copyto!(title_ptr, pointer(title_bytes), length(title_bytes))
+#     #unsafe_store!(Ptr{UInt8}(title_ptr + length(title_bytes)), 0x00)
 
-#     ccall(:free, Cvoid, (Ptr{Cvoid},), ptr)
-#     return result
+# #     window_ptr = Base.llvmcall(("""
+# #     declare ptr @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32)
+# #     define ptr @main(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags) {
+# #     entry:
+# #         %win = call ptr @SDL_CreateWindow(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags)
+# #         ret ptr %win
+# #     }
+# # """, "main"), Ptr{Cvoid}, Tuple{Ptr{UInt8}, Cint, Cint, Cint, Cint, Cint},
+# #     title_ptr, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_OPENGL)
+
+# #     wasm_free(title_ptr)
+#     return Int32(0)
 # end
 
+Base.@inline Base.@assume_effects :nothrow :foldable function SDL_CreateWindow()::Int32
+    printf(c"SDL_CreateWindoadafssadfsfew\n")
+        Base.llvmcall(("""
+            %SDL_Window = type opaque
+            declare %SDL_Window* @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32)
+    
+            @title_str = private unnamed_addr constant [20 x i8] c"New Window\\00"
+    
+            define %SDL_Window* @main() {
+            entry:
+                %title_ptr = getelementptr [20 x i8], [20 x i8]* @title_str, i32 0, i32 0
+                %win = call %SDL_Window* @SDL_CreateWindow(
+                    i8* %title_ptr,
+                    i32 0x1FFF0000, ; SDL_WINDOWPOS_UNDEFINED
+                    i32 0x1FFF0000, ; SDL_WINDOWPOS_UNDEFINED
+                    i32 640,
+                    i32 480,
+                    i32 0x00000002 ; SDL_WINDOW_OPENGL
+                )
+                ret %SDL_Window* %win
+            }
+        """, "main"), Ptr{Nothing}, Tuple{})
+        return Int32(0)
+    end
 
 
+    function call_create_window_hardcoded()::Int32
+        Base.llvmcall(("""
+            declare i32 @create_window_hardcoded() nounwind
+            define i32 @main() {
+            entry:
+                %result = call i32 @create_window_hardcoded()
+                ret i32 %result
+            }
+        """, "main"), Int32, Tuple{}, ())
 
+        return Int32(0)
+    end
+    
+    
+    

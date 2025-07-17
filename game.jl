@@ -26,7 +26,10 @@ function j_init_game_state()::Int32
     result = set_game_state_simple(Int32(6), Float32(0.0))  # coyote_time
     result = set_game_state_simple(Int32(7), Float32(0.0))  # jump_buffer
     result = set_game_state_simple(Int32(8), Int32(0))      # is_jumping
-    
+    printf(c"SDL_CreateWindow\n")
+    call_create_window_hardcoded()
+    printf(c"SDL_CreateWindow done\n")
+
     return result
 end
 
@@ -69,7 +72,7 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     input = call_update_input(x)
 
     test_rect = SDL_Rect(Int32(0), Int32(0), Int32(100), Int32(100))    
-    call_draw_rect(Int32(0), Int32(0), Int32(100), Int32(100))
+    call_draw_rect(test_rect)
 
     # Game state variables
     player_x::Float32 = get_game_state_simple_float(Int32(1))

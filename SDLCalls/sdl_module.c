@@ -63,6 +63,7 @@ int test_sdl_working() {
 // Separate initialization function that doesn't set up main loop
 EMSCRIPTEN_KEEPALIVE
 int init_sdl_drawing() {
+    return -1;
     printf("Initializing SDL...\n");
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -124,7 +125,7 @@ int draw_entities() {
 
 EMSCRIPTEN_KEEPALIVE
 int draw_rect_1(SDL_Rect *rect) {
-    printf("draw_rect_1: %d, %d, %d, %d\n", rect->x, rect->y, rect->w, rect->h);
+    //printf("draw_rect_1: %d, %d, %d, %d\n", rect->x, rect->y, rect->w, rect->h);
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);  // Blue color
     SDL_RenderFillRect(renderer, rect);
     return 1;
@@ -527,7 +528,7 @@ float get_game_state_simple_float(int key_id) {
 EMSCRIPTEN_KEEPALIVE
 int render_rect(int r, int g, int b, int a, float x, float y, int w, int h) {
     if (!renderer) {
-        printf("Renderer is NULL in render_rect!\n");
+        //printf("Renderer is NULL in render_rect!\n");
         return 0;
     }
     //printf("position: %d, %d, %d, %d\n", x, y, w, h);
@@ -568,5 +569,24 @@ int main(void) {
     // Set up the main loop using requestAnimationFrame
     // emscripten_set_main_loop(main_loop, 0, 1);
 
+    return 0;
+}
+
+int create_window_hardcoded() {
+    window = SDL_CreateWindow("SDL + Meow", 
+                             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
+                             640, 480, SDL_WINDOW_OPENGL);
+    if (!window) {
+        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    printf("SDL initialized successfully in main!\n");
+    
     return 0;
 }
