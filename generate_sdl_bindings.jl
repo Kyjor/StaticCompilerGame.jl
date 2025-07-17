@@ -420,12 +420,12 @@ Parse SDL header files to extract function signatures
 """
 function parse_sdl_headers(headers_dir::String)
     function_signatures = Dict{String, Tuple{String, Vector{Tuple{String, String}}}}()
-    
+
     if !isdir(headers_dir)
         println("Warning: SDL headers directory not found: $headers_dir")
         return function_signatures
     end
-    
+
     # Find all header files
     header_files = String[]
     for (root, dirs, files) in walkdir(headers_dir)
@@ -435,44 +435,51 @@ function parse_sdl_headers(headers_dir::String)
             end
         end
     end
-    
+
     # Parse each header file
     for header_file in header_files
         content = read(header_file, String)
-        
-        # Look for function declarations
-        # Pattern: extern DECLSPEC return_type SDLCALL function_name(parameters);
+
+        # Match function declarations of the form:
+        # extern DECLSPEC return_type SDLCALL SDL_FunctionName(params...);
         func_pattern = r"extern\s+DECLSPEC\s+([^;]+?)\s+SDLCALL\s+SDL_([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)\s*;"
         matches = eachmatch(func_pattern, content)
-        
+
         for match in matches
             return_type = strip(match[1])
             func_name = "SDL_" * match[2]
             params_str = strip(match[3])
-            
-            # Skip if it's a deprecated function
+
+            # Skip deprecated functions
             if func_name in DEPRECATED_FUNCTIONS
                 continue
             end
-            
+
             # Parse parameters
             params = Tuple{String, String}[]
-            if !isempty(params_str)
+            if !isempty(params_str) && params_str != "void"
                 param_parts = split(params_str, ",")
                 for param in param_parts
                     param = strip(param)
                     if !isempty(param)
-                        # Handle complex parameter types
-                        if contains(param, "(") && contains(param, ")")
+                        if occursin(r"\(.*\)", param)
                             # Function pointer or complex type
                             param_type = param
                             param_name = ""
                         else
-                            # Simple parameter
                             parts = split(param)
-                            if length(parts) >= 2
-                                param_type = join(parts[1:end-1], " ")
-                                param_name = parts[end]
+
+                            if !isempty(parts)
+                                last = parts[end]
+                                stars = ""
+                                # Pull leading * from param name into type
+                                while startswith(last, "*")
+                                    stars *= "*"
+                                    last = last[2:end]
+                                end
+                                param_name = last
+                                base_type = join(parts[1:end-1], " ")
+                                param_type = strip(base_type * " " * stars)
                             else
                                 param_type = param
                                 param_name = ""
@@ -482,13 +489,14 @@ function parse_sdl_headers(headers_dir::String)
                     end
                 end
             end
-            
+
             function_signatures[func_name] = (return_type, params)
         end
     end
-    
+
     return function_signatures
 end
+
 
 """
 Convert C type to Julia type
@@ -503,7 +511,7 @@ function c_to_julia_type(c_type::String)
     
     # Handle pointer types
     if endswith(c_type, "*")
-        base_type = c_type[1:end-1]
+        base_type = strip(c_type[1:end-1])
         julia_base = get(TYPE_MAPPING, base_type, base_type)
         return "Ptr{$julia_base}"
     end
