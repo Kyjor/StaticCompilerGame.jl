@@ -22,7 +22,7 @@ Pkg.add(["StaticCompiler", "StaticTools"])
 ```
 
 ### 2. Build for Web (WASM)
-- Make sure Emscripten is installed and `emcc` is in your PATH.
+- Make sure Emscripten is installed and `emcc` is in your PATH. Instructions here: https://emscripten.org/docs/getting_started/downloads.html
 - Run:
 ```bash
 # Remember, julia 1.10 or below
