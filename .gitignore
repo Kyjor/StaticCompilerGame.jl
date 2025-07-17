@@ -28,3 +28,5 @@ Manifest.toml
 game_wasm/
 
 Build/
+
+game_desktop/
