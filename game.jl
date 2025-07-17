@@ -1,6 +1,7 @@
 # combined_game_working.jl
 using StaticTools
 using StaticCompiler
+using SimpleDirectMediaLayer
 
 include("structs.jl")
 include("llvm_wrappers.jl") 
@@ -74,8 +75,8 @@ function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
     delta_time::Float64 = get_delta_time()
     input = call_update_input(x)
 
-    test_rect = SDL_Rect(Int32(0), Int32(0), Int32(100), Int32(100))    
-    call_draw_rect(test_rect)
+    #test_rect = SDL_Rect(Int32(0), Int32(0), Int32(100), Int32(100))    
+    #call_draw_rect(test_rect)
 
     #ticks = llvm_SDL_GetTicks()
     #printf(c"ticks: %d\n", ticks)
@@ -210,7 +211,13 @@ function pc_main()::Int32
     
     # Initialize game state
     printf(c"Initializing game state...\n")
-    result = j_init_game_state()
+    result = llvm_SDL_Init()
+    printf(c"init result: %d\n", result)
+    printf(c"SDL_Init done\n")
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow()
+    renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window)
+    llvm_set_window(window)
+    llvm_set_renderer(renderer)
     if result != Int32(0)
         printf(c"Failed to initialize game state\n")
         return Int32(1)
@@ -222,6 +229,8 @@ function pc_main()::Int32
         # Call the main game frame function
         # Pass dummy values for x, y, on_ground (these are handled internally now)
         draw_result = draw_game_frame(Int32(0), Int32(0), Int32(0))
+        llvm_SDL_SetRenderDrawColor(renderer, Int32(255), Int32(0), Int32(0), Int32(255))
+        llvm_SDL_RenderPresent(renderer)
         llvm_SDL_Delay(Int32(17))
     end
     

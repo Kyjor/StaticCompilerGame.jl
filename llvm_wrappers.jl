@@ -216,6 +216,7 @@ function call_draw_rect(rect::SDL_Rect)::Int32
         }
     """, "main"), Int32, Tuple{Ptr{Nothing}}, ptr)
 
+    printf(c"draw_rect result: %d\n", result)
     wasm_free(ptr)
     return Int32(0)
 end
@@ -257,7 +258,7 @@ const SDL_WINDOW_OPENGL = Cint(0x00000002)
             define i8* @main() {
             entry:
                 %title_ptr = getelementptr inbounds [6 x i8], [6 x i8]* @title, i32 0, i32 0
-                %win = call i8* @SDL_CreateWindow(i8* %title_ptr, i32 100, i32 100, i32 500, i32 500, i32 2)
+                %win = call i8* @SDL_CreateWindow(i8* %title_ptr, i32 100, i32 100, i32 640, i32 480, i32 2)
                 ret i8* %win
             }
         """, "main"), Ptr{SDL_Window}, Tuple{}, ())
@@ -319,4 +320,28 @@ const SDL_WINDOW_OPENGL = Cint(0x00000002)
             }
         """, "main"), Cvoid, Tuple{Int32}, ms)
     end
+
+    function llvm_SDL_SetRenderDrawColor(renderer::Ptr{SDL_Renderer}, r::Int32, g::Int32, b::Int32, a::Int32)
+        result = Base.llvmcall(("""
+            declare i32 @SDL_SetRenderDrawColor(i8*, i32, i32, i32, i32) nounwind
+            define i32 @main(i8* %renderer, i32 %r, i32 %g, i32 %b, i32 %a) {
+            entry:
+                %result = call i32 @SDL_SetRenderDrawColor(i8* %renderer, i32 %r, i32 %g, i32 %b, i32 %a)
+                ret i32 %result
+            }
+        """, "main"), Int32, Tuple{Ptr{SDL_Renderer}, Int32, Int32, Int32, Int32}, renderer, r, g, b, a)
+
+        printf(c"SDL_SetRenderDrawColor result: %d\n", result)
+    end
     
+
+    function llvm_SDL_RenderPresent(renderer::Ptr{SDL_Renderer})
+        Base.llvmcall(("""
+            declare void @SDL_RenderPresent(i8*) nounwind
+            define void @main(i8* %renderer) {
+            entry:
+                call void @SDL_RenderPresent(i8* %renderer)
+                ret void
+            }
+        """, "main"), Cvoid, Tuple{Ptr{SDL_Renderer}}, renderer)
+    end
