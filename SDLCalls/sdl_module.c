@@ -63,6 +63,7 @@ int test_sdl_working() {
 // Separate initialization function that doesn't set up main loop
 EMSCRIPTEN_KEEPALIVE
 int init_sdl_drawing() {
+    return 1;
     printf("Initializing SDL...\n");
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -569,4 +570,35 @@ int main(void) {
     // emscripten_set_main_loop(main_loop, 0, 1);
 
     return 0;
+}
+
+int get_error() {
+    printf("SDL_GetError: %s\n", SDL_GetError());
+    return 1;
+}
+
+int set_renderer(SDL_Renderer *new_renderer) {
+    printf("Setting renderer\n");
+    if (!new_renderer) {
+        printf("Error: NULL renderer provided to set_renderer\n");
+        return 0;
+    }
+    printf("Renderer set\n");
+    renderer = new_renderer;
+    return 1;
+}
+
+int set_window(SDL_Window *new_window) {
+    printf("Setting window\n");
+    if (!new_window) {
+        printf("Error: NULL window provided to set_window\n");
+        return 0;
+    }
+    printf("Window set\n");
+    window = new_window;
+    // get the window size
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+    printf("Window size: %d, %d\n", w, h);
+    return 1;
 }

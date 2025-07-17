@@ -43,7 +43,6 @@ end
 # Only compile functions that don't conflict with C functions
 functions_to_compile = [
     (draw_game_frame, (Int32, Int32, Int32), "draw_game_frame"),
-    (init_sdl, (), "init_sdl"),
     #(call_update_input, (), "call_update_input"),
     (j_init_game_state, (), "j_init_game_state"),
 ]
@@ -85,9 +84,7 @@ if build_type == "web"
         cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_draw_game_frame',
-        '_init_sdl',
         '_draw_entities', 
-        '_init_sdl_drawing', 
         '_main_loop', 
         '_test_sdl_working', 
         '_update_entities', 

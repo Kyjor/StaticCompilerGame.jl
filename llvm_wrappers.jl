@@ -223,68 +223,7 @@ end
 const SDL_WINDOWPOS_UNDEFINED = Cint(0x1FFF0000)
 const SDL_WINDOW_OPENGL = Cint(0x00000002)
 
-# function SDL_CreateWindow()::Int32
-#     title::String = c"SDL2 + Emscripten"
-#     title_bytes::Base.CodeUnits{UInt8, String} = codeunits(title)
-#     title_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(length(title_bytes) + 1))
 
-#     # Write bytes and null-terminate
-#     unsafe_copyto!(title_ptr, pointer(title_bytes), length(title_bytes))
-#     #unsafe_store!(Ptr{UInt8}(title_ptr + length(title_bytes)), 0x00)
-
-# #     window_ptr = Base.llvmcall(("""
-# #     declare ptr @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32)
-# #     define ptr @main(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags) {
-# #     entry:
-# #         %win = call ptr @SDL_CreateWindow(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags)
-# #         ret ptr %win
-# #     }
-# # """, "main"), Ptr{Cvoid}, Tuple{Ptr{UInt8}, Cint, Cint, Cint, Cint, Cint},
-# #     title_ptr, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_OPENGL)
-
-# #     wasm_free(title_ptr)
-#     return Int32(0)
-# end
-
-function SDL_CreateWindow()::Ptr{SDL_Window}
-    printf(c"SDL_CreateWindoadafssadfsfew\n")
-        result = Base.llvmcall(("""
-            %SDL_Window = type opaque
-            declare %SDL_Window* @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32)
-    
-            @title_str = private unnamed_addr constant [20 x i8] c"New Window\\00"
-    
-            define %SDL_Window* @main() {
-            entry:
-                %title_ptr = getelementptr [20 x i8], [20 x i8]* @title_str, i32 0, i32 0
-                %win = call %SDL_Window* @SDL_CreateWindow(
-                    i8* %title_ptr,
-                    i32 0x1FFF0000, ; SDL_WINDOWPOS_UNDEFINED
-                    i32 0x1FFF0000, ; SDL_WINDOWPOS_UNDEFINED
-                    i32 640,
-                    i32 480,
-                    i32 0x00000002 ; SDL_WINDOW_OPENGL
-                )
-                ret %SDL_Window* %win
-            }
-        """, "main"), Ptr{SDL_Window}, Tuple{})
-        return result
-    end
-
-
-    function call_create_window_hardcoded()::Int32
-        Base.llvmcall(("""
-            declare i32 @create_window_hardcoded() nounwind
-            define i32 @main() {
-            entry:
-                %result = call i32 @create_window_hardcoded()
-                ret i32 %result
-            }
-        """, "main"), Int32, Tuple{}, ())
-
-        return Int32(0)
-    end
-    
     function llvm_SDL_GetTicks()::Int32
         Base.llvmcall(("""
             declare i32 @SDL_GetTicks() nounwind
@@ -318,9 +257,53 @@ function SDL_CreateWindow()::Ptr{SDL_Window}
             define i8* @main() {
             entry:
                 %title_ptr = getelementptr inbounds [6 x i8], [6 x i8]* @title, i32 0, i32 0
-                %win = call i8* @SDL_CreateWindow(i8* %title_ptr, i32 100, i32 100, i32 640, i32 480, i32 2)
+                %win = call i8* @SDL_CreateWindow(i8* %title_ptr, i32 100, i32 100, i32 500, i32 500, i32 2)
                 ret i8* %win
             }
-        """, "main"), Ptr{Cvoid}, Tuple{}, ())
+        """, "main"), Ptr{SDL_Window}, Tuple{}, ())
+    end
+
+    function llvm_SDL_CreateRenderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
+        Base.llvmcall(("""
+            declare i8* @SDL_CreateRenderer(i8*, i32, i32) nounwind
+    
+            define i8* @main(i8* %window) {
+            entry:
+                %renderer = call i8* @SDL_CreateRenderer(i8* %window, i32 -1, i32 2) ;
+                ret i8* %renderer
+            }
+        """, "main"), Ptr{SDL_Renderer}, Tuple{Ptr{SDL_Window}}, window)
+    end
+
+    function llvm_get_error()::Int32
+        Base.llvmcall(("""
+            declare i32 @get_error() nounwind
+            define i32 @main() {
+            entry:
+                %result = call i32 @get_error()
+                ret i32 %result
+            }
+        """, "main"), Int32, Tuple{}, ())
     end
     
+    function llvm_set_renderer(renderer::Ptr{SDL_Renderer})::Int32
+        Base.llvmcall(("""
+            declare i32 @set_renderer(i8*) nounwind
+            define i32 @main(i8* %renderer) {
+            entry:
+                %result = call i32 @set_renderer(i8* %renderer)
+                ret i32 %result
+            }
+        """, "main"), Int32, Tuple{Ptr{SDL_Renderer}}, renderer)
+    end
+
+    function llvm_set_window(window::Ptr{SDL_Window})::Int32
+        Base.llvmcall(("""
+            declare i32 @set_window(i8*) nounwind
+            define i32 @main(i8* %window) {
+            entry:
+                %result = call i32 @set_window(i8* %window)
+                ret i32 %result
+            }
+        """, "main"), Int32, Tuple{Ptr{SDL_Window}}, window)
+    end

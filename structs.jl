@@ -13,3 +13,4 @@ struct SDL_Rect
 end
 
 mutable struct SDL_Window end
+mutable struct SDL_Renderer end

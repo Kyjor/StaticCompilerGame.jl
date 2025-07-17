@@ -6,13 +6,12 @@ window.onModuleReady = function() {
     console.log("Available functions:", Object.keys(Module).filter(key => key.startsWith('_')));
     
     // Initialize SDL drawing first
-    if (Module._init_sdl_drawing) {
-        console.log("Calling init_sdl_drawing...");
-        Module._init_sdl_drawing();
+    if (Module._j_init_game_state) {
+        console.log("Calling init_game_state...");
+        Module._j_init_game_state();
     } else {
-        console.error("init_sdl_drawing not found!");
+        console.error("init_game_state not found!");
     }
-    
     // Test if SDL is working
     if (Module._test_sdl_working) {
         console.log("Testing SDL working...");
@@ -22,13 +21,7 @@ window.onModuleReady = function() {
     }
     
     let frameCount = 0;
-    let is_initialized = false;
     function runMainLoop() {
-        if (!is_initialized) {
-            Module._j_init_game_state();
-            is_initialized = true;
-        }
-
         frameCount++;
         // Call the C/C++ main_loop function
         let x = Module._draw_game_frame(999, 10, 1);

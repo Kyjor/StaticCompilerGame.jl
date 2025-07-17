@@ -5,13 +5,6 @@ using StaticCompiler
 include("structs.jl")
 include("llvm_wrappers.jl") 
 
-# Julia functions that will call C functions
-# These are just stubs - the actual implementation is in C
-function init_sdl_drawing()::Int32
-    # This will be linked to the C function init_sdl_drawing()
-    return Int32(0)  # Placeholder return
-end
-
 # Convenient Julia wrapper functions for game state management
 function j_init_game_state()::Int32
     printf(c"Initializing game state\n")
@@ -29,8 +22,16 @@ function j_init_game_state()::Int32
     printf(c"SDL_CreateWindow\n")
     #call_create_window_hardcoded()
     #window = SDL_CreateWindow()
-    window = llvm_SDL_CreateWindow()
-    printf(c"SDL_CreateWindow done\n")
+    printf(c"SDL_Init\n")
+    result = llvm_SDL_Init()
+    printf(c"init result: %d\n", result)
+    printf(c"SDL_Init done\n")
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow()
+    renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window)
+    llvm_set_window(window)
+    llvm_set_renderer(renderer)
+    llvm_get_error()
+    printf(c"SDL_CreateRenderer done\n")
 
     return result
 end
@@ -201,9 +202,4 @@ function move_toward(current::Float32, target::Float32, max_delta::Float32)::Flo
     else
         return target
     end
-end
-
-# Initialize SDL (simple wrapper)
-function init_sdl()::Int32
-    return init_sdl_drawing()
 end
