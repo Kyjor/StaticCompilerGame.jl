@@ -246,8 +246,6 @@ const SDL_WINDOW_OPENGL = Cint(0x00000002)
 #     return Int32(0)
 # end
 
-mutable struct SDL_Window end
-
 function SDL_CreateWindow()::Ptr{SDL_Window}
     printf(c"SDL_CreateWindoadafssadfsfew\n")
         result = Base.llvmcall(("""
@@ -287,8 +285,6 @@ function SDL_CreateWindow()::Ptr{SDL_Window}
         return Int32(0)
     end
     
-    
-    
     function llvm_SDL_GetTicks()::Int32
         Base.llvmcall(("""
             declare i32 @SDL_GetTicks() nounwind
@@ -299,10 +295,23 @@ function SDL_CreateWindow()::Ptr{SDL_Window}
             }
         """, "main"), Int32, Tuple{}, ())
     end
-    
-    function llvm_create_window()::Ptr{SDL_Window}
+
+    function llvm_SDL_Init()::Int32
         Base.llvmcall(("""
-            @title = private unnamed_addr constant [6 x i8] c"It me\\00", align 1
+            declare i32 @SDL_Init(i32) nounwind
+    
+            define i32 @main() {
+            entry:
+                %result = call i32 @SDL_Init(i32 32)
+                ret i32 %result
+            }
+        """, "main"), Int32, Tuple{}, ())
+    end
+    
+    
+    function llvm_SDL_CreateWindow()::Ptr{SDL_Window}
+        Base.llvmcall(("""
+            @title = private unnamed_addr constant [6 x i8] c"Hello\\00", align 1
     
             declare i8* @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32) nounwind
     

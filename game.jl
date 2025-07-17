@@ -29,7 +29,7 @@ function j_init_game_state()::Int32
     printf(c"SDL_CreateWindow\n")
     #call_create_window_hardcoded()
     #window = SDL_CreateWindow()
-    llvm_create_window()
+    window = llvm_SDL_CreateWindow()
     printf(c"SDL_CreateWindow done\n")
 
     return result

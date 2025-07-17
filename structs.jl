@@ -11,3 +11,5 @@ struct SDL_Rect
     w::Cint
     h::Cint
 end
+
+mutable struct SDL_Window end
