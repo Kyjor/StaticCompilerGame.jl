@@ -31,49 +31,52 @@ const TYPE_MAPPING = Dict(
     "float" => "Float32",
     "double" => "Float64",
     "void" => "Cvoid",
+    "void *" => "Cvoid",
+    "void **" => "Cvoid",
     "char" => "UInt8",
-    "const char*" => "Ptr{UInt8}",
-    "char*" => "Ptr{UInt8}",
+    "const char *" => "UInt8",
+    "char *" => "UInt8",
+    "unsigned int" => "UInt32",
     "SDL_bool" => "UInt32",
-    "SDL_Window*" => "Ptr{SDL_Window}",
-    "SDL_Renderer*" => "Ptr{SDL_Renderer}",
-    "SDL_Texture*" => "Ptr{SDL_Texture}",
-    "SDL_Surface*" => "Ptr{SDL_Surface}",
-    "SDL_Rect*" => "Ptr{SDL_Rect}",
-    "SDL_Event*" => "Ptr{SDL_Event}",
-    "SDL_Color*" => "Ptr{SDL_Color}",
-    "SDL_Point*" => "Ptr{SDL_Point}",
-    "SDL_FRect*" => "Ptr{SDL_FRect}",
-    "SDL_FPoint*" => "Ptr{SDL_FPoint}",
-    "SDL_DisplayMode*" => "Ptr{SDL_DisplayMode}",
-    "SDL_RendererInfo*" => "Ptr{SDL_RendererInfo}",
-    "SDL_version*" => "Ptr{SDL_version}",
-    "SDL_Locale*" => "Ptr{SDL_Locale}",
-    "SDL_Vertex*" => "Ptr{SDL_Vertex}",
-    "SDL_Palette*" => "Ptr{SDL_Palette}",
-    "SDL_PixelFormat*" => "Ptr{SDL_PixelFormat}",
-    "SDL_Cursor*" => "Ptr{SDL_Cursor}",
-    "SDL_Joystick*" => "Ptr{SDL_Joystick}",
-    "SDL_GameController*" => "Ptr{SDL_GameController}",
-    "SDL_Haptic*" => "Ptr{SDL_Haptic}",
+    "SDL_Window *" => "SDL_Window",
+    "SDL_Renderer *" => "SDL_Renderer",
+    "SDL_Texture *" => "SDL_Texture",
+    "SDL_Surface *" => "SDL_Surface",
+    "SDL_Rect *" => "SDL_Rect",
+    "SDL_Event *" => "SDL_Event",
+    "SDL_Color *" => "SDL_Color",
+    "SDL_Point *" => "SDL_Point",
+    "SDL_FRect *" => "SDL_FRect",
+    "SDL_FPoint *" => "SDL_FPoint",
+    "SDL_DisplayMode*" => "SDL_DisplayMode",
+    "SDL_RendererInfo*" => "SDL_RendererInfo",
+    "SDL_version*" => "SDL_version",
+    "SDL_Locale*" => "SDL_Locale",
+    "SDL_Vertex*" => "SDL_Vertex",
+    "SDL_Palette*" => "SDL_Palette",
+    "SDL_PixelFormat*" => "SDL_PixelFormat",
+    "SDL_Cursor*" => "SDL_Cursor",
+    "SDL_Joystick*" => "SDL_Joystick",
+    "SDL_GameController*" => "SDL_GameController",
+    "SDL_Haptic*" => "SDL_Haptic",
     "SDL_TouchID" => "Int64",
     "SDL_FingerID" => "Int64",
     "SDL_GestureID" => "Int64",
     "SDL_TimerID" => "Int32",
-    "SDL_Thread*" => "Ptr{Cvoid}",
-    "SDL_mutex*" => "Ptr{Cvoid}",
-    "SDL_sem*" => "Ptr{Cvoid}",
-    "SDL_cond*" => "Ptr{Cvoid}",
-    "SDL_RWops*" => "Ptr{Cvoid}",
+    "SDL_Thread*" => "Cvoid",
+    "SDL_mutex*" => "Cvoid",
+    "SDL_sem*" => "Cvoid",
+    "SDL_cond*" => "Cvoid",
+    "SDL_RWops*" => "Cvoid",
     "SDL_AudioDeviceID" => "UInt32",
     "SDL_AudioFormat" => "UInt16",
-    "SDL_AudioCallback" => "Ptr{Cvoid}",
-    "SDL_TimerCallback" => "Ptr{Cvoid}",
-    "SDL_HitTest" => "Ptr{Cvoid}",
-    "SDL_LogOutputFunction" => "Ptr{Cvoid}",
-    "SDL_AssertData*" => "Ptr{Cvoid}",
-    "SDL_AssertionHandler" => "Ptr{Cvoid}",
-    "SDL_BlitMap*" => "Ptr{Cvoid}",
+    "SDL_AudioCallback" => "Cvoid",
+    "SDL_TimerCallback" => "Cvoid",
+    "SDL_HitTest" => "Cvoid",
+    "SDL_LogOutputFunction" => "Cvoid",
+    "SDL_AssertData*" => "Cvoid",
+    "SDL_AssertionHandler" => "Cvoid",
+    "SDL_BlitMap*" => "Cvoid",
     "SDL_BlendMode" => "UInt32",
     "SDL_BlendFactor" => "UInt32",
     "SDL_BlendOperation" => "UInt32",
@@ -115,12 +118,12 @@ const TYPE_MAPPING = Dict(
     "SDL_ThreadPriority" => "Int32",
     "SDL_AudioStatus" => "Int32",
     "SDL_AudioFormat" => "UInt16",
-    "SDL_AudioCallback" => "Ptr{Cvoid}",
-    "SDL_AudioFilter" => "Ptr{Cvoid}",
+    "SDL_AudioCallback" => "SDL_AudioCallback",
+    "SDL_AudioFilter" => "SDL_AudioFilter",
     "SDL_AudioDeviceID" => "UInt32",
-    "SDL_AudioStream*" => "Ptr{Cvoid}",
-    "SDL_AudioCVT*" => "Ptr{Cvoid}",
-    "SDL_AudioSpec*" => "Ptr{SDL_AudioSpec}",
+    "SDL_AudioStream *" => "SDL_AudioStream",
+    "SDL_AudioCVT *" => "SDL_AudioCVT",
+    "SDL_AudioSpec *" => "SDL_AudioSpec",
     "SDL_AudioCVT" => "SDL_AudioCVT",
     "SDL_AudioSpec" => "SDL_AudioSpec",
     "SDL_AudioStream" => "SDL_AudioStream",
@@ -220,6 +223,8 @@ const TYPE_MAPPING = Dict(
     "SDL_Version" => "SDL_version",
     "SDL_Vertex" => "SDL_Vertex",
     "SDL_Window" => "SDL_Window",
+    "SDL_Window *" => "SDL_Window",
+    "SDL_Window **" => "SDL_Window",
     "SDL_Renderer" => "SDL_Renderer",
     "SDL_Event" => "SDL_Event",
     "SDL_Cursor" => "SDL_Cursor",
@@ -252,7 +257,20 @@ const TYPE_MAPPING = Dict(
     "SDL_DisplayEvent" => "SDL_DisplayEvent",
     "SDL_SysWMEvent" => "SDL_SysWMEvent",
     "SDL_ControllerTouchpadEvent" => "SDL_ControllerTouchpadEvent",
-    "SDL_ControllerSensorEvent" => "SDL_ControllerSensorEvent"
+    "SDL_ControllerSensorEvent" => "SDL_ControllerSensorEvent",
+    "XUserHandle" => "Cvoid",
+    "XTaskQueueHandle" => "Cvoid",
+    "size_t" => "Csize_t",
+    "SDL_SysWMinfo" => "Cvoid",
+    "SDL_WindowsMessageHook" => "Cvoid",
+    "wchar_t" => "Cwchar_t",
+    "unsigned short" => "UInt16",
+    "unsigned char" => "UInt8",
+    "unsigned int" => "UInt32",
+    "unsigned long" => "UInt32",
+    "unsigned long long" => "UInt64",
+    "unsigned long long int" => "UInt64",
+    "unsigned long int" => "UInt32",
 )
 
 # LLVM type mapping for function declarations
@@ -290,7 +308,15 @@ const LLVM_TYPE_MAPPING = Dict(
     "Ptr{SDL_Joystick}" => "i8*",
     "Ptr{SDL_GameController}" => "i8*",
     "Ptr{SDL_Haptic}" => "i8*",
-    "Ptr{Cvoid}" => "i8*"
+    "Ptr{Cvoid}" => "i8*",
+    "Ptr{Cvoid}}" => "i8**",
+    "Ptr{Ptr{SDL_Window}}" => "i8**",
+    "Ptr{Ptr{SDL_Renderer}}" => "i8**",
+    "Ptr{Ptr{SDL_Texture}}" => "i8**",
+    "Ptr{Ptr{SDL_Surface}}" => "i8**",
+    "Ptr{Ptr{SDL_Rect}}" => "i8**",
+    "Ptr{Ptr{SDL_Event}}" => "i8**",
+    "Ptr{Ptr{SDL_Color}}" => "i8**",
 )
 
 # Deprecated functions to skip
@@ -431,6 +457,7 @@ function parse_sdl_headers(headers_dir::String)
     for (root, dirs, files) in walkdir(headers_dir)
         for file in files
             if endswith(file, ".h")
+                println("Found header file: $file")
                 push!(header_files, joinpath(root, file))
             end
         end
@@ -473,6 +500,8 @@ function parse_sdl_headers(headers_dir::String)
                                 last = parts[end]
                                 stars = ""
                                 # Pull leading * from param name into type
+                                # If there are multiple *s, we need to do a double wrap ie void** -> Ptr{Ptr{Cvoid}}
+                                
                                 while startswith(last, "*")
                                     stars *= "*"
                                     last = last[2:end]
@@ -511,9 +540,15 @@ function c_to_julia_type(c_type::String)
     
     # Handle pointer types
     if endswith(c_type, "*")
+        #println("Pointer type: $c_type")
         base_type = strip(c_type[1:end-1])
         julia_base = get(TYPE_MAPPING, base_type, base_type)
-        return "Ptr{$julia_base}"
+        # if has multiple *s, we need to do a double wrap ie void** -> Ptr{Ptr{Cvoid}}
+        if count(c -> c == '*', c_type) > 1
+            return "Ptr{Ptr{$julia_base}}"
+        else
+            return "Ptr{$julia_base}"
+        end
     end
     
     # Handle basic types
@@ -523,7 +558,8 @@ end
 """
 Convert Julia type to LLVM type
 """
-function julia_to_llvm_type(julia_type::String)
+function julia_to_llvm_type(julia_type::Union{String, SubString{String}})
+    julia_type = String(julia_type)
     return get(LLVM_TYPE_MAPPING, julia_type, "i8*")
 end
 
@@ -694,6 +730,7 @@ function generate_bindings()
     println("Parsing SDL headers from $SDL_HEADERS_DIR...")
     function_signatures = parse_sdl_headers(SDL_HEADERS_DIR)
     println("Found $(length(function_signatures)) function signatures in headers")
+    println(function_signatures)
     
     # Generate bindings
     println("Generating Julia bindings...")
@@ -705,8 +742,12 @@ function generate_bindings()
                      "# Headers: " * SDL_HEADERS_DIR * "\n\n"
     push!(bindings, header_comment)
     
+    skip_functions = ["SDL_UIKitRunApp", "SDL_Vulkan_CreateSurface", "SDL_WinRTGetFSPathUNICODE", "SDL_WinRTGetFSPathUTF8", "SDL_hid_enumerate", "SDL_hid_get_feature_report", "SDL_hid_open", "SDL_hid_open_path"]
     # Generate binding for each function
-    for func_name in sort(collect(sdl_functions))
+    for func_name in sort(collect(keys(function_signatures)))
+        if func_name in skip_functions
+            continue
+        end
         if haskey(function_signatures, func_name)
             return_type, params = function_signatures[func_name]
             binding = generate_julia_binding(func_name, return_type, params)
