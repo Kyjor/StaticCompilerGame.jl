@@ -30,3 +30,5 @@ game_wasm/
 Build/
 
 game_desktop/
+
+.vscode/

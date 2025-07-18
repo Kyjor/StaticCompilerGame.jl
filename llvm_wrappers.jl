@@ -221,9 +221,6 @@ function call_draw_rect(rect::SDL_Rect)::Int32
     return Int32(0)
 end
 
-const SDL_WINDOWPOS_UNDEFINED = Cint(0x1FFF0000)
-const SDL_WINDOW_OPENGL = Cint(0x00000002)
-
 
     function llvm_SDL_GetTicks()::Int32
         Base.llvmcall(("""

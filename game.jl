@@ -1,10 +1,10 @@
 # combined_game_working.jl
 using StaticTools
 using StaticCompiler
-using SimpleDirectMediaLayer
 
 include("structs.jl")
 include("llvm_wrappers.jl") 
+include("llvm_bindings.jl")
 
 # Convenient Julia wrapper functions for game state management
 function j_init_game_state()::Int32
@@ -22,7 +22,6 @@ function j_init_game_state()::Int32
     result = set_game_state_simple(Int32(8), Int32(0))      # is_jumping
     printf(c"SDL_CreateWindow\n")
     #call_create_window_hardcoded()
-    #window = SDL_CreateWindow()
     printf(c"SDL_Init\n")
     result = llvm_SDL_Init()
     printf(c"init result: %d\n", result)
@@ -215,7 +214,9 @@ function pc_main()::Int32
     printf(c"init result: %d\n", result)
     printf(c"SDL_Init done\n")
     window::Ptr{SDL_Window} = llvm_SDL_CreateWindow()
-    renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window)
+    #renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window)
+
+    renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window, Int32(-1), Int32(2))
     llvm_set_window(window)
     llvm_set_renderer(renderer)
     if result != Int32(0)

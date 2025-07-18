@@ -544,7 +544,7 @@ function generate_llvm_declaration(func_name::String, return_type::String, param
     end
     
     param_str = join(llvm_params, ", ")
-    return "declare $llvm_return @$func_name($param_str) nounwind"
+    return "declare $llvm_return @$func_name($param_str) nounwind\n"
 end
 
 """
@@ -575,21 +575,22 @@ function generate_llvm_call(func_name::String, return_type::String, params::Vect
         end
     end
     
-    param_str = join(llvm_params, ", ")
-    param_names_str = join(param_names, ", ")
-    
+    param_names_and_types = ""
+    for i in eachindex(llvm_params)
+        param_names_and_types *= "$(llvm_params[i]) $(param_names[i])$(i == length(llvm_params) ? "" : ", ")"
+    end
     if llvm_return == "void"
-        return "define void @main(" * join(llvm_params, ", ") * ") {\n" *
-               "entry:\n" *
-               "    call void @" * func_name * "(" * param_names_str * ")\n" *
-               "    ret void\n" *
-               "}"
+        return "define void @main(" * param_names_and_types * ") {\n" *
+               "        entry:\n" *
+               "            call void @" * func_name * "(" * param_names_and_types * ")\n" *
+               "            ret void\n" *
+               "        }"
     else
-        return "define " * llvm_return * " @main(" * join(llvm_params, ", ") * ") {\n" *
-               "entry:\n" *
-               "    %result = call " * llvm_return * " @" * func_name * "(" * param_names_str * ")\n" *
-               "    ret " * llvm_return * " %result\n" *
-               "}"
+        return "define " * llvm_return * " @main(" * param_names_and_types * ") {\n" *
+               "        entry:\n" *
+               "            %result = call " * llvm_return * " @" * func_name * "(" * param_names_and_types * ")\n" *
+               "            ret " * llvm_return * " %result\n" *
+               "        }"
     end
 end
 
@@ -673,7 +674,7 @@ function generate_julia_binding(func_name::String, return_type::String, params::
         Base.llvmcall((\"\"\"
         $llvm_decl
         $llvm_call
-        \"\"\", \"main\"), $julia_return, $julia_tuple, ($julia_params))
+        \"\"\", \"main\"), $julia_return, $julia_tuple, $julia_params)
     end"
 end
 
@@ -700,7 +701,6 @@ function generate_bindings()
     
     # Add header comment
     header_comment = "# Auto-generated SDL bindings using llvmcall\n" *
-                     "# Generated on: " * string(Dates.now()) * "\n" *
                      "# Source: " * C_FILE * "\n" *
                      "# Headers: " * SDL_HEADERS_DIR * "\n\n"
     push!(bindings, header_comment)

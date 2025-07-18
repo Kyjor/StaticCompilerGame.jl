@@ -608,9 +608,10 @@ int render_rect(int r, int g, int b, int a, float x, float y, int w, int h) {
     return 1;
 }
 
+#ifdef __EMSCRIPTEN__
 // Original main function - kept for compatibility but not used
 // Renamed to avoid conflict with pc_main.c
-int sdl_main(void) {
+int main(void) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -639,6 +640,7 @@ int sdl_main(void) {
 
     return 0;
 }
+#endif
 
 int get_error() {
     printf("SDL_GetError: %s\n", SDL_GetError());
