@@ -176,6 +176,28 @@ function wasm_malloc(size::UInt32)::Ptr{Cvoid}
     """, "my_malloc"), Ptr{Cvoid}, Tuple{UInt32}, size)
 end
 
+function wasm_malloc_string(size::UInt32)::Ptr{UInt8}
+    Base.llvmcall(("""
+        declare noalias i8* @malloc(i32) nounwind
+        define i8* @my_malloc_string(i32 %size) {
+            entry:
+                %ptr = call noalias i8* @malloc(i32 %size)
+                ret i8* %ptr
+            }
+        """, "my_malloc_string"), Ptr{UInt8}, Tuple{UInt32}, size)
+end
+
+function wasm_free_string(ptr::Ptr{UInt8})
+    Base.llvmcall(("""
+        declare void @free(i8*) nounwind
+        define void @my_free_string(i8* %ptr) {
+            entry:
+                call void @free(i8* %ptr)
+                ret void
+            }
+        """, "my_free_string"), Nothing, Tuple{Ptr{UInt8}}, ptr)
+end
+
 function wasm_free(ptr::Ptr{Cvoid})
     Base.llvmcall(("""
         declare void @free(i8*) nounwind

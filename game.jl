@@ -202,55 +202,72 @@ function move_toward(current::Float32, target::Float32, max_delta::Float32)::Flo
 end
 
 
+
 # PC Entry Point - Main function for desktop builds
 function pc_main()::Int32
-    
-    # Initialize game state
-    printf(c"Initializing game state...\n")
-    result = llvm_SDL_Init()
-    printf(c"init result: %d\n", result)
-    printf(c"SDL_Init done\n")
-    #window::Ptr{SDL_Window} = llvm_SDL_CreateWindow()
+    # Init SDL
+    printf(c"Initializing game...\n")
+    llvm_SDL_Init()
+
+    # Title string
     ptr::Ptr{Cvoid} = wasm_malloc(UInt32(18))
     unsafe_store!(Ptr{UInt8}(ptr + 0), UInt8('S'))
-    unsafe_store!(Ptr{UInt8}(ptr + 1), UInt8('D'))
-    unsafe_store!(Ptr{UInt8}(ptr + 2), UInt8('L'))
-    unsafe_store!(Ptr{UInt8}(ptr + 3), UInt8('2'))
-    unsafe_store!(Ptr{UInt8}(ptr + 4), UInt8(' '))
-    unsafe_store!(Ptr{UInt8}(ptr + 5), UInt8('+'))
+    unsafe_store!(Ptr{UInt8}(ptr + 1), UInt8('Q'))
+    unsafe_store!(Ptr{UInt8}(ptr + 2), UInt8('U'))
+    unsafe_store!(Ptr{UInt8}(ptr + 3), UInt8('A'))
+    unsafe_store!(Ptr{UInt8}(ptr + 4), UInt8('R'))
+    unsafe_store!(Ptr{UInt8}(ptr + 5), UInt8('E'))
     unsafe_store!(Ptr{UInt8}(ptr + 6), UInt8(' '))
-    unsafe_store!(Ptr{UInt8}(ptr + 7), UInt8('E'))
-    unsafe_store!(Ptr{UInt8}(ptr + 8), UInt8('m'))
-    unsafe_store!(Ptr{UInt8}(ptr + 9), UInt8('s'))
-    unsafe_store!(Ptr{UInt8}(ptr + 10), UInt8('c'))
-    unsafe_store!(Ptr{UInt8}(ptr + 11), UInt8('r'))
-    unsafe_store!(Ptr{UInt8}(ptr + 12), UInt8('i'))
-    unsafe_store!(Ptr{UInt8}(ptr + 13), UInt8('p'))
-    unsafe_store!(Ptr{UInt8}(ptr + 14), UInt8('t'))
-    unsafe_store!(Ptr{UInt8}(ptr + 15), UInt8('e'))
-    unsafe_store!(Ptr{UInt8}(ptr + 16), UInt8('n'))
-    unsafe_store!(Ptr{UInt8}(ptr + 17), 0x00)
-    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(ptr, Int32(0), Int32(0), Int32(640), Int32(480), UInt32(0))
+    unsafe_store!(Ptr{UInt8}(ptr + 7), UInt8('G'))
+    unsafe_store!(Ptr{UInt8}(ptr + 8), UInt8('A'))
+    unsafe_store!(Ptr{UInt8}(ptr + 9), UInt8('M'))
+    unsafe_store!(Ptr{UInt8}(ptr + 10), UInt8('E'))
+    unsafe_store!(Ptr{UInt8}(ptr + 11), 0x00)
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(ptr, Int32(100), Int32(100), Int32(640), Int32(480), UInt32(0))
     wasm_free(ptr)
+
     renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window)
-    llvm_set_window(window)
-    llvm_set_renderer(renderer)
-    if result != Int32(0)
-        printf(c"Failed to initialize game state\n")
-        return Int32(1)
-    end
+
+    # Player rect
+    player = Ref(SDL_Rect(Int32(300), Int32(220), Int32(40), Int32(40)))
+
+    # Event loop
+    #event = Ref{SDL_Event}(SDL_Event)()
+    running::Int32 = Int32(1)
     
-    draw_result = Int32(0)
-    while draw_result == Int32(0)
-        
-        # Call the main game frame function
-        # Pass dummy values for x, y, on_ground (these are handled internally now)
-        draw_result = draw_game_frame(Int32(0), Int32(0), Int32(0))
-        llvm_SDL_SetRenderDrawColor(renderer, Int32(255), Int32(0), Int32(0), Int32(255))
+
+    #event::SDL_Event = (SDL_Event)()
+    while running == Int32(1)
+        while llvm_SDL_PollEvent(Ptr{SDL_Event}(C_NULL)) != 0
+            # if event[].type == SDL_QUIT
+            #     running = false
+            # elseif event[].type == SDL_KEYDOWN
+            #     key = event[].key.keysym.sym
+            #     if key == SDLK_LEFT
+            #         player[].x -= 5
+            #     elseif key == SDLK_RIGHT
+            #         player[].x += 5
+            #     elseif key == SDLK_UP
+            #         player[].y -= 5
+            #     elseif key == SDLK_DOWN
+            #         player[].y += 5
+            #     end
+            # end
+        end
+
+        # Draw
+        llvm_SDL_SetRenderDrawColor(renderer, Int32(0), Int32(0), Int32(0), Int32(255)) # black
+        llvm_SDL_RenderClear(renderer)
+
+        llvm_SDL_SetRenderDrawColor(renderer, Int32(255), Int32(0), Int32(0), Int32(255)) # red
+        #llvm_SDL_RenderFillRect(renderer, player)
+
         llvm_SDL_RenderPresent(renderer)
-        llvm_SDL_Delay(Int32(17))
+        llvm_SDL_Delay(Int32(16)) # ~60 FPS
     end
-    
-    return Int32(0)
+
+    llvm_SDL_Quit()
+    return 0
 end
+
 
