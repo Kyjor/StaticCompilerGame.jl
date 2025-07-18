@@ -18,8 +18,8 @@
     end
 
     # Original C signature: SDL_Window * SDL_CreateWindow(const char * title, int x, int y, int w, int h, Uint32 flags)
-    function llvm_SDL_CreateWindow(title::Ptr{UInt8}, x::Int32, y::Int32, w::Int32, h::Int32, flags::UInt32)::Ptr{SDL_Window}
-        Base.llvmcall(("""
+    function llvm_SDL_CreateWindow(ptr::Ptr{Cvoid}, x::Int32, y::Int32, w::Int32, h::Int32, flags::Int32)::Ptr{SDL_Window}
+        result = Base.llvmcall(("""
         declare i8* @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32) nounwind
 
         define i8* @main(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags) {
@@ -27,7 +27,8 @@
             %result = call i8* @SDL_CreateWindow(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags)
             ret i8* %result
         }
-        """, "main"), Ptr{SDL_Window}, Tuple{Ptr{UInt8}, Int32, Int32, Int32, Int32, UInt32}, title, x, y, w, h, flags)
+        """, "main"), Ptr{SDL_Window}, Tuple{Ptr{Cvoid}, Int32, Int32, Int32, Int32, Int32}, ptr, x, y, w, h, flags)
+        return result
     end
 
     # Original C signature: void SDL_DestroyRenderer(SDL_Renderer * renderer)

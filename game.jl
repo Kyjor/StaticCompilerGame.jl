@@ -54,10 +54,6 @@ function remove_game_state_simple(key_id::Int32)::Int32
     return call_remove_game_state_simple(key_id)
 end
 
-function get_delta_time()::Float64
-    return call_get_delta_time()
-end 
-
 function get_game_state_simple_float(key_id::Int32)::Float64
     return call_get_game_state_simple_float(key_id)
 end
@@ -71,7 +67,7 @@ function print_string(str::StaticString)::Int32
 end
 
 function draw_game_frame(x::Int32, y::Int32, on_ground::Int32)::Int32
-    delta_time::Float64 = get_delta_time()
+    delta_time::Float64 = 0.016666666666666666
     input = call_update_input(x)
 
     #test_rect = SDL_Rect(Int32(0), Int32(0), Int32(100), Int32(100))    
@@ -205,6 +201,7 @@ function move_toward(current::Float32, target::Float32, max_delta::Float32)::Flo
     end
 end
 
+
 # PC Entry Point - Main function for desktop builds
 function pc_main()::Int32
     
@@ -213,10 +210,29 @@ function pc_main()::Int32
     result = llvm_SDL_Init()
     printf(c"init result: %d\n", result)
     printf(c"SDL_Init done\n")
-    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow()
-    #renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window)
-
-    renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window, Int32(-1), Int32(2))
+    #window::Ptr{SDL_Window} = llvm_SDL_CreateWindow()
+    ptr::Ptr{Cvoid} = wasm_malloc(UInt32(18))
+    unsafe_store!(Ptr{UInt8}(ptr + 0), UInt8('S'))
+       unsafe_store!(Ptr{UInt8}(ptr + 1), UInt8('D'))
+       unsafe_store!(Ptr{UInt8}(ptr + 2), UInt8('L'))
+       unsafe_store!(Ptr{UInt8}(ptr + 3), UInt8('2'))
+       unsafe_store!(Ptr{UInt8}(ptr + 4), UInt8(' '))
+       unsafe_store!(Ptr{UInt8}(ptr + 5), UInt8('+'))
+       unsafe_store!(Ptr{UInt8}(ptr + 6), UInt8(' '))
+       unsafe_store!(Ptr{UInt8}(ptr + 7), UInt8('E'))
+       unsafe_store!(Ptr{UInt8}(ptr + 8), UInt8('m'))
+       unsafe_store!(Ptr{UInt8}(ptr + 9), UInt8('s'))
+       unsafe_store!(Ptr{UInt8}(ptr + 10), UInt8('c'))
+       unsafe_store!(Ptr{UInt8}(ptr + 11), UInt8('r'))
+       unsafe_store!(Ptr{UInt8}(ptr + 12), UInt8('i'))
+       unsafe_store!(Ptr{UInt8}(ptr + 13), UInt8('p'))
+       unsafe_store!(Ptr{UInt8}(ptr + 14), UInt8('t'))
+       unsafe_store!(Ptr{UInt8}(ptr + 15), UInt8('e'))
+       unsafe_store!(Ptr{UInt8}(ptr + 16), UInt8('n'))
+       unsafe_store!(Ptr{UInt8}(ptr + 17), 0x00)
+       window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(ptr, Int32(0), Int32(0), Int32(640), Int32(480), Int32(0))
+    wasm_free(ptr)
+    renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window)
     llvm_set_window(window)
     llvm_set_renderer(renderer)
     if result != Int32(0)
@@ -237,3 +253,4 @@ function pc_main()::Int32
     
     return Int32(0)
 end
+

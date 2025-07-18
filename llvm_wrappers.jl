@@ -9,17 +9,6 @@ function call_print_string(ptr::Ptr{UInt8})::Int32
     """, "main"), Int32, Tuple{Ptr{UInt8}}, ptr)
 end
 
-function call_get_delta_time()::Float32
-    Base.llvmcall(("""
-    declare float @get_delta_time() nounwind
-    define float @main() {
-    entry:
-       %result = call float @get_delta_time()
-       ret float %result
-    }
-    """, "main"), Float32, Tuple{}, ())
-end
-
 function call_set_game_state_simple(key_id::Int32, value::Float32)::Int32
     Base.llvmcall(("""
     declare i32 @set_game_state_simple_float(i32, float) nounwind
