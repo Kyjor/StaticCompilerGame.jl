@@ -18,7 +18,7 @@
     end
 
     # Original C signature: void SDL_AddHintCallback(const char * name, SDL_HintCallback callback, void * userdata)
-    function llvm_SDL_AddHintCallback(name::Ptr{UInt8}, callback::SDL_HintCallback, userdata::Ptr{Cvoid})::Cvoid
+    function llvm_SDL_AddHintCallback(name::Ptr{Cvoid}, callback::SDL_HintCallback, userdata::Ptr{Cvoid})::Cvoid
         Base.llvmcall(("""
         declare void @SDL_AddHintCallback(i8*, i8*, i8*) nounwind
 
@@ -27,7 +27,7 @@
             call void @SDL_AddHintCallback(i8* %name, i8* %callback, i8* %userdata)
             ret void
         }
-        """, "main"), Cvoid, Tuple{Ptr{UInt8}, SDL_HintCallback, Ptr{Cvoid}}, name, callback, userdata)
+        """, "main"), Cvoid, Tuple{Ptr{Cvoid}, SDL_HintCallback, Ptr{Cvoid}}, name, callback, userdata)
     end
 
     # Original C signature: SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void * param)
@@ -83,7 +83,7 @@
     end
 
     # Original C signature: const char * SDL_AndroidGetExternalStoragePath()
-    function llvm_SDL_AndroidGetExternalStoragePath()::Ptr{UInt8}
+    function llvm_SDL_AndroidGetExternalStoragePath()::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_AndroidGetExternalStoragePath() nounwind
 
@@ -92,7 +92,7 @@
             %result = call i8* @SDL_AndroidGetExternalStoragePath()
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{}, )
+        """, "main"), Ptr{Cvoid}, Tuple{}, )
     end
 
     # Original C signature: int SDL_AndroidGetExternalStorageState()
@@ -109,7 +109,7 @@
     end
 
     # Original C signature: const char * SDL_AndroidGetInternalStoragePath()
-    function llvm_SDL_AndroidGetInternalStoragePath()::Ptr{UInt8}
+    function llvm_SDL_AndroidGetInternalStoragePath()::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_AndroidGetInternalStoragePath() nounwind
 
@@ -118,7 +118,7 @@
             %result = call i8* @SDL_AndroidGetInternalStoragePath()
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{}, )
+        """, "main"), Ptr{Cvoid}, Tuple{}, )
     end
 
     # Original C signature: void * SDL_AndroidGetJNIEnv()
@@ -135,7 +135,7 @@
     end
 
     # Original C signature: SDL_bool SDL_AndroidRequestPermission(const char * permission)
-    function llvm_SDL_AndroidRequestPermission(permission::Ptr{UInt8})::UInt32
+    function llvm_SDL_AndroidRequestPermission(permission::Ptr{Cvoid})::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_AndroidRequestPermission(i8*) nounwind
 
@@ -144,7 +144,7 @@
             %result = call i32 @SDL_AndroidRequestPermission(i8* %permission)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{UInt8}}, permission)
+        """, "main"), UInt32, Tuple{Ptr{Cvoid}}, permission)
     end
 
     # Original C signature: int SDL_AndroidSendMessage(Uint32 command, int param)
@@ -161,7 +161,7 @@
     end
 
     # Original C signature: int SDL_AndroidShowToast(const char* message, int duration, int gravity, int xoffset, int yoffset)
-    function llvm_SDL_AndroidShowToast(message::Ptr{UInt8}, duration::Int32, gravity::Int32, xoffset::Int32, yoffset::Int32)::Int32
+    function llvm_SDL_AndroidShowToast(message::Ptr{Cvoid}, duration::Int32, gravity::Int32, xoffset::Int32, yoffset::Int32)::Int32
         Base.llvmcall(("""
         declare i32 @SDL_AndroidShowToast(i8*, i32, i32, i32, i32) nounwind
 
@@ -170,7 +170,7 @@
             %result = call i32 @SDL_AndroidShowToast(i8* %message, i32 %duration, i32 %gravity, i32 %xoffset, i32 %yoffset)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, Int32, Int32, Int32, Int32}, message, duration, gravity, xoffset, yoffset)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}, Int32, Int32, Int32, Int32}, message, duration, gravity, xoffset, yoffset)
     end
 
     # Original C signature: int SDL_AtomicAdd(SDL_atomic_t * a, int v)
@@ -304,7 +304,7 @@
     end
 
     # Original C signature: int SDL_AudioInit(const char * driver_name)
-    function llvm_SDL_AudioInit(driver_name::Ptr{UInt8})::Int32
+    function llvm_SDL_AudioInit(driver_name::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_AudioInit(i8*) nounwind
 
@@ -313,7 +313,7 @@
             %result = call i32 @SDL_AudioInit(i8* %driver_name)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, driver_name)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, driver_name)
     end
 
     # Original C signature: void SDL_AudioQuit()
@@ -616,7 +616,7 @@
     end
 
     # Original C signature: SDL_Window * SDL_CreateShapedWindow(const char * title, unsigned int x, unsigned int y, unsigned int w, unsigned int h, Uint32 flags)
-    function llvm_SDL_CreateShapedWindow(title::Ptr{UInt8}, x::UInt32, y::UInt32, w::UInt32, h::UInt32, flags::UInt32)::Ptr{SDL_Window}
+    function llvm_SDL_CreateShapedWindow(title::Ptr{Cvoid}, x::UInt32, y::UInt32, w::UInt32, h::UInt32, flags::UInt32)::Ptr{SDL_Window}
         Base.llvmcall(("""
         declare i8* @SDL_CreateShapedWindow(i8*, i32, i32, i32, i32, i32) nounwind
 
@@ -625,7 +625,7 @@
             %result = call i8* @SDL_CreateShapedWindow(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags)
             ret i8* %result
         }
-        """, "main"), Ptr{SDL_Window}, Tuple{Ptr{UInt8}, UInt32, UInt32, UInt32, UInt32, UInt32}, title, x, y, w, h, flags)
+        """, "main"), Ptr{SDL_Window}, Tuple{Ptr{Cvoid}, UInt32, UInt32, UInt32, UInt32, UInt32}, title, x, y, w, h, flags)
     end
 
     # Original C signature: SDL_Renderer * SDL_CreateSoftwareRenderer(SDL_Surface * surface)
@@ -668,7 +668,7 @@
     end
 
     # Original C signature: SDL_Window * SDL_CreateWindow(const char * title, int x, int y, int w, int h, Uint32 flags)
-    function llvm_SDL_CreateWindow(title::Ptr{UInt8}, x::Int32, y::Int32, w::Int32, h::Int32, flags::UInt32)::Ptr{SDL_Window}
+    function llvm_SDL_CreateWindow(title::Ptr{Cvoid}, x::Int32, y::Int32, w::Int32, h::Int32, flags::UInt32)::Ptr{SDL_Window}
         Base.llvmcall(("""
         declare i8* @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32) nounwind
 
@@ -677,7 +677,7 @@
             %result = call i8* @SDL_CreateWindow(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags)
             ret i8* %result
         }
-        """, "main"), Ptr{SDL_Window}, Tuple{Ptr{UInt8}, Int32, Int32, Int32, Int32, UInt32}, title, x, y, w, h, flags)
+        """, "main"), Ptr{SDL_Window}, Tuple{Ptr{Cvoid}, Int32, Int32, Int32, Int32, UInt32}, title, x, y, w, h, flags)
     end
 
     # Original C signature: int SDL_CreateWindowAndRenderer(int width, int height, Uint32 window_flags, SDL_Window ** window, SDL_Renderer ** renderer)
@@ -733,7 +733,7 @@
     end
 
     # Original C signature: void SDL_DelHintCallback(const char * name, SDL_HintCallback callback, void * userdata)
-    function llvm_SDL_DelHintCallback(name::Ptr{UInt8}, callback::SDL_HintCallback, userdata::Ptr{Cvoid})::Cvoid
+    function llvm_SDL_DelHintCallback(name::Ptr{Cvoid}, callback::SDL_HintCallback, userdata::Ptr{Cvoid})::Cvoid
         Base.llvmcall(("""
         declare void @SDL_DelHintCallback(i8*, i8*, i8*) nounwind
 
@@ -742,7 +742,7 @@
             call void @SDL_DelHintCallback(i8* %name, i8* %callback, i8* %userdata)
             ret void
         }
-        """, "main"), Cvoid, Tuple{Ptr{UInt8}, SDL_HintCallback, Ptr{Cvoid}}, name, callback, userdata)
+        """, "main"), Cvoid, Tuple{Ptr{Cvoid}, SDL_HintCallback, Ptr{Cvoid}}, name, callback, userdata)
     end
 
     # Original C signature: void SDL_Delay(Uint32 ms)
@@ -1214,7 +1214,7 @@
     end
 
     # Original C signature: SDL_bool SDL_GL_ExtensionSupported(const char * extension)
-    function llvm_SDL_GL_ExtensionSupported(extension::Ptr{UInt8})::UInt32
+    function llvm_SDL_GL_ExtensionSupported(extension::Ptr{Cvoid})::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_GL_ExtensionSupported(i8*) nounwind
 
@@ -1223,7 +1223,7 @@
             %result = call i32 @SDL_GL_ExtensionSupported(i8* %extension)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{UInt8}}, extension)
+        """, "main"), UInt32, Tuple{Ptr{Cvoid}}, extension)
     end
 
     # Original C signature: int SDL_GL_GetAttribute(SDL_GLattr attr, int * value)
@@ -1292,7 +1292,7 @@
     end
 
     # Original C signature: int SDL_GL_LoadLibrary(const char * path)
-    function llvm_SDL_GL_LoadLibrary(path::Ptr{UInt8})::Int32
+    function llvm_SDL_GL_LoadLibrary(path::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_GL_LoadLibrary(i8*) nounwind
 
@@ -1301,7 +1301,7 @@
             %result = call i32 @SDL_GL_LoadLibrary(i8* %path)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, path)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, path)
     end
 
     # Original C signature: int SDL_GL_MakeCurrent(SDL_Window * window, SDL_GLContext context)
@@ -1396,7 +1396,7 @@
     end
 
     # Original C signature: SDL_GUID SDL_GUIDFromString(const char * pchGUID)
-    function llvm_SDL_GUIDFromString(pchGUID::Ptr{UInt8})::SDL_GUID
+    function llvm_SDL_GUIDFromString(pchGUID::Ptr{Cvoid})::SDL_GUID
         Base.llvmcall(("""
         declare i8* @SDL_GUIDFromString(i8*) nounwind
 
@@ -1405,11 +1405,11 @@
             %result = call i8* @SDL_GUIDFromString(i8* %pchGUID)
             ret i8* %result
         }
-        """, "main"), SDL_GUID, Tuple{Ptr{UInt8}}, pchGUID)
+        """, "main"), SDL_GUID, Tuple{Ptr{Cvoid}}, pchGUID)
     end
 
     # Original C signature: void SDL_GUIDToString(SDL_GUID guid, char * pszGUID, int cbGUID)
-    function llvm_SDL_GUIDToString(guid::SDL_GUID, pszGUID::Ptr{UInt8}, cbGUID::Int32)::Cvoid
+    function llvm_SDL_GUIDToString(guid::SDL_GUID, pszGUID::Ptr{Cvoid}, cbGUID::Int32)::Cvoid
         Base.llvmcall(("""
         declare void @SDL_GUIDToString(i8*, i8*, i32) nounwind
 
@@ -1418,11 +1418,11 @@
             call void @SDL_GUIDToString(i8* %guid, i8* %pszGUID, i32 %cbGUID)
             ret void
         }
-        """, "main"), Cvoid, Tuple{SDL_GUID, Ptr{UInt8}, Int32}, guid, pszGUID, cbGUID)
+        """, "main"), Cvoid, Tuple{SDL_GUID, Ptr{Cvoid}, Int32}, guid, pszGUID, cbGUID)
     end
 
     # Original C signature: int SDL_GameControllerAddMapping(const char* mappingString)
-    function llvm_SDL_GameControllerAddMapping(mappingString::Ptr{UInt8})::Int32
+    function llvm_SDL_GameControllerAddMapping(mappingString::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_GameControllerAddMapping(i8*) nounwind
 
@@ -1431,7 +1431,7 @@
             %result = call i32 @SDL_GameControllerAddMapping(i8* %mappingString)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, mappingString)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, mappingString)
     end
 
     # Original C signature: int SDL_GameControllerAddMappingsFromRW(SDL_RWops * rw, int freerw)
@@ -1474,7 +1474,7 @@
     end
 
     # Original C signature: const char* SDL_GameControllerGetAppleSFSymbolsNameForAxis(SDL_GameController * gamecontroller, SDL_GameControllerAxis axis)
-    function llvm_SDL_GameControllerGetAppleSFSymbolsNameForAxis(gamecontroller::Ptr{SDL_GameController}, axis::Int32)::Ptr{UInt8}
+    function llvm_SDL_GameControllerGetAppleSFSymbolsNameForAxis(gamecontroller::Ptr{SDL_GameController}, axis::Int32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GameControllerGetAppleSFSymbolsNameForAxis(i8*, i32) nounwind
 
@@ -1483,11 +1483,11 @@
             %result = call i8* @SDL_GameControllerGetAppleSFSymbolsNameForAxis(i8* %gamecontroller, i32 %axis)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Ptr{SDL_GameController}, Int32}, gamecontroller, axis)
+        """, "main"), Ptr{Cvoid}, Tuple{Ptr{SDL_GameController}, Int32}, gamecontroller, axis)
     end
 
     # Original C signature: const char* SDL_GameControllerGetAppleSFSymbolsNameForButton(SDL_GameController * gamecontroller, SDL_GameControllerButton button)
-    function llvm_SDL_GameControllerGetAppleSFSymbolsNameForButton(gamecontroller::Ptr{SDL_GameController}, button::Int32)::Ptr{UInt8}
+    function llvm_SDL_GameControllerGetAppleSFSymbolsNameForButton(gamecontroller::Ptr{SDL_GameController}, button::Int32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GameControllerGetAppleSFSymbolsNameForButton(i8*, i32) nounwind
 
@@ -1496,7 +1496,7 @@
             %result = call i8* @SDL_GameControllerGetAppleSFSymbolsNameForButton(i8* %gamecontroller, i32 %button)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Ptr{SDL_GameController}, Int32}, gamecontroller, button)
+        """, "main"), Ptr{Cvoid}, Tuple{Ptr{SDL_GameController}, Int32}, gamecontroller, button)
     end
 
     # Original C signature: SDL_bool SDL_GameControllerGetAttached(SDL_GameController * gamecontroller)
@@ -1526,7 +1526,7 @@
     end
 
     # Original C signature: SDL_GameControllerAxis SDL_GameControllerGetAxisFromString(const char * str)
-    function llvm_SDL_GameControllerGetAxisFromString(str::Ptr{UInt8})::Int32
+    function llvm_SDL_GameControllerGetAxisFromString(str::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_GameControllerGetAxisFromString(i8*) nounwind
 
@@ -1535,7 +1535,7 @@
             %result = call i32 @SDL_GameControllerGetAxisFromString(i8* %str)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, str)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, str)
     end
 
     # Original C signature: SDL_GameControllerButtonBind SDL_GameControllerGetBindForAxis(SDL_GameController * gamecontroller, SDL_GameControllerAxis axis)
@@ -1578,7 +1578,7 @@
     end
 
     # Original C signature: SDL_GameControllerButton SDL_GameControllerGetButtonFromString(const char * str)
-    function llvm_SDL_GameControllerGetButtonFromString(str::Ptr{UInt8})::Int32
+    function llvm_SDL_GameControllerGetButtonFromString(str::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_GameControllerGetButtonFromString(i8*) nounwind
 
@@ -1587,7 +1587,7 @@
             %result = call i32 @SDL_GameControllerGetButtonFromString(i8* %str)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, str)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, str)
     end
 
     # Original C signature: Uint16 SDL_GameControllerGetFirmwareVersion(SDL_GameController * gamecontroller)
@@ -1708,7 +1708,7 @@
     end
 
     # Original C signature: const char * SDL_GameControllerGetSerial(SDL_GameController * gamecontroller)
-    function llvm_SDL_GameControllerGetSerial(gamecontroller::Ptr{SDL_GameController})::Ptr{UInt8}
+    function llvm_SDL_GameControllerGetSerial(gamecontroller::Ptr{SDL_GameController})::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GameControllerGetSerial(i8*) nounwind
 
@@ -1717,7 +1717,7 @@
             %result = call i8* @SDL_GameControllerGetSerial(i8* %gamecontroller)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Ptr{SDL_GameController}}, gamecontroller)
+        """, "main"), Ptr{Cvoid}, Tuple{Ptr{SDL_GameController}}, gamecontroller)
     end
 
     # Original C signature: Uint64 SDL_GameControllerGetSteamHandle(SDL_GameController * gamecontroller)
@@ -1734,7 +1734,7 @@
     end
 
     # Original C signature: const char* SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis axis)
-    function llvm_SDL_GameControllerGetStringForAxis(axis::Int32)::Ptr{UInt8}
+    function llvm_SDL_GameControllerGetStringForAxis(axis::Int32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GameControllerGetStringForAxis(i32) nounwind
 
@@ -1743,11 +1743,11 @@
             %result = call i8* @SDL_GameControllerGetStringForAxis(i32 %axis)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Int32}, axis)
+        """, "main"), Ptr{Cvoid}, Tuple{Int32}, axis)
     end
 
     # Original C signature: const char* SDL_GameControllerGetStringForButton(SDL_GameControllerButton button)
-    function llvm_SDL_GameControllerGetStringForButton(button::Int32)::Ptr{UInt8}
+    function llvm_SDL_GameControllerGetStringForButton(button::Int32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GameControllerGetStringForButton(i32) nounwind
 
@@ -1756,7 +1756,7 @@
             %result = call i8* @SDL_GameControllerGetStringForButton(i32 %button)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Int32}, button)
+        """, "main"), Ptr{Cvoid}, Tuple{Int32}, button)
     end
 
     # Original C signature: int SDL_GameControllerGetTouchpadFinger(SDL_GameController * gamecontroller, int touchpad, int finger, Uint8 * state, float * x, float * y, float * pressure)
@@ -1890,7 +1890,7 @@
     end
 
     # Original C signature: char * SDL_GameControllerMapping(SDL_GameController * gamecontroller)
-    function llvm_SDL_GameControllerMapping(gamecontroller::Ptr{SDL_GameController})::Ptr{UInt8}
+    function llvm_SDL_GameControllerMapping(gamecontroller::Ptr{SDL_GameController})::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GameControllerMapping(i8*) nounwind
 
@@ -1899,11 +1899,11 @@
             %result = call i8* @SDL_GameControllerMapping(i8* %gamecontroller)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Ptr{SDL_GameController}}, gamecontroller)
+        """, "main"), Ptr{Cvoid}, Tuple{Ptr{SDL_GameController}}, gamecontroller)
     end
 
     # Original C signature: char * SDL_GameControllerMappingForGUID(SDL_JoystickGUID guid)
-    function llvm_SDL_GameControllerMappingForGUID(guid::SDL_JoystickGUID)::Ptr{UInt8}
+    function llvm_SDL_GameControllerMappingForGUID(guid::SDL_JoystickGUID)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GameControllerMappingForGUID(i8*) nounwind
 
@@ -1912,11 +1912,11 @@
             %result = call i8* @SDL_GameControllerMappingForGUID(i8* %guid)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{SDL_JoystickGUID}, guid)
+        """, "main"), Ptr{Cvoid}, Tuple{SDL_JoystickGUID}, guid)
     end
 
     # Original C signature: char * SDL_GameControllerMappingForIndex(int mapping_index)
-    function llvm_SDL_GameControllerMappingForIndex(mapping_index::Int32)::Ptr{UInt8}
+    function llvm_SDL_GameControllerMappingForIndex(mapping_index::Int32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GameControllerMappingForIndex(i32) nounwind
 
@@ -1925,7 +1925,7 @@
             %result = call i8* @SDL_GameControllerMappingForIndex(i32 %mapping_index)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Int32}, mapping_index)
+        """, "main"), Ptr{Cvoid}, Tuple{Int32}, mapping_index)
     end
 
     # Original C signature: int SDL_GameControllerNumMappings()
@@ -2163,7 +2163,7 @@
     end
 
     # Original C signature: char * SDL_GetClipboardText()
-    function llvm_SDL_GetClipboardText()::Ptr{UInt8}
+    function llvm_SDL_GetClipboardText()::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GetClipboardText() nounwind
 
@@ -2172,7 +2172,7 @@
             %result = call i8* @SDL_GetClipboardText()
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{}, )
+        """, "main"), Ptr{Cvoid}, Tuple{}, )
     end
 
     # Original C signature: SDL_DisplayMode * SDL_GetClosestDisplayMode(int displayIndex, const SDL_DisplayMode * mode, SDL_DisplayMode * closest)
@@ -2228,7 +2228,7 @@
     end
 
     # Original C signature: int SDL_GetDefaultAudioInfo(char ** name, SDL_AudioSpec * spec, int iscapture)
-    function llvm_SDL_GetDefaultAudioInfo(name::Ptr{Ptr{UInt8}}, spec::Ptr{SDL_AudioSpec}, iscapture::Int32)::Int32
+    function llvm_SDL_GetDefaultAudioInfo(name::Ptr{Ptr{Cvoid}}, spec::Ptr{SDL_AudioSpec}, iscapture::Int32)::Int32
         Base.llvmcall(("""
         declare i32 @SDL_GetDefaultAudioInfo(i8*, i8*, i32) nounwind
 
@@ -2237,7 +2237,7 @@
             %result = call i32 @SDL_GetDefaultAudioInfo(i8* %name, i8* %spec, i32 %iscapture)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{Ptr{UInt8}}, Ptr{SDL_AudioSpec}, Int32}, name, spec, iscapture)
+        """, "main"), Int32, Tuple{Ptr{Ptr{Cvoid}}, Ptr{SDL_AudioSpec}, Int32}, name, spec, iscapture)
     end
 
     # Original C signature: int SDL_GetDesktopDisplayMode(int displayIndex, SDL_DisplayMode * mode)
@@ -2293,7 +2293,7 @@
     end
 
     # Original C signature: const char * SDL_GetDisplayName(int displayIndex)
-    function llvm_SDL_GetDisplayName(displayIndex::Int32)::Ptr{UInt8}
+    function llvm_SDL_GetDisplayName(displayIndex::Int32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GetDisplayName(i32) nounwind
 
@@ -2302,7 +2302,7 @@
             %result = call i8* @SDL_GetDisplayName(i32 %displayIndex)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Int32}, displayIndex)
+        """, "main"), Ptr{Cvoid}, Tuple{Int32}, displayIndex)
     end
 
     # Original C signature: SDL_DisplayOrientation SDL_GetDisplayOrientation(int displayIndex)
@@ -2332,7 +2332,7 @@
     end
 
     # Original C signature: char * SDL_GetErrorMsg(char * errstr, int maxlen)
-    function llvm_SDL_GetErrorMsg(errstr::Ptr{UInt8}, maxlen::Int32)::Ptr{UInt8}
+    function llvm_SDL_GetErrorMsg(errstr::Ptr{Cvoid}, maxlen::Int32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GetErrorMsg(i8*, i32) nounwind
 
@@ -2341,7 +2341,7 @@
             %result = call i8* @SDL_GetErrorMsg(i8* %errstr, i32 %maxlen)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Ptr{UInt8}, Int32}, errstr, maxlen)
+        """, "main"), Ptr{Cvoid}, Tuple{Ptr{Cvoid}, Int32}, errstr, maxlen)
     end
 
     # Original C signature: SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void ** userdata)
@@ -2384,7 +2384,7 @@
     end
 
     # Original C signature: const char * SDL_GetHint(const char * name)
-    function llvm_SDL_GetHint(name::Ptr{UInt8})::Ptr{UInt8}
+    function llvm_SDL_GetHint(name::Ptr{Cvoid})::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GetHint(i8*) nounwind
 
@@ -2393,11 +2393,11 @@
             %result = call i8* @SDL_GetHint(i8* %name)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Ptr{UInt8}}, name)
+        """, "main"), Ptr{Cvoid}, Tuple{Ptr{Cvoid}}, name)
     end
 
     # Original C signature: SDL_bool SDL_GetHintBoolean(const char * name, SDL_bool default_value)
-    function llvm_SDL_GetHintBoolean(name::Ptr{UInt8}, default_value::UInt32)::UInt32
+    function llvm_SDL_GetHintBoolean(name::Ptr{Cvoid}, default_value::UInt32)::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_GetHintBoolean(i8*, i32) nounwind
 
@@ -2406,7 +2406,7 @@
             %result = call i32 @SDL_GetHintBoolean(i8* %name, i32 %default_value)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{UInt8}, UInt32}, name, default_value)
+        """, "main"), UInt32, Tuple{Ptr{Cvoid}, UInt32}, name, default_value)
     end
 
     # Original C signature: void SDL_GetJoystickGUIDInfo(SDL_JoystickGUID guid, Uint16 * vendor, Uint16 * product, Uint16 * version, Uint16 * crc16)
@@ -2423,7 +2423,7 @@
     end
 
     # Original C signature: SDL_Keycode SDL_GetKeyFromName(const char * name)
-    function llvm_SDL_GetKeyFromName(name::Ptr{UInt8})::Int32
+    function llvm_SDL_GetKeyFromName(name::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_GetKeyFromName(i8*) nounwind
 
@@ -2432,7 +2432,7 @@
             %result = call i32 @SDL_GetKeyFromName(i8* %name)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, name)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, name)
     end
 
     # Original C signature: SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode)
@@ -2644,7 +2644,7 @@
     end
 
     # Original C signature: const char* SDL_GetPixelFormatName(Uint32 format)
-    function llvm_SDL_GetPixelFormatName(format::UInt32)::Ptr{UInt8}
+    function llvm_SDL_GetPixelFormatName(format::UInt32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GetPixelFormatName(i32) nounwind
 
@@ -2653,11 +2653,11 @@
             %result = call i8* @SDL_GetPixelFormatName(i32 %format)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{UInt32}, format)
+        """, "main"), Ptr{Cvoid}, Tuple{UInt32}, format)
     end
 
     # Original C signature: const char * SDL_GetPlatform()
-    function llvm_SDL_GetPlatform()::Ptr{UInt8}
+    function llvm_SDL_GetPlatform()::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GetPlatform() nounwind
 
@@ -2666,7 +2666,7 @@
             %result = call i8* @SDL_GetPlatform()
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{}, )
+        """, "main"), Ptr{Cvoid}, Tuple{}, )
     end
 
     # Original C signature: int SDL_GetPointDisplayIndex(const SDL_Point * point)
@@ -2709,7 +2709,7 @@
     end
 
     # Original C signature: char * SDL_GetPrimarySelectionText()
-    function llvm_SDL_GetPrimarySelectionText()::Ptr{UInt8}
+    function llvm_SDL_GetPrimarySelectionText()::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GetPrimarySelectionText() nounwind
 
@@ -2718,7 +2718,7 @@
             %result = call i8* @SDL_GetPrimarySelectionText()
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{}, )
+        """, "main"), Ptr{Cvoid}, Tuple{}, )
     end
 
     # Original C signature: Uint32 SDL_GetQueuedAudioSize(SDL_AudioDeviceID dev)
@@ -2865,7 +2865,7 @@
     end
 
     # Original C signature: SDL_Scancode SDL_GetScancodeFromName(const char * name)
-    function llvm_SDL_GetScancodeFromName(name::Ptr{UInt8})::Int32
+    function llvm_SDL_GetScancodeFromName(name::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_GetScancodeFromName(i8*) nounwind
 
@@ -2874,7 +2874,7 @@
             %result = call i32 @SDL_GetScancodeFromName(i8* %name)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, name)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, name)
     end
 
     # Original C signature: int SDL_GetShapedWindowMode(SDL_Window * window, SDL_WindowShapeMode * shape_mode)
@@ -3086,7 +3086,7 @@
     end
 
     # Original C signature: const char* SDL_GetTouchName(int index)
-    function llvm_SDL_GetTouchName(index::Int32)::Ptr{UInt8}
+    function llvm_SDL_GetTouchName(index::Int32)::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_GetTouchName(i32) nounwind
 
@@ -3095,7 +3095,7 @@
             %result = call i8* @SDL_GetTouchName(i32 %index)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Int32}, index)
+        """, "main"), Ptr{Cvoid}, Tuple{Int32}, index)
     end
 
     # Original C signature: void SDL_GetVersion(SDL_version * ver)
@@ -4412,7 +4412,7 @@
     end
 
     # Original C signature: const char * SDL_JoystickGetSerial(SDL_Joystick * joystick)
-    function llvm_SDL_JoystickGetSerial(joystick::Ptr{SDL_Joystick})::Ptr{UInt8}
+    function llvm_SDL_JoystickGetSerial(joystick::Ptr{SDL_Joystick})::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_JoystickGetSerial(i8*) nounwind
 
@@ -4421,7 +4421,7 @@
             %result = call i8* @SDL_JoystickGetSerial(i8* %joystick)
             ret i8* %result
         }
-        """, "main"), Ptr{UInt8}, Tuple{Ptr{SDL_Joystick}}, joystick)
+        """, "main"), Ptr{Cvoid}, Tuple{Ptr{SDL_Joystick}}, joystick)
     end
 
     # Original C signature: SDL_bool SDL_JoystickHasLED(SDL_Joystick * joystick)
@@ -5101,7 +5101,7 @@
     end
 
     # Original C signature: SDL_AudioDeviceID SDL_OpenAudioDevice(const char * device, int iscapture, const SDL_AudioSpec * desired, SDL_AudioSpec * obtained, int allowed_changes)
-    function llvm_SDL_OpenAudioDevice(device::Ptr{UInt8}, iscapture::Int32, desired::Ptr{SDL_AudioSpec}, obtained::Ptr{SDL_AudioSpec}, allowed_changes::Int32)::UInt32
+    function llvm_SDL_OpenAudioDevice(device::Ptr{Cvoid}, iscapture::Int32, desired::Ptr{SDL_AudioSpec}, obtained::Ptr{SDL_AudioSpec}, allowed_changes::Int32)::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_OpenAudioDevice(i8*, i32, i8*, i8*, i32) nounwind
 
@@ -5110,11 +5110,11 @@
             %result = call i32 @SDL_OpenAudioDevice(i8* %device, i32 %iscapture, i8* %desired, i8* %obtained, i32 %allowed_changes)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{UInt8}, Int32, Ptr{SDL_AudioSpec}, Ptr{SDL_AudioSpec}, Int32}, device, iscapture, desired, obtained, allowed_changes)
+        """, "main"), UInt32, Tuple{Ptr{Cvoid}, Int32, Ptr{SDL_AudioSpec}, Ptr{SDL_AudioSpec}, Int32}, device, iscapture, desired, obtained, allowed_changes)
     end
 
     # Original C signature: int SDL_OpenURL(const char * url)
-    function llvm_SDL_OpenURL(url::Ptr{UInt8})::Int32
+    function llvm_SDL_OpenURL(url::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_OpenURL(i8*) nounwind
 
@@ -5123,7 +5123,7 @@
             %result = call i32 @SDL_OpenURL(i8* %url)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, url)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, url)
     end
 
     # Original C signature: void SDL_PauseAudio(int pause_on)
@@ -5478,7 +5478,7 @@
     end
 
     # Original C signature: int SDL_RegisterApp(const char * name, Uint32 style, void * hInst)
-    function llvm_SDL_RegisterApp(name::Ptr{UInt8}, style::UInt32, hInst::Ptr{Cvoid})::Int32
+    function llvm_SDL_RegisterApp(name::Ptr{Cvoid}, style::UInt32, hInst::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_RegisterApp(i8*, i32, i8*) nounwind
 
@@ -5487,7 +5487,7 @@
             %result = call i32 @SDL_RegisterApp(i8* %name, i32 %style, i8* %hInst)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, UInt32, Ptr{Cvoid}}, name, style, hInst)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}, UInt32, Ptr{Cvoid}}, name, style, hInst)
     end
 
     # Original C signature: Uint32 SDL_RegisterEvents(int numevents)
@@ -6115,7 +6115,7 @@
     end
 
     # Original C signature: SDL_bool SDL_ResetHint(const char * name)
-    function llvm_SDL_ResetHint(name::Ptr{UInt8})::UInt32
+    function llvm_SDL_ResetHint(name::Ptr{Cvoid})::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_ResetHint(i8*) nounwind
 
@@ -6124,7 +6124,7 @@
             %result = call i32 @SDL_ResetHint(i8* %name)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{UInt8}}, name)
+        """, "main"), UInt32, Tuple{Ptr{Cvoid}}, name)
     end
 
     # Original C signature: void SDL_ResetHints()
@@ -6479,7 +6479,7 @@
     end
 
     # Original C signature: int SDL_SetClipboardText(const char * text)
-    function llvm_SDL_SetClipboardText(text::Ptr{UInt8})::Int32
+    function llvm_SDL_SetClipboardText(text::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_SetClipboardText(i8*) nounwind
 
@@ -6488,7 +6488,7 @@
             %result = call i32 @SDL_SetClipboardText(i8* %text)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, text)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, text)
     end
 
     # Original C signature: int SDL_SetColorKey(SDL_Surface * surface, int flag, Uint32 key)
@@ -6531,7 +6531,7 @@
     end
 
     # Original C signature: SDL_bool SDL_SetHint(const char * name, const char * value)
-    function llvm_SDL_SetHint(name::Ptr{UInt8}, value::Ptr{UInt8})::UInt32
+    function llvm_SDL_SetHint(name::Ptr{Cvoid}, value::Ptr{Cvoid})::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_SetHint(i8*, i8*) nounwind
 
@@ -6540,11 +6540,11 @@
             %result = call i32 @SDL_SetHint(i8* %name, i8* %value)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, name, value)
+        """, "main"), UInt32, Tuple{Ptr{Cvoid}, Ptr{Cvoid}}, name, value)
     end
 
     # Original C signature: SDL_bool SDL_SetHintWithPriority(const char * name, const char * value, SDL_HintPriority priority)
-    function llvm_SDL_SetHintWithPriority(name::Ptr{UInt8}, value::Ptr{UInt8}, priority::SDL_HintPriority)::UInt32
+    function llvm_SDL_SetHintWithPriority(name::Ptr{Cvoid}, value::Ptr{Cvoid}, priority::SDL_HintPriority)::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_SetHintWithPriority(i8*, i8*, i8*) nounwind
 
@@ -6553,7 +6553,7 @@
             %result = call i32 @SDL_SetHintWithPriority(i8* %name, i8* %value, i8* %priority)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{UInt8}, Ptr{UInt8}, SDL_HintPriority}, name, value, priority)
+        """, "main"), UInt32, Tuple{Ptr{Cvoid}, Ptr{Cvoid}, SDL_HintPriority}, name, value, priority)
     end
 
     # Original C signature: void SDL_SetMainReady()
@@ -6609,7 +6609,7 @@
     end
 
     # Original C signature: int SDL_SetPrimarySelectionText(const char * text)
-    function llvm_SDL_SetPrimarySelectionText(text::Ptr{UInt8})::Int32
+    function llvm_SDL_SetPrimarySelectionText(text::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_SetPrimarySelectionText(i8*) nounwind
 
@@ -6618,7 +6618,7 @@
             %result = call i32 @SDL_SetPrimarySelectionText(i8* %text)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, text)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, text)
     end
 
     # Original C signature: int SDL_SetRelativeMouseMode(SDL_bool enabled)
@@ -6869,7 +6869,7 @@
     end
 
     # Original C signature: void* SDL_SetWindowData(SDL_Window * window, const char * name, void * userdata)
-    function llvm_SDL_SetWindowData(window::Ptr{SDL_Window}, name::Ptr{UInt8}, userdata::Ptr{Cvoid})::Ptr{Cvoid}
+    function llvm_SDL_SetWindowData(window::Ptr{SDL_Window}, name::Ptr{Cvoid}, userdata::Ptr{Cvoid})::Ptr{Cvoid}
         Base.llvmcall(("""
         declare i8* @SDL_SetWindowData(i8*, i8*, i8*) nounwind
 
@@ -6878,7 +6878,7 @@
             %result = call i8* @SDL_SetWindowData(i8* %window, i8* %name, i8* %userdata)
             ret i8* %result
         }
-        """, "main"), Ptr{Cvoid}, Tuple{Ptr{SDL_Window}, Ptr{UInt8}, Ptr{Cvoid}}, window, name, userdata)
+        """, "main"), Ptr{Cvoid}, Tuple{Ptr{SDL_Window}, Ptr{Cvoid}, Ptr{Cvoid}}, window, name, userdata)
     end
 
     # Original C signature: int SDL_SetWindowDisplayMode(SDL_Window * window, const SDL_DisplayMode * mode)
@@ -7116,7 +7116,7 @@
     end
 
     # Original C signature: void SDL_SetWindowTitle(SDL_Window * window, const char * title)
-    function llvm_SDL_SetWindowTitle(window::Ptr{SDL_Window}, title::Ptr{UInt8})::Cvoid
+    function llvm_SDL_SetWindowTitle(window::Ptr{SDL_Window}, title::Ptr{Cvoid})::Cvoid
         Base.llvmcall(("""
         declare void @SDL_SetWindowTitle(i8*, i8*) nounwind
 
@@ -7125,7 +7125,7 @@
             call void @SDL_SetWindowTitle(i8* %window, i8* %title)
             ret void
         }
-        """, "main"), Cvoid, Tuple{Ptr{SDL_Window}, Ptr{UInt8}}, window, title)
+        """, "main"), Cvoid, Tuple{Ptr{SDL_Window}, Ptr{Cvoid}}, window, title)
     end
 
     # Original C signature: void SDL_SetWindowsMessageHook(SDL_WindowsMessageHook callback, void * userdata)
@@ -7181,7 +7181,7 @@
     end
 
     # Original C signature: int SDL_ShowSimpleMessageBox(Uint32 flags, const char * title, const char * message, SDL_Window * window)
-    function llvm_SDL_ShowSimpleMessageBox(flags::UInt32, title::Ptr{UInt8}, message::Ptr{UInt8}, window::Ptr{SDL_Window})::Int32
+    function llvm_SDL_ShowSimpleMessageBox(flags::UInt32, title::Ptr{Cvoid}, message::Ptr{Cvoid}, window::Ptr{SDL_Window})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_ShowSimpleMessageBox(i32, i8*, i8*, i8*) nounwind
 
@@ -7190,7 +7190,7 @@
             %result = call i32 @SDL_ShowSimpleMessageBox(i32 %flags, i8* %title, i8* %message, i8* %window)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{UInt32, Ptr{UInt8}, Ptr{UInt8}, Ptr{SDL_Window}}, flags, title, message, window)
+        """, "main"), Int32, Tuple{UInt32, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{SDL_Window}}, flags, title, message, window)
     end
 
     # Original C signature: void SDL_ShowWindow(SDL_Window * window)
@@ -7506,7 +7506,7 @@
     end
 
     # Original C signature: int SDL_VideoInit(const char * driver_name)
-    function llvm_SDL_VideoInit(driver_name::Ptr{UInt8})::Int32
+    function llvm_SDL_VideoInit(driver_name::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_VideoInit(i8*) nounwind
 
@@ -7515,7 +7515,7 @@
             %result = call i32 @SDL_VideoInit(i8* %driver_name)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, driver_name)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, driver_name)
     end
 
     # Original C signature: void SDL_VideoQuit()
@@ -7545,7 +7545,7 @@
     end
 
     # Original C signature: SDL_bool SDL_Vulkan_GetInstanceExtensions(SDL_Window * window, unsigned int * pCount, const char ** pNames)
-    function llvm_SDL_Vulkan_GetInstanceExtensions(window::Ptr{SDL_Window}, pCount::Ptr{UInt32}, pNames::Ptr{Ptr{UInt8}})::UInt32
+    function llvm_SDL_Vulkan_GetInstanceExtensions(window::Ptr{SDL_Window}, pCount::Ptr{UInt32}, pNames::Ptr{Ptr{Cvoid}})::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_Vulkan_GetInstanceExtensions(i8*, i8*, i8*) nounwind
 
@@ -7554,11 +7554,11 @@
             %result = call i32 @SDL_Vulkan_GetInstanceExtensions(i8* %window, i8* %pCount, i8* %pNames)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{SDL_Window}, Ptr{UInt32}, Ptr{Ptr{UInt8}}}, window, pCount, pNames)
+        """, "main"), UInt32, Tuple{Ptr{SDL_Window}, Ptr{UInt32}, Ptr{Ptr{Cvoid}}}, window, pCount, pNames)
     end
 
     # Original C signature: int SDL_Vulkan_LoadLibrary(const char * path)
-    function llvm_SDL_Vulkan_LoadLibrary(path::Ptr{UInt8})::Int32
+    function llvm_SDL_Vulkan_LoadLibrary(path::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_Vulkan_LoadLibrary(i8*) nounwind
 
@@ -7567,7 +7567,7 @@
             %result = call i32 @SDL_Vulkan_LoadLibrary(i8* %path)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, path)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, path)
     end
 
     # Original C signature: void SDL_Vulkan_UnloadLibrary()
@@ -7896,7 +7896,7 @@
     end
 
     # Original C signature: double SDL_atof(const char * str)
-    function llvm_SDL_atof(str::Ptr{UInt8})::Float64
+    function llvm_SDL_atof(str::Ptr{Cvoid})::Float64
         Base.llvmcall(("""
         declare double @SDL_atof(i8*) nounwind
 
@@ -7905,11 +7905,11 @@
             %result = call double @SDL_atof(i8* %str)
             ret double %result
         }
-        """, "main"), Float64, Tuple{Ptr{UInt8}}, str)
+        """, "main"), Float64, Tuple{Ptr{Cvoid}}, str)
     end
 
     # Original C signature: int SDL_atoi(const char * str)
-    function llvm_SDL_atoi(str::Ptr{UInt8})::Int32
+    function llvm_SDL_atoi(str::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_atoi(i8*) nounwind
 
@@ -7918,7 +7918,7 @@
             %result = call i32 @SDL_atoi(i8* %str)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}}, str)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}}, str)
     end
 
     # Original C signature: double SDL_ceil(double x)
@@ -8351,7 +8351,7 @@
     end
 
     # Original C signature: size_t SDL_iconv(SDL_iconv_t cd, const char ** inbuf, size_t * inbytesleft, char ** outbuf, size_t * outbytesleft)
-    function llvm_SDL_iconv(cd::SDL_iconv_t, inbuf::Ptr{Ptr{UInt8}}, inbytesleft::Ptr{Csize_t}, outbuf::Ptr{Ptr{UInt8}}, outbytesleft::Ptr{Csize_t})::Csize_t
+    function llvm_SDL_iconv(cd::SDL_iconv_t, inbuf::Ptr{Ptr{Cvoid}}, inbytesleft::Ptr{Csize_t}, outbuf::Ptr{Ptr{Cvoid}}, outbytesleft::Ptr{Csize_t})::Csize_t
         Base.llvmcall(("""
         declare i8* @SDL_iconv(i8*, i8*, i8*, i8*, i8*) nounwind
 
@@ -8360,7 +8360,7 @@
             %result = call i8* @SDL_iconv(i8* %cd, i8* %inbuf, i8* %inbytesleft, i8* %outbuf, i8* %outbytesleft)
             ret i8* %result
         }
-        """, "main"), Csize_t, Tuple{SDL_iconv_t, Ptr{Ptr{UInt8}}, Ptr{Csize_t}, Ptr{Ptr{UInt8}}, Ptr{Csize_t}}, cd, inbuf, inbytesleft, outbuf, outbytesleft)
+        """, "main"), Csize_t, Tuple{SDL_iconv_t, Ptr{Ptr{Cvoid}}, Ptr{Csize_t}, Ptr{Ptr{Cvoid}}, Ptr{Csize_t}}, cd, inbuf, inbytesleft, outbuf, outbytesleft)
     end
 
     # Original C signature: int SDL_iconv_close(SDL_iconv_t cd)
@@ -8377,7 +8377,7 @@
     end
 
     # Original C signature: SDL_iconv_t SDL_iconv_open(const char * tocode, const char * fromcode)
-    function llvm_SDL_iconv_open(tocode::Ptr{UInt8}, fromcode::Ptr{UInt8})::SDL_iconv_t
+    function llvm_SDL_iconv_open(tocode::Ptr{Cvoid}, fromcode::Ptr{Cvoid})::SDL_iconv_t
         Base.llvmcall(("""
         declare i8* @SDL_iconv_open(i8*, i8*) nounwind
 
@@ -8386,7 +8386,7 @@
             %result = call i8* @SDL_iconv_open(i8* %tocode, i8* %fromcode)
             ret i8* %result
         }
-        """, "main"), SDL_iconv_t, Tuple{Ptr{UInt8}, Ptr{UInt8}}, tocode, fromcode)
+        """, "main"), SDL_iconv_t, Tuple{Ptr{Cvoid}, Ptr{Cvoid}}, tocode, fromcode)
     end
 
     # Original C signature: int SDL_isalnum(int x)
@@ -8715,7 +8715,7 @@
     end
 
     # Original C signature: int SDL_setenv(const char * name, const char * value, int overwrite)
-    function llvm_SDL_setenv(name::Ptr{UInt8}, value::Ptr{UInt8}, overwrite::Int32)::Int32
+    function llvm_SDL_setenv(name::Ptr{Cvoid}, value::Ptr{Cvoid}, overwrite::Int32)::Int32
         Base.llvmcall(("""
         declare i32 @SDL_setenv(i8*, i8*, i32) nounwind
 
@@ -8724,7 +8724,7 @@
             %result = call i32 @SDL_setenv(i8* %name, i8* %value, i32 %overwrite)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Int32}, name, value, overwrite)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}, Ptr{Cvoid}, Int32}, name, value, overwrite)
     end
 
     # Original C signature: double SDL_sin(double x)
@@ -8780,7 +8780,7 @@
     end
 
     # Original C signature: int SDL_strcasecmp(const char * str1, const char * str2)
-    function llvm_SDL_strcasecmp(str1::Ptr{UInt8}, str2::Ptr{UInt8})::Int32
+    function llvm_SDL_strcasecmp(str1::Ptr{Cvoid}, str2::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_strcasecmp(i8*, i8*) nounwind
 
@@ -8789,11 +8789,11 @@
             %result = call i32 @SDL_strcasecmp(i8* %str1, i8* %str2)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, str1, str2)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}, Ptr{Cvoid}}, str1, str2)
     end
 
     # Original C signature: int SDL_strcmp(const char * str1, const char * str2)
-    function llvm_SDL_strcmp(str1::Ptr{UInt8}, str2::Ptr{UInt8})::Int32
+    function llvm_SDL_strcmp(str1::Ptr{Cvoid}, str2::Ptr{Cvoid})::Int32
         Base.llvmcall(("""
         declare i32 @SDL_strcmp(i8*, i8*) nounwind
 
@@ -8802,11 +8802,11 @@
             %result = call i32 @SDL_strcmp(i8* %str1, i8* %str2)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}}, str1, str2)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}, Ptr{Cvoid}}, str1, str2)
     end
 
     # Original C signature: size_t SDL_strlen(const char * str)
-    function llvm_SDL_strlen(str::Ptr{UInt8})::Csize_t
+    function llvm_SDL_strlen(str::Ptr{Cvoid})::Csize_t
         Base.llvmcall(("""
         declare i8* @SDL_strlen(i8*) nounwind
 
@@ -8815,11 +8815,11 @@
             %result = call i8* @SDL_strlen(i8* %str)
             ret i8* %result
         }
-        """, "main"), Csize_t, Tuple{Ptr{UInt8}}, str)
+        """, "main"), Csize_t, Tuple{Ptr{Cvoid}}, str)
     end
 
     # Original C signature: int SDL_strncasecmp(const char * str1, const char * str2, size_t len)
-    function llvm_SDL_strncasecmp(str1::Ptr{UInt8}, str2::Ptr{UInt8}, len::Csize_t)::Int32
+    function llvm_SDL_strncasecmp(str1::Ptr{Cvoid}, str2::Ptr{Cvoid}, len::Csize_t)::Int32
         Base.llvmcall(("""
         declare i32 @SDL_strncasecmp(i8*, i8*, i8*) nounwind
 
@@ -8828,11 +8828,11 @@
             %result = call i32 @SDL_strncasecmp(i8* %str1, i8* %str2, i8* %len)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Csize_t}, str1, str2, len)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}, Ptr{Cvoid}, Csize_t}, str1, str2, len)
     end
 
     # Original C signature: int SDL_strncmp(const char * str1, const char * str2, size_t maxlen)
-    function llvm_SDL_strncmp(str1::Ptr{UInt8}, str2::Ptr{UInt8}, maxlen::Csize_t)::Int32
+    function llvm_SDL_strncmp(str1::Ptr{Cvoid}, str2::Ptr{Cvoid}, maxlen::Csize_t)::Int32
         Base.llvmcall(("""
         declare i32 @SDL_strncmp(i8*, i8*, i8*) nounwind
 
@@ -8841,11 +8841,11 @@
             %result = call i32 @SDL_strncmp(i8* %str1, i8* %str2, i8* %maxlen)
             ret i32 %result
         }
-        """, "main"), Int32, Tuple{Ptr{UInt8}, Ptr{UInt8}, Csize_t}, str1, str2, maxlen)
+        """, "main"), Int32, Tuple{Ptr{Cvoid}, Ptr{Cvoid}, Csize_t}, str1, str2, maxlen)
     end
 
     # Original C signature: double SDL_strtod(const char * str, char ** endp)
-    function llvm_SDL_strtod(str::Ptr{UInt8}, endp::Ptr{Ptr{UInt8}})::Float64
+    function llvm_SDL_strtod(str::Ptr{Cvoid}, endp::Ptr{Ptr{Cvoid}})::Float64
         Base.llvmcall(("""
         declare double @SDL_strtod(i8*, i8*) nounwind
 
@@ -8854,11 +8854,11 @@
             %result = call double @SDL_strtod(i8* %str, i8* %endp)
             ret double %result
         }
-        """, "main"), Float64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}}, str, endp)
+        """, "main"), Float64, Tuple{Ptr{Cvoid}, Ptr{Ptr{Cvoid}}}, str, endp)
     end
 
     # Original C signature: long SDL_strtol(const char * str, char ** endp, int base)
-    function llvm_SDL_strtol(str::Ptr{UInt8}, endp::Ptr{Ptr{UInt8}}, base::Int32)::long
+    function llvm_SDL_strtol(str::Ptr{Cvoid}, endp::Ptr{Ptr{Cvoid}}, base::Int32)::long
         Base.llvmcall(("""
         declare i8* @SDL_strtol(i8*, i8*, i32) nounwind
 
@@ -8867,11 +8867,11 @@
             %result = call i8* @SDL_strtol(i8* %str, i8* %endp, i32 %base)
             ret i8* %result
         }
-        """, "main"), long, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, str, endp, base)
+        """, "main"), long, Tuple{Ptr{Cvoid}, Ptr{Ptr{Cvoid}}, Int32}, str, endp, base)
     end
 
     # Original C signature: Sint64 SDL_strtoll(const char * str, char ** endp, int base)
-    function llvm_SDL_strtoll(str::Ptr{UInt8}, endp::Ptr{Ptr{UInt8}}, base::Int32)::Int64
+    function llvm_SDL_strtoll(str::Ptr{Cvoid}, endp::Ptr{Ptr{Cvoid}}, base::Int32)::Int64
         Base.llvmcall(("""
         declare i64 @SDL_strtoll(i8*, i8*, i32) nounwind
 
@@ -8880,11 +8880,11 @@
             %result = call i64 @SDL_strtoll(i8* %str, i8* %endp, i32 %base)
             ret i64 %result
         }
-        """, "main"), Int64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, str, endp, base)
+        """, "main"), Int64, Tuple{Ptr{Cvoid}, Ptr{Ptr{Cvoid}}, Int32}, str, endp, base)
     end
 
     # Original C signature: unsigned long SDL_strtoul(const char * str, char ** endp, int base)
-    function llvm_SDL_strtoul(str::Ptr{UInt8}, endp::Ptr{Ptr{UInt8}}, base::Int32)::UInt32
+    function llvm_SDL_strtoul(str::Ptr{Cvoid}, endp::Ptr{Ptr{Cvoid}}, base::Int32)::UInt32
         Base.llvmcall(("""
         declare i32 @SDL_strtoul(i8*, i8*, i32) nounwind
 
@@ -8893,11 +8893,11 @@
             %result = call i32 @SDL_strtoul(i8* %str, i8* %endp, i32 %base)
             ret i32 %result
         }
-        """, "main"), UInt32, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, str, endp, base)
+        """, "main"), UInt32, Tuple{Ptr{Cvoid}, Ptr{Ptr{Cvoid}}, Int32}, str, endp, base)
     end
 
     # Original C signature: Uint64 SDL_strtoull(const char * str, char ** endp, int base)
-    function llvm_SDL_strtoull(str::Ptr{UInt8}, endp::Ptr{Ptr{UInt8}}, base::Int32)::UInt64
+    function llvm_SDL_strtoull(str::Ptr{Cvoid}, endp::Ptr{Ptr{Cvoid}}, base::Int32)::UInt64
         Base.llvmcall(("""
         declare i64 @SDL_strtoull(i8*, i8*, i32) nounwind
 
@@ -8906,7 +8906,7 @@
             %result = call i64 @SDL_strtoull(i8* %str, i8* %endp, i32 %base)
             ret i64 %result
         }
-        """, "main"), UInt64, Tuple{Ptr{UInt8}, Ptr{Ptr{UInt8}}, Int32}, str, endp, base)
+        """, "main"), UInt64, Tuple{Ptr{Cvoid}, Ptr{Ptr{Cvoid}}, Int32}, str, endp, base)
     end
 
     # Original C signature: double SDL_tan(double x)
@@ -8988,7 +8988,7 @@
     end
 
     # Original C signature: size_t SDL_utf8strlen(const char * str)
-    function llvm_SDL_utf8strlen(str::Ptr{UInt8})::Csize_t
+    function llvm_SDL_utf8strlen(str::Ptr{Cvoid})::Csize_t
         Base.llvmcall(("""
         declare i8* @SDL_utf8strlen(i8*) nounwind
 
@@ -8997,11 +8997,11 @@
             %result = call i8* @SDL_utf8strlen(i8* %str)
             ret i8* %result
         }
-        """, "main"), Csize_t, Tuple{Ptr{UInt8}}, str)
+        """, "main"), Csize_t, Tuple{Ptr{Cvoid}}, str)
     end
 
     # Original C signature: size_t SDL_utf8strnlen(const char * str, size_t bytes)
-    function llvm_SDL_utf8strnlen(str::Ptr{UInt8}, bytes::Csize_t)::Csize_t
+    function llvm_SDL_utf8strnlen(str::Ptr{Cvoid}, bytes::Csize_t)::Csize_t
         Base.llvmcall(("""
         declare i8* @SDL_utf8strnlen(i8*, i8*) nounwind
 
@@ -9010,7 +9010,7 @@
             %result = call i8* @SDL_utf8strnlen(i8* %str, i8* %bytes)
             ret i8* %result
         }
-        """, "main"), Csize_t, Tuple{Ptr{UInt8}, Csize_t}, str, bytes)
+        """, "main"), Csize_t, Tuple{Ptr{Cvoid}, Csize_t}, str, bytes)
     end
 
     # Original C signature: int SDL_wcscasecmp(const wchar_t * str1, const wchar_t * str2)
