@@ -148,7 +148,7 @@ else
             output_name = "game.exe"
             rpath_flag = ``
         elseif Sys.isapple()
-            sdl_flags = `-framework SDL2`
+            sdl_flags = `-I/opt/homebrew/include/SDL2 -L/opt/homebrew/lib -lSDL2 -lSDL2main`
             output_name = "game"
             rpath_flag = `-Wl,-rpath,@loader_path`
         else
