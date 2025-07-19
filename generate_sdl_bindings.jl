@@ -13,7 +13,6 @@ using Base: llvmcall
 using Dates
 
 # Configuration
-const C_FILE = "SDLCalls/sdl_module.c"
 const SDL_HEADERS_DIR = "SDLCalls/SDL2-2.30.11/include"
 const OUTPUT_FILE = "llvm_bindings.jl"
 
@@ -409,39 +408,6 @@ const DEPRECATED_FUNCTIONS = Set([
 ])
 
 """
-Extract SDL function calls from the C file
-"""
-function extract_sdl_functions(c_file::String)
-    functions = Set{String}()
-    
-    if !isfile(c_file)
-        println("Warning: C file not found: $c_file")
-        return functions
-    end
-    
-    content = read(c_file, String)
-    
-    # Find SDL function calls using regex
-    # This pattern matches SDL_ followed by alphanumeric characters and underscores
-    sdl_pattern = r"SDL_[a-zA-Z_][a-zA-Z0-9_]*\s*\("
-    matches = eachmatch(sdl_pattern, content)
-    
-    for match in matches
-        func_name = match.match[1:end-1]  # Remove the opening parenthesis
-        func_name = strip(func_name)
-        
-        # Skip if it's a deprecated function
-        if func_name in DEPRECATED_FUNCTIONS
-            continue
-        end
-        
-        push!(functions, func_name)
-    end
-    
-    return functions
-end
-
-"""
 Parse SDL header files to extract function signatures
 """
 function parse_sdl_headers(headers_dir::String)
@@ -721,11 +687,6 @@ Main function to generate all bindings
 function generate_bindings()
     println("Generating SDL bindings...")
     
-    # Extract SDL functions from C file
-    println("Extracting SDL functions from $C_FILE...")
-    sdl_functions = extract_sdl_functions(C_FILE)
-    println("Found $(length(sdl_functions)) SDL function calls")
-    
     # Parse SDL headers
     println("Parsing SDL headers from $SDL_HEADERS_DIR...")
     function_signatures = parse_sdl_headers(SDL_HEADERS_DIR)
@@ -738,7 +699,6 @@ function generate_bindings()
     
     # Add header comment
     header_comment = "# Auto-generated SDL bindings using llvmcall\n" *
-                     "# Source: " * C_FILE * "\n" *
                      "# Headers: " * SDL_HEADERS_DIR * "\n\n"
     push!(bindings, header_comment)
     

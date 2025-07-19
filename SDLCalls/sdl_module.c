@@ -208,6 +208,8 @@ int update_input(int x) {
                 case SDLK_SPACE:
                     input_state.key_Space = pressed;
                     if (pressed) result = 5;
+                    //Quit the game
+                    SDL_Quit();
                     break;
             }
         }

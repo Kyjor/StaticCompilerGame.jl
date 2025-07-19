@@ -338,8 +338,6 @@ end
                 ret i32 %result
             }
         """, "main"), Int32, Tuple{Ptr{SDL_Renderer}, Int32, Int32, Int32, Int32}, renderer, r, g, b, a)
-
-        printf(c"SDL_SetRenderDrawColor result: %d\n", result)
     end
     
 

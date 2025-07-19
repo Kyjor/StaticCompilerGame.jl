@@ -233,27 +233,40 @@ function pc_main()::Int32
 
     # Event loop
     #event = Ref{SDL_Event}(SDL_Event)()
-    running::Int32 = Int32(1)
+    running::Bool = true
     
 
-    #event::SDL_Event = (SDL_Event)()
-    while running == Int32(1)
-        while llvm_SDL_PollEvent(Ptr{SDL_Event}(C_NULL)) != 0
-            # if event[].type == SDL_QUIT
-            #     running = false
-            # elseif event[].type == SDL_KEYDOWN
-            #     key = event[].key.keysym.sym
-            #     if key == SDLK_LEFT
-            #         player[].x -= 5
-            #     elseif key == SDLK_RIGHT
-            #         player[].x += 5
-            #     elseif key == SDLK_UP
-            #         player[].y -= 5
-            #     elseif key == SDLK_DOWN
-            #         player[].y += 5
-            #     end
-            # end
+    event::SDL_Event = SDL_Event()
+    event_ptr::Ptr{SDL_Event} = wasm_malloc(UInt32(56))
+    max_frames::Int32 = Int32(600)
+    frame_count::Int32 = Int32(0)
+    while true
+        frame_count += Int32(1)
+        while llvm_SDL_PollEvent(event_ptr) != 0
+            eventType = unsafe_load(Ptr{UInt32}(event_ptr))
+            if eventType == SDL_QUIT
+                running = Int32(0)
+                printf(c"QUIT\n")
+                return Int32(0)
+            elseif eventType == SDL_KEYDOWN
+                key = event_ptr.key.keysym.sym
+                if key == SDLK_a
+                    printf(c"A\n")
+                elseif key == SDLK_d
+                    printf(c"D\n")
+                elseif key == SDLK_w
+                    printf(c"W\n")
+                elseif key == SDLK_s
+                    printf(c"S\n")
+                elseif key == SDLK_SPACE
+                    printf(c"SPACE\n")
+                end
+            elseif eventType == SDL_KEYUP
+                key = event_ptr.key.keysym.sym
+            end
+          
         end
+        draw_game_frame(Int32(0), Int32(0), Int32(0))
 
         # Draw
         llvm_SDL_SetRenderDrawColor(renderer, Int32(0), Int32(0), Int32(0), Int32(255)) # black
@@ -264,10 +277,15 @@ function pc_main()::Int32
 
         llvm_SDL_RenderPresent(renderer)
         llvm_SDL_Delay(Int32(16)) # ~60 FPS
+        # running = Int32(0)
+        if frame_count > max_frames
+            return Int32(0)
+        end
     end
 
+    wasm_free(event_ptr)
     llvm_SDL_Quit()
-    return 0
+    return Int32(0)
 end
 
 
