@@ -26,7 +26,7 @@ function j_init_window()::Ptr{SDL_Window}
 end
 
 function j_init_renderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
-    renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window)
+    renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window, Int32(-1), UInt32(2))
     return renderer
 end
 
@@ -49,7 +49,6 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     delta_time::Float64 = Float64(0.016666666666666666)
     
     handle_input(game_state)
-    
     # Game state variables
     player_x::Float64 = game_state.player_x
     player_y::Float64 = game_state.player_y
@@ -159,12 +158,9 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     game_state.coyote_time = coyote_time
     game_state.jump_buffer = jump_buffer
     
-    return game_state
-    # --- Render ---
-    val = call_render_rect(Int32(255), Int32(0), Int32(0), Int32(255),
-    Float64(player_x), Float64(player_y), Int32(64), Int32(64))
     
-    llvm_SDL_Delay(Int32(16)) # ~60 FPS
+    # --- Render ---
+    #llvm_SDL_Delay(Int32(16)) # ~60 FPS
     
     return game_state
 end
@@ -218,7 +214,7 @@ end
 function pc_main()::Int32
     # Init SDL
     printf(c"Initializing game...\n")
-    llvm_SDL_Init()
+    llvm_SDL_Init(UInt32(32))
 
     window::Ptr{SDL_Window} = j_init_window()
     renderer::Ptr{SDL_Renderer} = j_init_renderer(window)

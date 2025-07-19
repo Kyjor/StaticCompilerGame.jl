@@ -88,27 +88,10 @@ if build_type == "web"
         cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_game_loop',
-        '_draw_entities', 
-        '_main_loop', 
-        '_test_sdl_working', 
-        '_update_entities', 
-        '_print_entities', 
-        '_game_loop',
-        '_update_input', 
-        '_get_input_state', 
-        '_update_square_position', 
-        '_get_square_position', 
-        '_deinitialize_the_game', 
         '_j_init_game_state',
         '_j_init_window',
         '_j_init_renderer',
-        '_pc_main',
-        '_set_game_state_simple',
-        '_get_game_state_simple',
-        '_has_game_state_simple',
-        '_remove_game_state_simple',
-        '_print_game_state',
-        '_get_game_state_count'
+        '_pc_main'
         ]" 
         -s EXPORTED_RUNTIME_METHODS="['cwrap']" 
         -o $output_dir/game.js
