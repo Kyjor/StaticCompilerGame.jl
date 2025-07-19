@@ -41,10 +41,13 @@ for file in readdir(output_dir)
 end
 
 # Only compile functions that don't conflict with C functions
+# This helps to expose the functions to the web assembly module
 functions_to_compile = [
-    (draw_game_frame, (Int32, Int32, Int32), "draw_game_frame"),
     #(call_update_input, (), "call_update_input"),
     (j_init_game_state, (), "j_init_game_state"),
+    (j_init_window, (), "j_init_window"),
+    (j_init_renderer, (Ptr{SDL_Window},), "j_init_renderer"),
+    (game_loop, (Ptr{GameState}, Ptr{SDL_Renderer}), "game_loop"),
     (pc_main, (), "pc_main"),
 ]
 
@@ -84,18 +87,21 @@ if build_type == "web"
         # Link Julia LLVM IR with SDL2 C code
         cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
-        '_draw_game_frame',
+        '_game_loop',
         '_draw_entities', 
         '_main_loop', 
         '_test_sdl_working', 
         '_update_entities', 
         '_print_entities', 
+        '_game_loop',
         '_update_input', 
         '_get_input_state', 
         '_update_square_position', 
         '_get_square_position', 
         '_deinitialize_the_game', 
         '_j_init_game_state',
+        '_j_init_window',
+        '_j_init_renderer',
         '_pc_main',
         '_set_game_state_simple',
         '_get_game_state_simple',

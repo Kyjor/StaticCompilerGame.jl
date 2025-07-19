@@ -7762,3 +7762,35 @@ const SMOOTHING_OFF = 0
 
 const SMOOTHING_ON = 1
 
+
+############################
+
+struct GameState
+    player_x::Float64
+    player_y::Float64
+    player_vel_x::Float64
+    player_vel_y::Float64
+    on_ground::Int32
+end
+
+function Base.getproperty(x::Ptr{GameState}, f::Symbol)
+    f === :player_x && return unsafe_load(Ptr{Float64}(x + 0))
+    f === :player_y && return unsafe_load(Ptr{Float64}(x + 8))
+    f === :player_vel_x && return unsafe_load(Ptr{Float64}(x + 16))
+    f === :player_vel_y && return unsafe_load(Ptr{Float64}(x + 24))
+    f === :on_ground && return unsafe_load(Ptr{Int32}(x + 32))
+    f === :coyote_time && return unsafe_load(Ptr{Float64}(x + 36))
+    f === :jump_buffer && return unsafe_load(Ptr{Float64}(x + 44))
+    f === :is_jumping && return unsafe_load(Ptr{Int32}(x + 52))
+end
+
+function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
+    f === :player_x && return unsafe_store!(Ptr{Float64}(x + 0), v)
+    f === :player_y && return unsafe_store!(Ptr{Float64}(x + 8), v)
+    f === :player_vel_x && return unsafe_store!(Ptr{Float64}(x + 16), v)
+    f === :player_vel_y && return unsafe_store!(Ptr{Float64}(x + 24), v)
+    f === :on_ground && return unsafe_store!(Ptr{Int32}(x + 32), v)
+    f === :coyote_time && return unsafe_store!(Ptr{Float64}(x + 36), v)
+    f === :jump_buffer && return unsafe_store!(Ptr{Float64}(x + 44), v)
+    f === :is_jumping && return unsafe_store!(Ptr{Int32}(x + 52), v)
+end

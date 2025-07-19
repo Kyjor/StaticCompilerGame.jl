@@ -19,6 +19,25 @@ window.onModuleReady = function() {
     } else {
         console.error("test_sdl_working not found!");
     }
+
+    if (Module._j_init_game_state1) {
+        console.log("Calling init_game_state1...");
+        let game_state_ptr = Module._j_init_game_state1();
+        console.log("Game state pointer:", game_state_ptr);
+        if (game_state_ptr) {
+            console.log("Game state pointer is not null");
+            if (Module._update_game_state) {
+                console.log("Calling update_game_state...");
+                Module._update_game_state(game_state_ptr);
+            } else {
+                console.error("update_game_state not found!");
+            }
+        } else {
+            console.error("Game state pointer is null");
+        }
+    } else {
+        console.error("init_game_state1 not found!");
+    }
     
     let frameCount = 0;
     function runMainLoop() {
