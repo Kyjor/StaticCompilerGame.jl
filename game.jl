@@ -202,6 +202,13 @@ function move_toward(current::Float32, target::Float32, max_delta::Float32)::Flo
 end
 
 
+struct GameState
+    player_x::Float32
+    player_y::Float32
+    player_vel_x::Float32
+    player_vel_y::Float32
+    on_ground::Int32
+end
 
 # PC Entry Point - Main function for desktop builds
 function pc_main()::Int32
@@ -240,6 +247,10 @@ function pc_main()::Int32
     event_ptr::Ptr{SDL_Event} = wasm_malloc(UInt32(56))
     max_frames::Int32 = Int32(600)
     frame_count::Int32 = Int32(0)
+
+    player_state_ptr::Ptr{GameState} = wasm_malloc(UInt32(sizeof(GameState)))
+    unsafe_store!(Ptr{GameState}(player_state_ptr), GameState(Float32(300), Float32(220), Float32(0), Float32(0), Int32(0)))
+    game_state = GameState(Float32(300), Float32(220), Float32(0), Float32(0), Int32(0))
     while true
         frame_count += Int32(1)
         while llvm_SDL_PollEvent(event_ptr) != 0
