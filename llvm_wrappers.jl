@@ -33,13 +33,14 @@ function wasm_free(ptr::Ptr{Cvoid})
     """, "my_free"), Nothing, Tuple{Ptr{Cvoid}}, ptr)
 end
 
-    function llvm_get_error()::Int32
-        Base.llvmcall(("""
-            declare i32 @get_error() nounwind
-            define i32 @main() {
-            entry:
-                %result = call i32 @get_error()
-                ret i32 %result
-            }
-        """, "main"), Int32, Tuple{}, ())
-    end
+function wasm_free(ptr::Ptr{UInt8})
+    Base.llvmcall(("""
+        declare void @free(i8*) nounwind
+
+        define void @my_free(i8* %ptr) {
+        entry:
+            call void @free(i8* %ptr)
+            ret void
+        }
+    """, "my_free"), Nothing, Tuple{Ptr{UInt8}}, ptr)
+end

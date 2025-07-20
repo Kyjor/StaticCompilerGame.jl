@@ -6,22 +6,21 @@ include("structs.jl")
 include("llvm_wrappers.jl") 
 include("llvm_bindings.jl")
 
+macro str_ptr_with_len(len_expr, str_expr)
+    quote
+        ptr::Ptr{Cvoid} = wasm_malloc(UInt32($len_expr + 1))
+        for i = 1:$len_expr
+            unsafe_store!(Ptr{UInt8}(ptr + i - 1), codeunit($str_expr, i))
+        end
+        unsafe_store!(Ptr{UInt8}(ptr + $len_expr), 0x00)
+        Ptr{UInt8}(ptr)
+    end
+end
+
 function j_init_window()::Ptr{SDL_Window}
-    ptr::Ptr{Cvoid} = wasm_malloc(UInt32(18))
-    unsafe_store!(Ptr{UInt8}(ptr + 0), UInt8('S'))
-    unsafe_store!(Ptr{UInt8}(ptr + 1), UInt8('Q'))
-    unsafe_store!(Ptr{UInt8}(ptr + 2), UInt8('U'))
-    unsafe_store!(Ptr{UInt8}(ptr + 3), UInt8('A'))
-    unsafe_store!(Ptr{UInt8}(ptr + 4), UInt8('R'))
-    unsafe_store!(Ptr{UInt8}(ptr + 5), UInt8('E'))
-    unsafe_store!(Ptr{UInt8}(ptr + 6), UInt8(' '))
-    unsafe_store!(Ptr{UInt8}(ptr + 7), UInt8('G'))
-    unsafe_store!(Ptr{UInt8}(ptr + 8), UInt8('A'))
-    unsafe_store!(Ptr{UInt8}(ptr + 9), UInt8('M'))
-    unsafe_store!(Ptr{UInt8}(ptr + 10), UInt8('E'))
-    unsafe_store!(Ptr{UInt8}(ptr + 11), 0x00)
-    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(ptr, Int32(100), Int32(100), Int32(640), Int32(480), UInt32(0))
-    wasm_free(ptr)
+    window_name::Ptr{UInt8} = @str_ptr_with_len 4 m"Game"
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(100), Int32(100), Int32(640), Int32(480), UInt32(0))
+    wasm_free(Ptr{Cvoid}(window_name))
     return window
 end
 
@@ -35,14 +34,6 @@ function j_init_game_state()::Ptr{Cvoid}
     game_state_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(GameState)))
     unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0)))
     return game_state_ptr
-end
-
-function print_string(str::StaticString)::Int32
-    # No idea why this is needed twice. TODO: figure out why.
-    call_print_string(pointer(str))
-    call_print_string(pointer(str))
-
-    return Int32(0)
 end
 
 function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr{GameState}
@@ -160,7 +151,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     
     
     # --- Render ---
-    #llvm_SDL_Delay(Int32(16)) # ~60 FPS
+    llvm_SDL_Delay(UInt32(16)) # ~60 FPS
     
     return game_state
 end
@@ -220,22 +211,6 @@ macro static_string(str_expr)
     end
 end
 
-struct StringPtr{N}
-    string::NTuple{N, UInt8}
-end
-
-function Base.getproperty(x::Ptr{StringPtr}, f::Symbol)
-    f === :string && return unsafe_load(Ptr{NTuple{N, UInt8}}(x + 0))
-end
-
-function Base.setproperty!(x::Ptr{StringPtr}, f::Symbol, v::Any)
-    f === :string && return unsafe_store!(Ptr{NTuple{N, UInt8}}(x + 0), v)
-end
-
-
-const GREETING = @static_string "Hello"
-const my_static_str = Ref(@static_string "Hello")
-
 # pass to C function expecting char*
 function str_ptr(str::MallocString)::Ptr{UInt8}
     #get the length of the string
@@ -244,20 +219,23 @@ function str_ptr(str::MallocString)::Ptr{UInt8}
         len += 1
     end
     #allocate memory for the string
-    ptr::Ptr{Cvoid} = wasm_malloc(UInt32(len + 1))
+    tes = str.length
+    tes1 = str.length-1
+    ptr::Ptr{Cvoid} = wasm_malloc(UInt32(tes))
     #copy the string to the allocated memory
-    for i = 1:len
-        unsafe_store!(Ptr{UInt8}(ptr + i - 1), str[i])
+    for i = 1:8
+        unsafe_store!(Ptr{UInt8}(ptr + i - 1), codeunit(str, i))
     end
-    unsafe_store!(Ptr{UInt8}(ptr + len), 0x00)
+    unsafe_store!(Ptr{UInt8}(ptr + tes), 0x00)
     return ptr
 end
 
 # PC Entry Point - Main function for desktop builds
 function pc_main()::Int32
-    ptr1 = str_ptr(m"Test")
-    call_print_string(ptr1)
-    wasm_free(Ptr{Cvoid}(ptr1))
+    test = m"Testtttt"
+    ptr = str_ptr(test)
+    call_print_string(ptr)
+    wasm_free(Ptr{Cvoid}(ptr))
 
     printf(c"Initializing game...\n")
     llvm_SDL_Init(UInt32(32))

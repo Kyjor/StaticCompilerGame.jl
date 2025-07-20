@@ -668,7 +668,7 @@
     end
 
     # Original C signature: SDL_Window * SDL_CreateWindow(const char * title, int x, int y, int w, int h, Uint32 flags)
-    function llvm_SDL_CreateWindow(title::Ptr{Cvoid}, x::Int32, y::Int32, w::Int32, h::Int32, flags::UInt32)::Ptr{SDL_Window}
+    function llvm_SDL_CreateWindow(title::Ptr{UInt8}, x::Int32, y::Int32, w::Int32, h::Int32, flags::UInt32)::Ptr{SDL_Window}
         Base.llvmcall(("""
         declare i8* @SDL_CreateWindow(i8*, i32, i32, i32, i32, i32) nounwind
 
@@ -677,7 +677,7 @@
             %result = call i8* @SDL_CreateWindow(i8* %title, i32 %x, i32 %y, i32 %w, i32 %h, i32 %flags)
             ret i8* %result
         }
-        """, "main"), Ptr{SDL_Window}, Tuple{Ptr{Cvoid}, Int32, Int32, Int32, Int32, UInt32}, title, x, y, w, h, flags)
+        """, "main"), Ptr{SDL_Window}, Tuple{Ptr{UInt8}, Int32, Int32, Int32, Int32, UInt32}, title, x, y, w, h, flags)
     end
 
     # Original C signature: int SDL_CreateWindowAndRenderer(int width, int height, Uint32 window_flags, SDL_Window ** window, SDL_Renderer ** renderer)
