@@ -205,10 +205,10 @@ struct SDL_PixelFormat
 end
 
 struct SDL_Rect
-    x::Cint
-    y::Cint
-    w::Cint
-    h::Cint
+    x::Int32
+    y::Int32
+    w::Int32
+    h::Int32
 end
 
 mutable struct SDL_BlitMap end
@@ -7771,6 +7771,9 @@ struct GameState
     player_vel_x::Float64
     player_vel_y::Float64
     on_ground::Int32
+    coyote_time::Float64
+    jump_buffer::Float64
+    is_jumping::Int32
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -7793,4 +7796,52 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :coyote_time && return unsafe_store!(Ptr{Float64}(x + 36), v)
     f === :jump_buffer && return unsafe_store!(Ptr{Float64}(x + 44), v)
     f === :is_jumping && return unsafe_store!(Ptr{Int32}(x + 52), v)
+end
+
+struct KeyState_down
+    a::Bool
+    d::Bool
+    w::Bool
+    s::Bool
+    space::Bool
+end
+
+function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)
+    f === :a && return unsafe_load(Ptr{Bool}(x + 0))
+    f === :d && return unsafe_load(Ptr{Bool}(x + 1))
+    f === :w && return unsafe_load(Ptr{Bool}(x + 2))
+    f === :s && return unsafe_load(Ptr{Bool}(x + 3))
+    f === :space && return unsafe_load(Ptr{Bool}(x + 4))
+end
+
+function Base.setproperty!(x::Ptr{KeyState_down}, f::Symbol, v::Any)
+    f === :a && return unsafe_store!(Ptr{Bool}(x + 0), v)
+    f === :d && return unsafe_store!(Ptr{Bool}(x + 1), v)
+    f === :w && return unsafe_store!(Ptr{Bool}(x + 2), v)
+    f === :s && return unsafe_store!(Ptr{Bool}(x + 3), v)
+    f === :space && return unsafe_store!(Ptr{Bool}(x + 4), v)
+end
+
+struct KeyState_up
+    a::Bool
+    d::Bool
+    w::Bool
+    s::Bool
+    space::Bool
+end
+
+function Base.getproperty(x::Ptr{KeyState_up}, f::Symbol)
+    f === :a && return unsafe_load(Ptr{Bool}(x + 0))
+    f === :d && return unsafe_load(Ptr{Bool}(x + 1))
+    f === :w && return unsafe_load(Ptr{Bool}(x + 2))
+    f === :s && return unsafe_load(Ptr{Bool}(x + 3))
+    f === :space && return unsafe_load(Ptr{Bool}(x + 4))
+end
+
+function Base.setproperty!(x::Ptr{KeyState_up}, f::Symbol, v::Any)
+    f === :a && return unsafe_store!(Ptr{Bool}(x + 0), v)
+    f === :d && return unsafe_store!(Ptr{Bool}(x + 1), v)
+    f === :w && return unsafe_store!(Ptr{Bool}(x + 2), v)
+    f === :s && return unsafe_store!(Ptr{Bool}(x + 3), v)
+    f === :space && return unsafe_store!(Ptr{Bool}(x + 4), v)
 end
