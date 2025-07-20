@@ -209,10 +209,56 @@ function handle_input(game_state::Ptr{GameState})::Int32
     return Int32(0)
 end
 
+macro static_string(str_expr)
+    str = eval(str_expr)
+    bytes = [UInt8(c) for c in str]
+    push!(bytes, 0x00)  # null-terminate
+
+    N = length(bytes)
+    quote
+        NTuple{$N, UInt8}($(Expr(:tuple, bytes...)))
+    end
+end
+
+struct StringPtr{N}
+    string::NTuple{N, UInt8}
+end
+
+function Base.getproperty(x::Ptr{StringPtr}, f::Symbol)
+    f === :string && return unsafe_load(Ptr{NTuple{N, UInt8}}(x + 0))
+end
+
+function Base.setproperty!(x::Ptr{StringPtr}, f::Symbol, v::Any)
+    f === :string && return unsafe_store!(Ptr{NTuple{N, UInt8}}(x + 0), v)
+end
+
+
+const GREETING = @static_string "Hello"
+const my_static_str = Ref(@static_string "Hello")
+
+# pass to C function expecting char*
+function str_ptr(str::MallocString)::Ptr{UInt8}
+    #get the length of the string
+    len = 0
+    while str[len + 1] != 0x00
+        len += 1
+    end
+    #allocate memory for the string
+    ptr::Ptr{Cvoid} = wasm_malloc(UInt32(len + 1))
+    #copy the string to the allocated memory
+    for i = 1:len
+        unsafe_store!(Ptr{UInt8}(ptr + i - 1), str[i])
+    end
+    unsafe_store!(Ptr{UInt8}(ptr + len), 0x00)
+    return ptr
+end
 
 # PC Entry Point - Main function for desktop builds
 function pc_main()::Int32
-    # Init SDL
+    ptr1 = str_ptr(m"Test")
+    call_print_string(ptr1)
+    wasm_free(Ptr{Cvoid}(ptr1))
+
     printf(c"Initializing game...\n")
     llvm_SDL_Init(UInt32(32))
 
