@@ -3,6 +3,7 @@ using StaticTools
 using StaticCompiler
 
 include("structs.jl")
+include("game_structs.jl")
 include("llvm_wrappers.jl") 
 include("llvm_bindings.jl")
 
@@ -29,22 +30,28 @@ function j_init_renderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
     return renderer
 end
 
-function j_init_game_state()::Ptr{Cvoid}
+function j_init_game_state()::Ptr{GameState}
     printf(c"Initializing game state\n")
+    keys_up::Ptr{KeyState_up} = Ptr{KeyState_up}(wasm_malloc(UInt32(sizeof(KeyState_up))))
+    unsafe_store!(Ptr{KeyState_up}(keys_up), KeyState_up(false, false, false, false, false))
+    keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
+    unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
+
+    printf(c"Keys up: %p\n", keys_up)
+    printf(c"Keys down: %p\n", keys_down)
     game_state_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(GameState)))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0)))
-    return game_state_ptr
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up))
+    printf(c"Game state initialized\n")
+
+    return Ptr{GameState}(game_state_ptr)
 end
 
 function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr{GameState}
     delta_time::Float64 = Float64(0.016666666666666666)
-    keys_down::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(KeyState_down)))
-    unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
-    keys_up::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(KeyState_up)))
-    unsafe_store!(Ptr{KeyState_up}(keys_up), KeyState_up(false, false, false, false, false))
-    keys_down_ptr::Ptr{KeyState_down} = Ptr{KeyState_down}(keys_down)
-    keys_up_ptr::Ptr{KeyState_up} = Ptr{KeyState_up}(keys_up)
-    handle_input(game_state, keys_down_ptr, keys_up_ptr)
+    # Use persistent key state from GameState
+    keys_down_ptr::Ptr{KeyState_down} = game_state.keys_down
+    keys_up_ptr::Ptr{KeyState_up} = game_state.keys_up
+    handle_input(keys_down_ptr, keys_up_ptr)
     # Game state variables
     player_x::Float64 = game_state.player_x
     player_y::Float64 = game_state.player_y
@@ -55,16 +62,15 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     jump_buffer::Float64 = game_state.jump_buffer
     is_jumping::Int32 = game_state.is_jumping
     
-    
     # --- Platformer Physics ---
-    gravity::Float64 = Float64(15.0)             # Gravity strength
-    jump_velocity::Float64 = Float64(-12.0)    # Initial jump velocity
-    ground_y::Float64 = Float64(100.0)           # Ground level
-    move_accel::Float64 = Float64(800.0)         # Horizontal acceleration
-    ground_decel::Float64 = Float64(800.0)       # Ground deceleration
-    air_decel::Float64 = Float64(400.0)          # Air deceleration
+    gravity::Float64 = Float64(15.0)             # Gravity strength (unchanged, tune for arc)
+    jump_velocity::Float64 = Float64(-38.0)      # Initial jump velocity (tuned for ~3-tile jump)
+    ground_y::Float64 = Float64(400.0)           # Ground level
+    move_accel::Float64 = Float64(2000.0)        # Horizontal acceleration (reach max speed in 0.2s)
+    ground_decel::Float64 = Float64(4000.0)      # Ground deceleration (stop in 0.1s)
+    air_decel::Float64 = Float64(1200.0)         # Air deceleration (responsive air control)
     max_speed::Float64 = Float64(400.0)          # Max horizontal speed
-    coyote_duration::Float64 = Float64(0.1)    # Time window for coyote time
+    coyote_duration::Float64 = Float64(0.1)      # Time window for coyote time
     jump_buffer_duration::Float64 = Float64(0.1) # Time window for jump buffering
     jump_cancel_gravity_scale::Float64 = Float64(0.5) # Reduce gravity when jump button released
     
@@ -102,11 +108,10 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     # --- Jumping ---
     # Check if we can jump (either on ground or in coyote time)
     can_jump = (on_ground == Int32(1) || coyote_time > Float64(0)) && !(is_jumping == Int32(1) && player_vel_y < Float64(0))
-    
+
     # Jump if button pressed and either can jump now or has buffered jump
-    if (can_jump && keys_down_ptr.space) || (on_ground == Int32(1) && jump_buffer > Float64(0))
+    if ((can_jump && keys_down_ptr.space) || (on_ground == Int32(1) && jump_buffer > Float64(0))) && !(is_jumping == Int32(1) && player_vel_y < Float64(0))
         printf(c"Jumping\n")
-        #print_string(ptr)
         player_vel_y = jump_velocity
         game_state.player_vel_y = player_vel_y
         game_state.on_ground = Int32(0)
@@ -116,7 +121,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     end
     
     # # Variable jump height (cancel jump when button released)
-    if is_jumping == Int32(1) && player_vel_y < Float64(0) && !keys_up_ptr.space
+    if is_jumping == Int32(1) && player_vel_y < Float64(0) && !keys_down_ptr.space
         player_vel_y *= jump_cancel_gravity_scale
         game_state.player_vel_y = player_vel_y
     end
@@ -126,7 +131,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
         player_vel_y += Float64(gravity * delta_time)
         game_state.player_vel_y = player_vel_y
     else
-        game_state.is_jumping = Int32(0)
+        game_state.is_jumping = Int32(0)  # Reset jump state only when landing
     end
     
     # --- Update Position ---
@@ -154,9 +159,12 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     
     # print the game state
     # print player position
-    printf(c"Player Position: %f, %f\n", player_x, player_y)
+    #printf(c"Player Position: %f, %f\n", player_x, player_y)
     #printf(c"Game State: %f, %f, %f, %f, %d, %f, %f, %d\n", player_x, player_y, player_vel_x, player_vel_y, on_ground, coyote_time, jump_buffer, is_jumping)
     # --- Render ---
+    # Clear screen to black before drawing
+    llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
+    llvm_SDL_RenderClear(renderer)
     rect::SDL_FRect = SDL_FRect(Float32(player_x), Float32(player_y), Float32(64), Float32(64))
     rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_FRect)))
     unsafe_store!(Ptr{SDL_FRect}(rect_ptr), rect)
@@ -166,10 +174,14 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     wasm_free(Ptr{Cvoid}(rect_ptr))
     llvm_SDL_RenderPresent(renderer)
     llvm_SDL_Delay(UInt32(16)) # ~60 FPS
+
+    # Debug prints for movement
+    # printf(c"Player Velocity X: %f\n", player_vel_x)
+    # printf(c"Delta Time: %f\n", delta_time)
     
 
-    wasm_free(Ptr{Cvoid}(keys_down))
-    wasm_free(Ptr{Cvoid}(keys_up))
+    # wasm_free(Ptr{Cvoid}(keys_down))
+    # wasm_free(Ptr{Cvoid}(keys_up))
     return game_state
 end
 
@@ -184,15 +196,22 @@ function move_toward(current::Float64, target::Float64, max_delta::Float64)::Flo
     end
 end
 
-function handle_input(game_state::Ptr{GameState}, keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up})::Int32
+function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up})::Int32
+    # Reset key states for this frame
+    keys_up.a = false
+    keys_up.d = false
+    keys_up.w = false
+    keys_up.s = false
+    keys_up.space = false
+
     event::SDL_Event = SDL_Event()
     event_ptr::Ptr{SDL_Event} = wasm_malloc(UInt32(56))
-
     while llvm_SDL_PollEvent(event_ptr) != 0
         eventType = unsafe_load(Ptr{UInt32}(event_ptr))
         if eventType == SDL_QUIT
             running = Int32(0)
             printf(c"QUIT\n")
+            llvm_SDL_Quit()
             return Int32(0)
         elseif eventType == SDL_KEYDOWN
             key = event_ptr.key.keysym.sym
@@ -222,6 +241,22 @@ function handle_input(game_state::Ptr{GameState}, keys_down::Ptr{KeyState_down},
                 keys_up.space = true
             end
         end
+    end
+
+    if keys_up.a
+        keys_down.a = false
+    end
+    if keys_up.d
+        keys_down.d = false
+    end
+    if keys_up.w
+        keys_down.w = false
+    end
+    if keys_up.s
+        keys_down.s = false
+    end
+    if keys_up.space
+        keys_down.space = false
     end
 
     wasm_free(Ptr{Cvoid}(event_ptr))
@@ -264,17 +299,9 @@ function pc_main()::Int32
 
     window::Ptr{SDL_Window} = j_init_window()
     renderer::Ptr{SDL_Renderer} = j_init_renderer(window)
-    max_frames::Int32 = Int32(600)
-    frame_count::Int32 = Int32(0)
     game_state_ptr::Ptr{GameState} = j_init_game_state()
     while true
-        frame_count += Int32(1)
-
         game_loop(game_state_ptr, renderer)
-
-        if frame_count > max_frames
-            return Int32(0)
-        end
     end
 
     wasm_free(game_state_ptr)
