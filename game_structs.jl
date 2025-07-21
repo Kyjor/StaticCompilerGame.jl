@@ -25,6 +25,7 @@ struct GameState
     is_jumping::Int32
     keys_up::Ptr{KeyState_up}   
     keys_down::Ptr{KeyState_down}
+    last_frame_time::UInt64
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -38,6 +39,7 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :is_jumping && return unsafe_load(Ptr{Int32}(x + 52))
     f === :keys_up && return unsafe_load(Ptr{Ptr{KeyState_up}}(x + 64))
     f === :keys_down && return unsafe_load(Ptr{Ptr{KeyState_down}}(x + 72))
+    f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + 80))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
@@ -51,6 +53,7 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :is_jumping && return unsafe_store!(Ptr{Int32}(x + 52), v)
     f === :keys_up && return unsafe_store!(Ptr{Ptr{KeyState_up}}(x + 64), v)
     f === :keys_down && return unsafe_store!(Ptr{Ptr{KeyState_down}}(x + 72), v)
+    f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + 80), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)

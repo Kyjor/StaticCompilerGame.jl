@@ -37,17 +37,19 @@ function j_init_game_state()::Ptr{GameState}
     keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
     unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
 
-    printf(c"Keys up: %p\n", keys_up)
-    printf(c"Keys down: %p\n", keys_down)
-    game_state_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(GameState)))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up))
+    game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0)))
     printf(c"Game state initialized\n")
+    game_state_ptr.last_frame_time = UInt64(0)
 
-    return Ptr{GameState}(game_state_ptr)
+    return game_state_ptr
 end
 
 function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr{GameState}
-    delta_time::Float64 = Float64(0.016666666666666666)
+    current_time::UInt64 = llvm_SDL_GetPerformanceCounter()
+    delta_time::Float64 = Float64(current_time - game_state.last_frame_time) / Float64(llvm_SDL_GetPerformanceFrequency())
+    game_state.last_frame_time = current_time
+    printf(c"Delta time: %f\n", delta_time)
     # Use persistent key state from GameState
     keys_down_ptr::Ptr{KeyState_down} = game_state.keys_down
     keys_up_ptr::Ptr{KeyState_up} = game_state.keys_up
@@ -63,13 +65,13 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     is_jumping::Int32 = game_state.is_jumping
     
     # --- Platformer Physics ---
-    gravity::Float64 = Float64(15.0)             # Gravity strength (unchanged, tune for arc)
-    jump_velocity::Float64 = Float64(-38.0)      # Initial jump velocity (tuned for ~3-tile jump)
-    ground_y::Float64 = Float64(400.0)           # Ground level
-    move_accel::Float64 = Float64(2000.0)        # Horizontal acceleration (reach max speed in 0.2s)
-    ground_decel::Float64 = Float64(4000.0)      # Ground deceleration (stop in 0.1s)
-    air_decel::Float64 = Float64(1200.0)         # Air deceleration (responsive air control)
-    max_speed::Float64 = Float64(400.0)          # Max horizontal speed
+    gravity::Float64 = Float64(800.0)             # Much stronger gravity
+    jump_velocity::Float64 = Float64(-400.0)      # Much stronger jump
+    ground_y::Float64 = Float64(350.0)           # Closer ground level
+    move_accel::Float64 = Float64(2000.0)        # Keep as is
+    ground_decel::Float64 = Float64(4000.0)      # Keep as is
+    air_decel::Float64 = Float64(1200.0)         # Keep as is
+    max_speed::Float64 = Float64(400.0)          # Keep as is
     coyote_duration::Float64 = Float64(0.1)      # Time window for coyote time
     jump_buffer_duration::Float64 = Float64(0.1) # Time window for jump buffering
     jump_cancel_gravity_scale::Float64 = Float64(0.5) # Reduce gravity when jump button released
@@ -106,18 +108,13 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     game_state.player_vel_x = player_vel_x
     
     # --- Jumping ---
-    # Check if we can jump (either on ground or in coyote time)
-    can_jump = (on_ground == Int32(1) || coyote_time > Float64(0)) && !(is_jumping == Int32(1) && player_vel_y < Float64(0))
-
-    # Jump if button pressed and either can jump now or has buffered jump
-    if ((can_jump && keys_down_ptr.space) || (on_ground == Int32(1) && jump_buffer > Float64(0))) && !(is_jumping == Int32(1) && player_vel_y < Float64(0))
+    # Simple jump: if on ground and space pressed, jump
+    if on_ground == Int32(1) && keys_down_ptr.space
         printf(c"Jumping\n")
         player_vel_y = jump_velocity
         game_state.player_vel_y = player_vel_y
         game_state.on_ground = Int32(0)
         game_state.is_jumping = Int32(1)
-        game_state.coyote_time = Float64(0)  # Consume coyote time
-        game_state.jump_buffer = Float64(0)  # Consume jump buffer
     end
     
     # # Variable jump height (cancel jump when button released)
