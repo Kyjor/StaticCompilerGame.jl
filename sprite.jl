@@ -43,7 +43,7 @@ function load_sprite(renderer::Ptr{SDL_Renderer}, file_path::Ptr{UInt8})::Ptr{Sp
     printf(c"Surface width: %d, Surface height: %d\n", surface_width, surface_height)
     # Create sprite structure
     sprite_ptr::Ptr{Sprite} = Ptr{Sprite}(wasm_malloc(UInt32(sizeof(Sprite))))
-    unsafe_store!(Ptr{Sprite}(sprite_ptr), Sprite(texture, surface_width, surface_height, Int32(0), Int32(0), Int32(16), Int32(16), true, false))
+    unsafe_store!(Ptr{Sprite}(sprite_ptr), Sprite(texture, surface_width, surface_height, true, false))
     
     printf(c"PNG sprite loaded successfully\n")
     return sprite_ptr

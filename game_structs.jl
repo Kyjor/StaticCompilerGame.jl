@@ -44,6 +44,12 @@ const ANIM_IDLE = 0
 const ANIM_RUN = 1
 const ANIM_JUMP = 2
 
+struct Player
+    is_alive::Bool
+    anim::Ptr{Animation}
+    anim_state::Int32
+end
+
 struct GameState
     player_x::Float64
     player_y::Float64
@@ -139,7 +145,7 @@ function Base.setproperty!(x::Ptr{Sprite}, f::Symbol, v::Any)
     f === :texture && return unsafe_store!(Ptr{Ptr{SDL_Texture}}(x + 0), v)
     f === :width && return unsafe_store!(Ptr{Int32}(x + 8), v)
     f === :height && return unsafe_store!(Ptr{Int32}(x + 12), v)
-        f === :loaded && return unsafe_store!(Ptr{Bool}(x + 16), v)
+    f === :loaded && return unsafe_store!(Ptr{Bool}(x + 16), v)
     f === :is_flipped && return unsafe_store!(Ptr{Bool}(x + 17), v)
 end
 
@@ -175,8 +181,12 @@ end
 
 function Base.getproperty(x::Ptr{Player}, f::Symbol)
     f === :is_alive && return unsafe_load(Ptr{Bool}(x + 0))
+    f === :anim && return unsafe_load(Ptr{Ptr{Animation}}(x + 8))
+    f === :anim_state && return unsafe_load(Ptr{Int32}(x + 16))
 end
 
 function Base.setproperty!(x::Ptr{Player}, f::Symbol, v::Any)
     f === :is_alive && return unsafe_store!(Ptr{Bool}(x + 0), v)
+    f === :anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + 8), v)
+    f === :anim_state && return unsafe_store!(Ptr{Int32}(x + 16), v)
 end

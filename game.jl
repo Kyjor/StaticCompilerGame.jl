@@ -32,7 +32,7 @@ function j_init_renderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
 end
 
 # Helper to allocate and initialize an Animation
-function j_init_animation(frames::Vector{AnimationFrame})::Ptr{Animation}
+function init_animation(frames::Vector{AnimationFrame})::Ptr{Animation}
     frame_count::Int32 = Int32(length(frames))
     frames_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(wasm_malloc(UInt32(sizeof(AnimationFrame) * frame_count)))
     for i in 1:frame_count
@@ -51,18 +51,18 @@ const JUMP_FRAMES = [AnimationFrame(256, 0, 64, 64, 0.3)]
 # Helper to select animation by state
 function j_select_animation(state::Int32)::Ptr{Animation}
     if state == ANIM_IDLE
-        return j_init_animation(IDLE_FRAMES)
+        return init_animation(IDLE_FRAMES)
     elseif state == ANIM_RUN
-        return j_init_animation(RUN_FRAMES)
+        return init_animation(RUN_FRAMES)
     elseif state == ANIM_JUMP
-        return j_init_animation(JUMP_FRAMES)
+        return init_animation(JUMP_FRAMES)
     else
-        return j_init_animation(IDLE_FRAMES)
+        return init_animation(IDLE_FRAMES)
     end
 end
 
 # Update animation timer and frame
-function j_update_animation(anim::Ptr{Animation}, delta::Float64)::Cvoid
+function update_animation(anim::Ptr{Animation}, delta::Float64)::Cvoid
     if anim == Ptr{Animation}(C_NULL)
         return
     end
@@ -82,14 +82,14 @@ function j_init_game_state()::Ptr{GameState}
     keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
     unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
 
-    sprite_init_result::Int32 = j_init_sprite_system()
+    sprite_init_result::Int32 = init_sprite_system()
     if sprite_init_result != 0
         printf(c"Failed to initialize sprite system\n")
     end
 
-    anim_ptr::Ptr{Animation} = j_init_animation(IDLE_FRAMES)
+    #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), anim_ptr, ANIM_IDLE))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL)))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -193,27 +193,27 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     end
     
     # --- Animation state selection (example logic) ---
-    if game_state.on_ground == Int32(0)
-        if game_state.player_anim_state != ANIM_JUMP
-            game_state.player_anim_state = ANIM_JUMP
-            j_free_animation(game_state.player_anim)
-            game_state.player_anim = j_select_animation(ANIM_JUMP)
-        end
-    elseif abs(game_state.player_vel_x) > 1.0
-        if game_state.player_anim_state != ANIM_RUN
-            game_state.player_anim_state = ANIM_RUN
-            j_free_animation(game_state.player_anim)
-            game_state.player_anim = j_select_animation(ANIM_RUN)
-        end
-    else
-        if game_state.player_anim_state != ANIM_IDLE
-            game_state.player_anim_state = ANIM_IDLE
-            j_free_animation(game_state.player_anim)
-            game_state.player_anim = j_select_animation(ANIM_IDLE)
-        end
-    end
+    # if game_state.on_ground == Int32(0)
+    #     if game_state.player_anim_state != ANIM_JUMP
+    #         game_state.player_anim_state = ANIM_JUMP
+    #         #free_animation(game_state.player_anim)
+    #         game_state.player_anim = j_select_animation(ANIM_JUMP)
+    #     end
+    # elseif abs(game_state.player_vel_x) > 1.0
+    #     if game_state.player_anim_state != ANIM_RUN
+    #         game_state.player_anim_state = ANIM_RUN
+    #         #free_animation(game_state.player_anim)
+    #         game_state.player_anim = j_select_animation(ANIM_RUN)
+    #     end
+    # else
+    #     if game_state.player_anim_state != ANIM_IDLE
+    #         game_state.player_anim_state = ANIM_IDLE
+    #         #free_animation(game_state.player_anim)
+    #         game_state.player_anim = j_select_animation(ANIM_IDLE)
+    #     end
+    # end
     # Update animation frame
-    j_update_animation(game_state.player_anim, delta_time)
+   # update_animation(game_state.player_anim, delta_time)
     
     # --- Render ---
     # Clear screen to black before drawing
@@ -229,7 +229,8 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
             game_state.player_sprite.is_flipped = true
             printf(c"Player is facing left\n")
         end
-        render_result::Int32 = j_render_sprite(renderer, game_state.player_sprite, game_state.player_anim, Float32(game_state.player_x), Float32(game_state.player_y))
+        render_sprite(renderer, game_state.player_sprite, Float32(game_state.player_x), Float32(game_state.player_y))
+        #render_result::Int32 = j_render_sprite(renderer, game_state.player_sprite, game_state.player_anim, Float32(game_state.player_x), Float32(game_state.player_y))
     else
         # Fallback to rectangle
         rect::SDL_FRect = SDL_FRect(Float32(game_state.player_x), Float32(game_state.player_y), Float32(64), Float32(64))
@@ -403,7 +404,7 @@ function j_render_sprite(renderer::Ptr{SDL_Renderer}, sprite::Ptr{Sprite}, anim:
 end
 
 # Free animation resources
-function j_free_animation(anim::Ptr{Animation})::Cvoid
+function free_animation(anim::Ptr{Animation})::Cvoid
     if anim == Ptr{Animation}(C_NULL)
         return
     end
