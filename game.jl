@@ -31,6 +31,50 @@ function j_init_renderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
     return renderer
 end
 
+# Helper to allocate and initialize an Animation
+function j_init_animation(frames::Vector{AnimationFrame})::Ptr{Animation}
+    frame_count::Int32 = Int32(length(frames))
+    frames_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(wasm_malloc(UInt32(sizeof(AnimationFrame) * frame_count)))
+    for i in 1:frame_count
+        unsafe_store!(frames_ptr + (i-1), frames[i])
+    end
+    anim_ptr::Ptr{Animation} = Ptr{Animation}(wasm_malloc(UInt32(sizeof(Animation))))
+    unsafe_store!(anim_ptr, Animation(frames_ptr, frame_count, 0, 0.0))
+    return anim_ptr
+end
+
+# Example: define animation frames for idle, run, jump (assume 64x64 frames in a horizontal spritesheet)
+const IDLE_FRAMES = [AnimationFrame(0, 0, 64, 64, 0.2)]
+const RUN_FRAMES = [AnimationFrame(64*i, 0, 64, 64, 0.1) for i in 0:3]
+const JUMP_FRAMES = [AnimationFrame(256, 0, 64, 64, 0.3)]
+
+# Helper to select animation by state
+function j_select_animation(state::Int32)::Ptr{Animation}
+    if state == ANIM_IDLE
+        return j_init_animation(IDLE_FRAMES)
+    elseif state == ANIM_RUN
+        return j_init_animation(RUN_FRAMES)
+    elseif state == ANIM_JUMP
+        return j_init_animation(JUMP_FRAMES)
+    else
+        return j_init_animation(IDLE_FRAMES)
+    end
+end
+
+# Update animation timer and frame
+function j_update_animation(anim::Ptr{Animation}, delta::Float64)::Cvoid
+    if anim == Ptr{Animation}(C_NULL)
+        return
+    end
+    anim.timer += delta
+    frame::AnimationFrame = unsafe_load(anim.frames + anim.current_frame)
+    if anim.timer >= frame.duration
+        anim.timer -= frame.duration
+        anim.current_frame = (anim.current_frame + 1) % anim.frame_count
+    end
+end
+
+# In j_init_game_state, initialize animation state
 function j_init_game_state()::Ptr{GameState}
     printf(c"Initializing game state\n")
     keys_up::Ptr{KeyState_up} = Ptr{KeyState_up}(wasm_malloc(UInt32(sizeof(KeyState_up))))
@@ -38,24 +82,21 @@ function j_init_game_state()::Ptr{GameState}
     keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
     unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
 
-    # Initialize sprite system
-    sprite_init_result::Int32 = init_sprite_system()
+    sprite_init_result::Int32 = j_init_sprite_system()
     if sprite_init_result != 0
         printf(c"Failed to initialize sprite system\n")
     end
 
-    player::Ptr{Player} = Ptr{Player}(wasm_malloc(UInt32(sizeof(Player))))
-    unsafe_store!(Ptr{Player}(player), Player(false))
-
+    anim_ptr::Ptr{Animation} = j_init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), player))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), anim_ptr, ANIM_IDLE))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
-
     return game_state_ptr
 end
 
+# In game_loop, update animation state and frame
 function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr{GameState}
     current_time::UInt64 = llvm_SDL_GetPerformanceCounter()
     delta_time::Float64 = Float64(current_time - game_state.last_frame_time) / Float64(llvm_SDL_GetPerformanceFrequency())
@@ -151,6 +192,29 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
         end
     end
     
+    # --- Animation state selection (example logic) ---
+    if game_state.on_ground == Int32(0)
+        if game_state.player_anim_state != ANIM_JUMP
+            game_state.player_anim_state = ANIM_JUMP
+            j_free_animation(game_state.player_anim)
+            game_state.player_anim = j_select_animation(ANIM_JUMP)
+        end
+    elseif abs(game_state.player_vel_x) > 1.0
+        if game_state.player_anim_state != ANIM_RUN
+            game_state.player_anim_state = ANIM_RUN
+            j_free_animation(game_state.player_anim)
+            game_state.player_anim = j_select_animation(ANIM_RUN)
+        end
+    else
+        if game_state.player_anim_state != ANIM_IDLE
+            game_state.player_anim_state = ANIM_IDLE
+            j_free_animation(game_state.player_anim)
+            game_state.player_anim = j_select_animation(ANIM_IDLE)
+        end
+    end
+    # Update animation frame
+    j_update_animation(game_state.player_anim, delta_time)
+    
     # --- Render ---
     # Clear screen to black before drawing
     llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
@@ -165,7 +229,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
             game_state.player_sprite.is_flipped = true
             printf(c"Player is facing left\n")
         end
-        render_result::Int32 = render_sprite(renderer, game_state.player_sprite, Float32(game_state.player_x), Float32(game_state.player_y))
+        render_result::Int32 = j_render_sprite(renderer, game_state.player_sprite, game_state.player_anim, Float32(game_state.player_x), Float32(game_state.player_y))
     else
         # Fallback to rectangle
         rect::SDL_FRect = SDL_FRect(Float32(game_state.player_x), Float32(game_state.player_y), Float32(64), Float32(64))
@@ -314,6 +378,39 @@ function cleanup(game_state_ptr::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wi
     llvm_SDL_DestroyWindow(window)
     #llvm_IMG_Quit()  # Cleanup SDL2_image
     llvm_SDL_Quit()
+end
+
+# Render sprite with animation frame cropping
+function j_render_sprite(renderer::Ptr{SDL_Renderer}, sprite::Ptr{Sprite}, anim::Ptr{Animation}, x::Float32, y::Float32)::Int32
+    if sprite == Ptr{Sprite}(C_NULL) || anim == Ptr{Animation}(C_NULL)
+        return Int32(-1)
+    end
+    sprite_data::Sprite = unsafe_load(Ptr{Sprite}(sprite))
+    if !sprite_data.loaded
+        return Int32(-1)
+    end
+    frame::AnimationFrame = unsafe_load(anim.frames + anim.current_frame)
+    src_rect::SDL_Rect = SDL_Rect(frame.x, frame.y, frame.w, frame.h)
+    dst_rect::SDL_FRect = SDL_FRect(x, y, Float32(frame.w), Float32(frame.h))
+    src_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_Rect)))
+    dst_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+    unsafe_store!(Ptr{SDL_Rect}(src_rect_ptr), src_rect)
+    unsafe_store!(Ptr{SDL_FRect}(dst_rect_ptr), dst_rect)
+    render_result::Int32 = llvm_SDL_RenderCopyF(renderer, sprite_data.texture, Ptr{SDL_Rect}(src_rect_ptr), Ptr{SDL_FRect}(dst_rect_ptr))
+    wasm_free(Ptr{Cvoid}(src_rect_ptr))
+    wasm_free(Ptr{Cvoid}(dst_rect_ptr))
+    return render_result
+end
+
+# Free animation resources
+function j_free_animation(anim::Ptr{Animation})::Cvoid
+    if anim == Ptr{Animation}(C_NULL)
+        return
+    end
+    if anim.frames != Ptr{AnimationFrame}(C_NULL)
+        wasm_free(Ptr{Cvoid}(anim.frames))
+    end
+    wasm_free(Ptr{Cvoid}(anim))
 end
 
 

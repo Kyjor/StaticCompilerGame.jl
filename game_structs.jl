@@ -18,17 +18,31 @@ struct Sprite
     texture::Ptr{SDL_Texture}
     width::Int32
     height::Int32
-    crop_x::Int32
-    crop_y::Int32
-    crop_width::Int32
-    crop_height::Int32
     loaded::Bool
     is_flipped::Bool
 end
 
-struct Player
-    is_alive::Bool
+# Animation frame info
+struct AnimationFrame
+    x::Int32
+    y::Int32
+    w::Int32
+    h::Int32
+    duration::Float64 # seconds
 end
+
+# Animation sequence
+struct Animation
+    frames::Ptr{AnimationFrame} # pointer to array of frames
+    frame_count::Int32
+    current_frame::Int32
+    timer::Float64
+end
+
+# Animation state enum
+const ANIM_IDLE = 0
+const ANIM_RUN = 1
+const ANIM_JUMP = 2
 
 struct GameState
     player_x::Float64
@@ -117,24 +131,46 @@ function Base.getproperty(x::Ptr{Sprite}, f::Symbol)
     f === :texture && return unsafe_load(Ptr{Ptr{SDL_Texture}}(x + 0))
     f === :width && return unsafe_load(Ptr{Int32}(x + 8))
     f === :height && return unsafe_load(Ptr{Int32}(x + 12))
-    f === :crop_x && return unsafe_load(Ptr{Int32}(x + 16))
-    f === :crop_y && return unsafe_load(Ptr{Int32}(x + 20))
-    f === :crop_width && return unsafe_load(Ptr{Int32}(x + 24))
-    f === :crop_height && return unsafe_load(Ptr{Int32}(x + 28))
-    f === :loaded && return unsafe_load(Ptr{Bool}(x + 32))
-    f === :is_flipped && return unsafe_load(Ptr{Bool}(x + 33))
+    f === :loaded && return unsafe_load(Ptr{Bool}(x + 16))
+    f === :is_flipped && return unsafe_load(Ptr{Bool}(x + 17))
 end
 
 function Base.setproperty!(x::Ptr{Sprite}, f::Symbol, v::Any)
     f === :texture && return unsafe_store!(Ptr{Ptr{SDL_Texture}}(x + 0), v)
     f === :width && return unsafe_store!(Ptr{Int32}(x + 8), v)
     f === :height && return unsafe_store!(Ptr{Int32}(x + 12), v)
-    f === :crop_x && return unsafe_store!(Ptr{Int32}(x + 16), v)
-    f === :crop_y && return unsafe_store!(Ptr{Int32}(x + 20), v)
-    f === :crop_width && return unsafe_store!(Ptr{Int32}(x + 24), v)
-    f === :crop_height && return unsafe_store!(Ptr{Int32}(x + 28), v)
-    f === :loaded && return unsafe_store!(Ptr{Bool}(x + 32), v)
-    f === :is_flipped && return unsafe_store!(Ptr{Bool}(x + 33), v)
+        f === :loaded && return unsafe_store!(Ptr{Bool}(x + 16), v)
+    f === :is_flipped && return unsafe_store!(Ptr{Bool}(x + 17), v)
+end
+
+function Base.getproperty(x::Ptr{AnimationFrame}, f::Symbol)
+    f === :x && return unsafe_load(Ptr{Int32}(x + 0))
+    f === :y && return unsafe_load(Ptr{Int32}(x + 4))
+    f === :w && return unsafe_load(Ptr{Int32}(x + 8))
+    f === :h && return unsafe_load(Ptr{Int32}(x + 12))
+    f === :duration && return unsafe_load(Ptr{Float64}(x + 16))
+end
+
+function Base.setproperty!(x::Ptr{AnimationFrame}, f::Symbol, v::Any)
+    f === :x && return unsafe_store!(Ptr{Int32}(x + 0), v)
+    f === :y && return unsafe_store!(Ptr{Int32}(x + 4), v)
+    f === :w && return unsafe_store!(Ptr{Int32}(x + 8), v)
+    f === :h && return unsafe_store!(Ptr{Int32}(x + 12), v)
+    f === :duration && return unsafe_store!(Ptr{Float64}(x + 16), v)
+end
+
+function Base.getproperty(x::Ptr{Animation}, f::Symbol)
+    f === :frames && return unsafe_load(Ptr{Ptr{AnimationFrame}}(x + 0))
+    f === :frame_count && return unsafe_load(Ptr{Int32}(x + 8))
+    f === :current_frame && return unsafe_load(Ptr{Int32}(x + 12))
+    f === :timer && return unsafe_load(Ptr{Float64}(x + 16))
+end
+
+function Base.setproperty!(x::Ptr{Animation}, f::Symbol, v::Any)
+    f === :frames && return unsafe_store!(Ptr{Ptr{AnimationFrame}}(x + 0), v)
+    f === :frame_count && return unsafe_store!(Ptr{Int32}(x + 8), v)
+    f === :current_frame && return unsafe_store!(Ptr{Int32}(x + 12), v)
+    f === :timer && return unsafe_store!(Ptr{Float64}(x + 16), v)
 end
 
 function Base.getproperty(x::Ptr{Player}, f::Symbol)
