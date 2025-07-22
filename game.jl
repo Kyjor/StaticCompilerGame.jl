@@ -142,13 +142,6 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     llvm_SDL_RenderPresent(renderer)
     llvm_SDL_Delay(UInt32(16)) # ~60 FPS
 
-    # Debug prints for movement
-    # printf(c"Player Velocity X: %f\n", player_vel_x)
-    # printf(c"Delta Time: %f\n", delta_time)
-    
-
-    # wasm_free(Ptr{Cvoid}(keys_down))
-    # wasm_free(Ptr{Cvoid}(keys_up))
     return game_state
 end
 
@@ -268,8 +261,12 @@ function pc_main()::Int32
         game_loop(game_state_ptr, renderer)
     end
 
-    wasm_free(game_state_ptr)
+    wasm_free(Ptr{Cvoid}(game_state_ptr.keys_down))
+    wasm_free(Ptr{Cvoid}(game_state_ptr.keys_up))
+    llvm_SDL_DestroyRenderer(renderer)
+    llvm_SDL_DestroyWindow(window)
     llvm_SDL_Quit()
+    
     return Int32(0)
 end
 
