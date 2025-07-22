@@ -44,8 +44,11 @@ function j_init_game_state()::Ptr{GameState}
         printf(c"Failed to initialize sprite system\n")
     end
 
+    player::Ptr{Player} = Ptr{Player}(wasm_malloc(UInt32(sizeof(Player))))
+    unsafe_store!(Ptr{Player}(player), Player(false))
+
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL)))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), player))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -73,7 +76,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     coyote_duration::Float64 = Float64(0.1)      # Time window for coyote time
     jump_buffer_duration::Float64 = Float64(0.1) # Time window for jump buffering
     jump_cancel_gravity_scale::Float64 = Float64(0.5) # Reduce gravity when jump button released
-    
+
     # --- Coyote Time Update ---
     if game_state.on_ground == Int32(1)
         game_state.coyote_time = coyote_duration
@@ -155,6 +158,13 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     
     # Render sprite if available, otherwise render rectangle
     if game_state.player_sprite != Ptr{Sprite}(C_NULL)
+        if game_state.player_sprite.is_flipped && keys_down_ptr.d
+            game_state.player_sprite.is_flipped = false
+            printf(c"Player is facing right\n")
+        elseif !game_state.player_sprite.is_flipped && keys_down_ptr.a
+            game_state.player_sprite.is_flipped = true
+            printf(c"Player is facing left\n")
+        end
         render_result::Int32 = render_sprite(renderer, game_state.player_sprite, Float32(game_state.player_x), Float32(game_state.player_y))
     else
         # Fallback to rectangle

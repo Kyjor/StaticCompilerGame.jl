@@ -18,7 +18,16 @@ struct Sprite
     texture::Ptr{SDL_Texture}
     width::Int32
     height::Int32
+    crop_x::Int32
+    crop_y::Int32
+    crop_width::Int32
+    crop_height::Int32
     loaded::Bool
+    is_flipped::Bool
+end
+
+struct Player
+    is_alive::Bool
 end
 
 struct GameState
@@ -35,6 +44,7 @@ struct GameState
     last_frame_time::UInt64
     quit::Bool
     player_sprite::Ptr{Sprite}
+    player::Ptr{Player}
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -51,6 +61,7 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + 80))
     f === :quit && return unsafe_load(Ptr{Bool}(x + 88))
     f === :player_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + 96))
+    f === :player && return unsafe_load(Ptr{Ptr{Player}}(x + 104))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
@@ -67,6 +78,7 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + 80), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + 88), v)
     f === :player_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + 96), v)
+    f === :player && return unsafe_store!(Ptr{Ptr{Player}}(x + 104), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)
@@ -105,12 +117,30 @@ function Base.getproperty(x::Ptr{Sprite}, f::Symbol)
     f === :texture && return unsafe_load(Ptr{Ptr{SDL_Texture}}(x + 0))
     f === :width && return unsafe_load(Ptr{Int32}(x + 8))
     f === :height && return unsafe_load(Ptr{Int32}(x + 12))
-    f === :loaded && return unsafe_load(Ptr{Bool}(x + 16))
+    f === :crop_x && return unsafe_load(Ptr{Int32}(x + 16))
+    f === :crop_y && return unsafe_load(Ptr{Int32}(x + 20))
+    f === :crop_width && return unsafe_load(Ptr{Int32}(x + 24))
+    f === :crop_height && return unsafe_load(Ptr{Int32}(x + 28))
+    f === :loaded && return unsafe_load(Ptr{Bool}(x + 32))
+    f === :is_flipped && return unsafe_load(Ptr{Bool}(x + 33))
 end
 
 function Base.setproperty!(x::Ptr{Sprite}, f::Symbol, v::Any)
     f === :texture && return unsafe_store!(Ptr{Ptr{SDL_Texture}}(x + 0), v)
     f === :width && return unsafe_store!(Ptr{Int32}(x + 8), v)
     f === :height && return unsafe_store!(Ptr{Int32}(x + 12), v)
-    f === :loaded && return unsafe_store!(Ptr{Bool}(x + 16), v)
+    f === :crop_x && return unsafe_store!(Ptr{Int32}(x + 16), v)
+    f === :crop_y && return unsafe_store!(Ptr{Int32}(x + 20), v)
+    f === :crop_width && return unsafe_store!(Ptr{Int32}(x + 24), v)
+    f === :crop_height && return unsafe_store!(Ptr{Int32}(x + 28), v)
+    f === :loaded && return unsafe_store!(Ptr{Bool}(x + 32), v)
+    f === :is_flipped && return unsafe_store!(Ptr{Bool}(x + 33), v)
+end
+
+function Base.getproperty(x::Ptr{Player}, f::Symbol)
+    f === :is_alive && return unsafe_load(Ptr{Bool}(x + 0))
+end
+
+function Base.setproperty!(x::Ptr{Player}, f::Symbol, v::Any)
+    f === :is_alive && return unsafe_store!(Ptr{Bool}(x + 0), v)
 end

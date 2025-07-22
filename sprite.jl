@@ -43,7 +43,7 @@ function load_sprite(renderer::Ptr{SDL_Renderer}, file_path::Ptr{UInt8})::Ptr{Sp
     printf(c"Surface width: %d, Surface height: %d\n", surface_width, surface_height)
     # Create sprite structure
     sprite_ptr::Ptr{Sprite} = Ptr{Sprite}(wasm_malloc(UInt32(sizeof(Sprite))))
-    unsafe_store!(Ptr{Sprite}(sprite_ptr), Sprite(texture, surface_width, surface_height, true))
+    unsafe_store!(Ptr{Sprite}(sprite_ptr), Sprite(texture, surface_width, surface_height, Int32(0), Int32(0), Int32(16), Int32(16), true, false))
     
     printf(c"PNG sprite loaded successfully\n")
     return sprite_ptr
@@ -59,14 +59,21 @@ function render_sprite(renderer::Ptr{SDL_Renderer}, sprite::Ptr{Sprite}, x::Floa
         return Int32(-1)
     end
     
+    # Create source rectangle
+    src_rect::SDL_Rect = SDL_Rect(0, 48, 16, 16)
+    src_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_Rect)))
+    unsafe_store!(Ptr{SDL_Rect}(src_rect_ptr), src_rect)
+
     # Create destination rectangle
-    dst_rect::SDL_FRect = SDL_FRect(x, y, Float32(sprite_data.width), Float32(sprite_data.height))
+    dst_rect::SDL_FRect = SDL_FRect(x, y, Float32(64), Float32(64))
     dst_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_FRect)))
     unsafe_store!(Ptr{SDL_FRect}(dst_rect_ptr), dst_rect)
     
     # Render the texture
-    render_result::Int32 = llvm_SDL_RenderCopyF(renderer, sprite_data.texture, Ptr{SDL_FRect}(C_NULL), Ptr{SDL_FRect}(dst_rect_ptr))
+    flip::UInt32 = sprite_data.is_flipped ? UInt32(SDL_FLIP_HORIZONTAL) : UInt32(SDL_FLIP_NONE)
+    render_result::Int32 = llvm_SDL_RenderCopyExF(renderer, sprite_data.texture, Ptr{SDL_Rect}(src_rect_ptr), Ptr{SDL_FRect}(dst_rect_ptr), Float64(0.0), Ptr{SDL_FPoint}(C_NULL), flip)
     wasm_free(Ptr{Cvoid}(dst_rect_ptr))
+    wasm_free(Ptr{Cvoid}(src_rect_ptr))
     
     return render_result
 end
