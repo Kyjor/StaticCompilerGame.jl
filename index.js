@@ -33,7 +33,6 @@ window.onModuleReady = function() {
         requestAnimationFrame(runMainLoop);
     }
     
-    console.log("Starting main loop...");
     runMainLoop();
 };
 

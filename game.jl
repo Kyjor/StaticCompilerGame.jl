@@ -38,9 +38,10 @@ function j_init_game_state()::Ptr{GameState}
     unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
 
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0)))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
+    game_state_ptr.quit = false
 
     return game_state_ptr
 end
@@ -52,7 +53,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     # Use persistent key state from GameState
     keys_down_ptr::Ptr{KeyState_down} = game_state.keys_down
     keys_up_ptr::Ptr{KeyState_up} = game_state.keys_up
-    handle_input(keys_down_ptr, keys_up_ptr)
+    handle_input(keys_down_ptr, keys_up_ptr, game_state)
     
     # --- Platformer Physics ---
     gravity::Float64 = Float64(800.0)             # Much stronger gravity
@@ -156,7 +157,7 @@ function move_toward(current::Float64, target::Float64, max_delta::Float64)::Flo
     end
 end
 
-function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up})::Int32
+function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, game_state::Ptr{GameState})::Int32
     # Reset key states for this frame
     keys_up.a = false
     keys_up.d = false
@@ -169,8 +170,7 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}):
     while llvm_SDL_PollEvent(event_ptr) != 0
         eventType = unsafe_load(Ptr{UInt32}(event_ptr))
         if eventType == SDL_QUIT
-            llvm_SDL_Quit()
-            return Int32(0)
+            game_state.quit = true
         elseif eventType == SDL_KEYDOWN
             key = event_ptr.key.keysym.sym
             if key == SDLK_a
@@ -257,17 +257,21 @@ function pc_main()::Int32
     window::Ptr{SDL_Window} = j_init_window()
     renderer::Ptr{SDL_Renderer} = j_init_renderer(window)
     game_state_ptr::Ptr{GameState} = j_init_game_state()
-    while true
+    while !game_state_ptr.quit
         game_loop(game_state_ptr, renderer)
     end
 
+    cleanup(game_state_ptr, renderer, window)
+    
+    return Int32(0)
+end
+
+function cleanup(game_state_ptr::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     wasm_free(Ptr{Cvoid}(game_state_ptr.keys_down))
     wasm_free(Ptr{Cvoid}(game_state_ptr.keys_up))
     llvm_SDL_DestroyRenderer(renderer)
     llvm_SDL_DestroyWindow(window)
     llvm_SDL_Quit()
-    
-    return Int32(0)
 end
 
 

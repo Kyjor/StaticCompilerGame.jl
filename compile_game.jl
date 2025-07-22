@@ -48,6 +48,7 @@ functions_to_compile = [
     (j_init_window, (), "j_init_window"),
     (j_init_renderer, (Ptr{SDL_Window},), "j_init_renderer"),
     (game_loop, (Ptr{GameState}, Ptr{SDL_Renderer}), "game_loop"),
+    (cleanup, (Ptr{GameState}, Ptr{SDL_Renderer}, Ptr{SDL_Window}), "cleanup"),
     (pc_main, (), "pc_main"),
 ]
 
@@ -91,7 +92,8 @@ if build_type == "web"
         '_j_init_game_state',
         '_j_init_window',
         '_j_init_renderer',
-        '_pc_main'
+        '_pc_main',
+        '_cleanup'
         ]" 
         -s EXPORTED_RUNTIME_METHODS="['cwrap']" 
         -o $output_dir/game.js

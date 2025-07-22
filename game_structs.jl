@@ -26,6 +26,7 @@ struct GameState
     keys_up::Ptr{KeyState_up}   
     keys_down::Ptr{KeyState_down}
     last_frame_time::UInt64
+    quit::Bool
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -40,6 +41,7 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :keys_up && return unsafe_load(Ptr{Ptr{KeyState_up}}(x + 64))
     f === :keys_down && return unsafe_load(Ptr{Ptr{KeyState_down}}(x + 72))
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + 80))
+    f === :quit && return unsafe_load(Ptr{Bool}(x + 88))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
@@ -54,6 +56,7 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :keys_up && return unsafe_store!(Ptr{Ptr{KeyState_up}}(x + 64), v)
     f === :keys_down && return unsafe_store!(Ptr{Ptr{KeyState_down}}(x + 72), v)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + 80), v)
+    f === :quit && return unsafe_store!(Ptr{Bool}(x + 88), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)
