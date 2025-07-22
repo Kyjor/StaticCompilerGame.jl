@@ -131,19 +131,19 @@ else
         
         # Determine platform-specific flags
         if Sys.islinux()
-            sdl_flags = `-lSDL2 -lSDL2main`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image`
             output_name = "game"
             rpath_flag = `-Wl,-rpath,$(raw"$ORIGIN")`
         elseif Sys.iswindows()
-            sdl_flags = `-lSDL2 -lSDL2main`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image`
             output_name = "game.exe"
             rpath_flag = ``
         elseif Sys.isapple()
-            sdl_flags = `-I/opt/homebrew/include/SDL2 -L/opt/homebrew/lib -lSDL2 -lSDL2main`
+            sdl_flags = `-I/opt/homebrew/include/SDL2 -L/opt/homebrew/lib -lSDL2 -lSDL2main -lSDL2_image`
             output_name = "game"
             rpath_flag = `-Wl,-rpath,@loader_path`
         else
-            sdl_flags = `-lSDL2 -lSDL2main`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image`
             output_name = "game"
             rpath_flag = ``
         end

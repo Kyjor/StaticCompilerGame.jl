@@ -228,6 +228,23 @@ struct SDL_Surface
     refcount::Cint
 end
 
+function Base.getproperty(x::Ptr{SDL_Surface}, f::Symbol)
+    f === :flags         && return unsafe_load(Ptr{UInt32}(x + 0))      # offset 0
+    f === :format        && return unsafe_load(Ptr{SDL_PixelFormat}(x + 8))   # offset 8
+    f === :w             && return unsafe_load(Ptr{Cint}(x + 16))      # offset 16
+    f === :h             && return unsafe_load(Ptr{Cint}(x + 20))      # offset 20
+    f === :pitch         && return unsafe_load(Ptr{Cint}(x + 24))      # offset 24
+    f === :pixels        && return unsafe_load(Ptr{Cvoid}(x + 32))     # offset 32
+    f === :userdata      && return unsafe_load(Ptr{Cvoid}(x + 40))     # offset 40
+    f === :locked        && return unsafe_load(Ptr{Cint}(x + 48))      # offset 48
+    f === :list_blitmap  && return unsafe_load(Ptr{Cvoid}(x + 56))     # offset 56
+    f === :clip_rect     && return unsafe_load(Ptr{SDL_Rect}(x + 64))  # offset 64
+    f === :map           && return unsafe_load(Ptr{Cvoid}(x + 80))     # offset 80
+    f === :refcount      && return unsafe_load(Ptr{Cint}(x + 88))      # offset 88
+    return getfield(x, f)
+end
+
+
 function SDL_LoadBMP_RW(src, freesrc)
     ccall((:SDL_LoadBMP_RW, libsdl2), Ptr{SDL_Surface}, (Ptr{SDL_RWops}, Cint), src, freesrc)
 end

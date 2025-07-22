@@ -9077,3 +9077,121 @@
         }
         """, "main"), Int32, Tuple{Ptr{Cwchar_t}, Ptr{Cwchar_t}, Csize_t}, str1, str2, maxlen)
     end
+
+    # SDL2_image LLVM bindings
+    # Original C signature: int IMG_Init(int flags)
+    function llvm_IMG_Init(flags::Int32)::Int32
+        Base.llvmcall(("""
+        declare i32 @IMG_Init(i32) nounwind
+
+        define i32 @main(i32 %flags) {
+        entry:
+            %result = call i32 @IMG_Init(i32 %flags)
+            ret i32 %result
+        }
+        """, "main"), Int32, Tuple{Int32}, flags)
+    end
+
+    # Original C signature: void IMG_Quit()
+    function llvm_IMG_Quit()::Cvoid
+        Base.llvmcall(("""
+        declare void @IMG_Quit() nounwind
+
+        define void @main() {
+        entry:
+            call void @IMG_Quit()
+            ret void
+        }
+        """, "main"), Cvoid, Tuple{}, )
+    end
+
+    # Original C signature: SDL_Texture* IMG_LoadTexture(SDL_Renderer* renderer, const char* file)
+    function llvm_IMG_LoadTexture(renderer::Ptr{SDL_Renderer}, file::Ptr{UInt8})::Ptr{SDL_Texture}
+        Base.llvmcall(("""
+        declare i8* @IMG_LoadTexture(i8*, i8*) nounwind
+
+        define i8* @main(i8* %renderer, i8* %file) {
+        entry:
+            %result = call i8* @IMG_LoadTexture(i8* %renderer, i8* %file)
+            ret i8* %result
+        }
+        """, "main"), Ptr{SDL_Texture}, Tuple{Ptr{SDL_Renderer}, Ptr{UInt8}}, renderer, file)
+    end
+
+    # Original C signature: SDL_Surface* IMG_Load(const char* file)
+    function llvm_IMG_Load(file::Ptr{UInt8})::Ptr{SDL_Surface}
+        Base.llvmcall(("""
+        declare i8* @IMG_Load(i8*) nounwind
+
+        define i8* @main(i8* %file) {
+        entry:
+            %result = call i8* @IMG_Load(i8* %file)
+            ret i8* %result
+        }
+        """, "main"), Ptr{SDL_Surface}, Tuple{Ptr{UInt8}}, file)
+    end
+
+    # Original C signature: SDL_Surface* IMG_LoadPNG_RW(SDL_RWops* src)
+    function llvm_IMG_LoadPNG_RW(src::Ptr{SDL_RWops})::Ptr{SDL_Surface}
+        Base.llvmcall(("""
+        declare i8* @IMG_LoadPNG_RW(i8*) nounwind
+
+        define i8* @main(i8* %src) {
+        entry:
+            %result = call i8* @IMG_LoadPNG_RW(i8* %src)
+            ret i8* %result
+        }
+        """, "main"), Ptr{SDL_Surface}, Tuple{Ptr{SDL_RWops}}, src)
+    end
+
+    # Original C signature: int IMG_isPNG(SDL_RWops* src)
+    function llvm_IMG_isPNG(src::Ptr{SDL_RWops})::Int32
+        Base.llvmcall(("""
+        declare i32 @IMG_isPNG(i8*) nounwind
+
+        define i32 @main(i8* %src) {
+        entry:
+            %result = call i32 @IMG_isPNG(i8* %src)
+            ret i32 %result
+        }
+        """, "main"), Int32, Tuple{Ptr{SDL_RWops}}, src)
+    end
+
+    # Original C signature: SDL_Texture* SDL_CreateTextureFromSurface(SDL_Renderer* renderer, SDL_Surface* surface)
+    function llvm_SDL_CreateTextureFromSurface(renderer::Ptr{SDL_Renderer}, surface::Ptr{SDL_Surface})::Ptr{SDL_Texture}
+        Base.llvmcall(("""
+        declare i8* @SDL_CreateTextureFromSurface(i8*, i8*) nounwind
+
+        define i8* @main(i8* %renderer, i8* %surface) {
+        entry:
+            %result = call i8* @SDL_CreateTextureFromSurface(i8* %renderer, i8* %surface)
+            ret i8* %result
+        }
+        """, "main"), Ptr{SDL_Texture}, Tuple{Ptr{SDL_Renderer}, Ptr{SDL_Surface}}, renderer, surface)
+    end
+
+    # Original C signature: void SDL_FreeSurface(SDL_Surface* surface)
+    function llvm_SDL_FreeSurface(surface::Ptr{SDL_Surface})::Cvoid
+        Base.llvmcall(("""
+        declare void @SDL_FreeSurface(i8*) nounwind
+
+        define void @main(i8* %surface) {
+        entry:
+            call void @SDL_FreeSurface(i8* %surface)
+            ret void
+        }
+        """, "main"), Cvoid, Tuple{Ptr{SDL_Surface}}, surface)
+    end
+
+    # Original C signature: int SDL_RenderCopyF(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_FRect* srcrect, const SDL_FRect* dstrect)
+    function llvm_SDL_RenderCopyF(renderer::Ptr{SDL_Renderer}, texture::Ptr{SDL_Texture}, srcrect::Ptr{SDL_FRect}, dstrect::Ptr{SDL_FRect})::Int32
+        Base.llvmcall(("""
+        declare i32 @SDL_RenderCopyF(i8*, i8*, i8*, i8*) nounwind
+
+        define i32 @main(i8* %renderer, i8* %texture, i8* %srcrect, i8* %dstrect) {
+        entry:
+            %result = call i32 @SDL_RenderCopyF(i8* %renderer, i8* %texture, i8* %srcrect, i8* %dstrect)
+            ret i32 %result
+        }
+        """, "main"), Int32, Tuple{Ptr{SDL_Renderer}, Ptr{SDL_Texture}, Ptr{SDL_FRect}, Ptr{SDL_FRect}}, renderer, texture, srcrect, dstrect)
+    end

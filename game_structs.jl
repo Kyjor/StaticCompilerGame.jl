@@ -14,6 +14,13 @@ struct KeyState_up
     space::Bool
 end
 
+struct Sprite
+    texture::Ptr{SDL_Texture}
+    width::Int32
+    height::Int32
+    loaded::Bool
+end
+
 struct GameState
     player_x::Float64
     player_y::Float64
@@ -27,6 +34,7 @@ struct GameState
     keys_down::Ptr{KeyState_down}
     last_frame_time::UInt64
     quit::Bool
+    player_sprite::Ptr{Sprite}
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -42,6 +50,7 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :keys_down && return unsafe_load(Ptr{Ptr{KeyState_down}}(x + 72))
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + 80))
     f === :quit && return unsafe_load(Ptr{Bool}(x + 88))
+    f === :player_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + 96))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
@@ -57,6 +66,7 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :keys_down && return unsafe_store!(Ptr{Ptr{KeyState_down}}(x + 72), v)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + 80), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + 88), v)
+    f === :player_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + 96), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)
@@ -89,4 +99,18 @@ function Base.setproperty!(x::Ptr{KeyState_up}, f::Symbol, v::Any)
     f === :w && return unsafe_store!(Ptr{Bool}(x + 2), v)
     f === :s && return unsafe_store!(Ptr{Bool}(x + 3), v)
     f === :space && return unsafe_store!(Ptr{Bool}(x + 4), v)
+end
+
+function Base.getproperty(x::Ptr{Sprite}, f::Symbol)
+    f === :texture && return unsafe_load(Ptr{Ptr{SDL_Texture}}(x + 0))
+    f === :width && return unsafe_load(Ptr{Int32}(x + 8))
+    f === :height && return unsafe_load(Ptr{Int32}(x + 12))
+    f === :loaded && return unsafe_load(Ptr{Bool}(x + 16))
+end
+
+function Base.setproperty!(x::Ptr{Sprite}, f::Symbol, v::Any)
+    f === :texture && return unsafe_store!(Ptr{Ptr{SDL_Texture}}(x + 0), v)
+    f === :width && return unsafe_store!(Ptr{Int32}(x + 8), v)
+    f === :height && return unsafe_store!(Ptr{Int32}(x + 12), v)
+    f === :loaded && return unsafe_store!(Ptr{Bool}(x + 16), v)
 end
