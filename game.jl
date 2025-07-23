@@ -86,7 +86,15 @@ end
 
 # In j_init_game_state, initialize animation state
 function j_init_game_state()::Ptr{GameState}
+
     printf(c"Initializing game state\n")
+    @static if Sys.iswindows()
+        printf(c"Windows\n")
+    elseif Sys.isapple()
+        printf(c"macOS\n")
+    else
+        printf(c"Linux\n")
+    end
     keys_up::Ptr{KeyState_up} = Ptr{KeyState_up}(wasm_malloc(UInt32(sizeof(KeyState_up))))
     unsafe_store!(Ptr{KeyState_up}(keys_up), KeyState_up(false, false, false, false, false))
     keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
