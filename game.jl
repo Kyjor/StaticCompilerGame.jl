@@ -21,13 +21,23 @@ end
 
 function j_init_window()::Ptr{SDL_Window}
     window_name::Ptr{UInt8} = @str_ptr_with_len 4 m"Game"
-    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(100), Int32(100), Int32(640), Int32(480), UInt32(0))
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(0), Int32(0), UInt32(1))
+    if window == Ptr{SDL_Window}(C_NULL)
+        printf(c"Failed to create window\n")
+        msg_ptr = wasm_malloc(UInt32(100))
+        msg = llvm_SDL_GetErrorMsg(msg_ptr, Int32(100))
+        printf(c"Error: %s\n", msg)
+        wasm_free(Ptr{Cvoid}(msg_ptr))
+    end
     wasm_free(Ptr{Cvoid}(window_name))
     return window
 end
 
 function j_init_renderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
     renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window, Int32(-1), UInt32(2))
+    if renderer == Ptr{SDL_Renderer}(C_NULL)
+        printf(c"Failed to create renderer\n")
+    end
     return renderer
 end
 
@@ -181,16 +191,16 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     end
     
     # --- Load sprite if not loaded ---
-    if game_state.player_sprite == Ptr{Sprite}(C_NULL)
-        printf(c"Loading player sprite\n")
-        sprite_path::Ptr{UInt8} = @str_ptr_with_len 28 m"./assets/images/skeleton.png"
-        game_state.player_sprite = load_sprite(renderer, sprite_path)
-        wasm_free(Ptr{Cvoid}(sprite_path))
+    # if game_state.player_sprite == Ptr{Sprite}(C_NULL)
+    #     printf(c"Loading player sprite\n")
+    #     sprite_path::Ptr{UInt8} = @str_ptr_with_len 12 m"skeleton.png"
+    #     game_state.player_sprite = load_sprite(renderer, sprite_path)
+    #     wasm_free(Ptr{Cvoid}(sprite_path))
         
-        if game_state.player_sprite == Ptr{Sprite}(C_NULL)
-            printf(c"Failed to load sprite, falling back to rectangle\n")
-        end
-    end
+    #     if game_state.player_sprite == Ptr{Sprite}(C_NULL)
+    #         printf(c"Failed to load sprite, falling back to rectangle\n")
+    #     end
+    # end
     
     # --- Animation state selection (example logic) ---
     # if game_state.on_ground == Int32(0)
@@ -217,7 +227,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     
     # --- Render ---
     # Clear screen to black before drawing
-    llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
+    llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(250), UInt8(0), UInt8(255))
     llvm_SDL_RenderClear(renderer)
     
     # Render sprite if available, otherwise render rectangle
