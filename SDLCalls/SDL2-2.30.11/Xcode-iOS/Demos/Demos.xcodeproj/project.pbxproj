@@ -41,54 +41,54 @@
 		73443D882E31017E0075B8C6 /* skeleton.png in Resources */ = {isa = PBXBuildFile; fileRef = 73443D822E31017E0075B8C6 /* skeleton.png */; };
 		73443D892E31017E0075B8C6 /* skeleton.png in Resources */ = {isa = PBXBuildFile; fileRef = 73443D822E31017E0075B8C6 /* skeleton.png */; };
 		73443D8A2E31017E0075B8C6 /* skeleton.png in Resources */ = {isa = PBXBuildFile; fileRef = 73443D822E31017E0075B8C6 /* skeleton.png */; };
-		73E212E72E31137900F588C5 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E32E31137900F588C5 /* j_init_game_state.o */; };
-		73E212E82E31137900F588C5 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E42E31137900F588C5 /* j_init_renderer.o */; };
-		73E212E92E31137900F588C5 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E22E31137900F588C5 /* game_loop.o */; };
-		73E212EA2E31137900F588C5 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E52E31137900F588C5 /* j_init_window.o */; };
-		73E212EB2E31137900F588C5 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E62E31137900F588C5 /* pc_main.o */; };
-		73E212EC2E31137900F588C5 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E12E31137900F588C5 /* cleanup.o */; };
-		73E212ED2E31137900F588C5 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E32E31137900F588C5 /* j_init_game_state.o */; };
-		73E212EE2E31137900F588C5 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E42E31137900F588C5 /* j_init_renderer.o */; };
-		73E212EF2E31137900F588C5 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E22E31137900F588C5 /* game_loop.o */; };
-		73E212F02E31137900F588C5 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E52E31137900F588C5 /* j_init_window.o */; };
-		73E212F12E31137900F588C5 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E62E31137900F588C5 /* pc_main.o */; };
-		73E212F22E31137900F588C5 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E12E31137900F588C5 /* cleanup.o */; };
-		73E212F32E31137900F588C5 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E32E31137900F588C5 /* j_init_game_state.o */; };
-		73E212F42E31137900F588C5 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E42E31137900F588C5 /* j_init_renderer.o */; };
-		73E212F52E31137900F588C5 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E22E31137900F588C5 /* game_loop.o */; };
-		73E212F62E31137900F588C5 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E52E31137900F588C5 /* j_init_window.o */; };
-		73E212F72E31137900F588C5 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E62E31137900F588C5 /* pc_main.o */; };
-		73E212F82E31137900F588C5 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E12E31137900F588C5 /* cleanup.o */; };
-		73E212F92E31137900F588C5 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E32E31137900F588C5 /* j_init_game_state.o */; };
-		73E212FA2E31137900F588C5 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E42E31137900F588C5 /* j_init_renderer.o */; };
-		73E212FB2E31137900F588C5 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E22E31137900F588C5 /* game_loop.o */; };
-		73E212FC2E31137900F588C5 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E52E31137900F588C5 /* j_init_window.o */; };
-		73E212FD2E31137900F588C5 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E62E31137900F588C5 /* pc_main.o */; };
-		73E212FE2E31137900F588C5 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E12E31137900F588C5 /* cleanup.o */; };
-		73E212FF2E31137900F588C5 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E32E31137900F588C5 /* j_init_game_state.o */; };
-		73E213002E31137900F588C5 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E42E31137900F588C5 /* j_init_renderer.o */; };
-		73E213012E31137900F588C5 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E22E31137900F588C5 /* game_loop.o */; };
-		73E213022E31137900F588C5 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E52E31137900F588C5 /* j_init_window.o */; };
-		73E213032E31137900F588C5 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E62E31137900F588C5 /* pc_main.o */; };
-		73E213042E31137900F588C5 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E12E31137900F588C5 /* cleanup.o */; };
-		73E213052E31137900F588C5 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E32E31137900F588C5 /* j_init_game_state.o */; };
-		73E213062E31137900F588C5 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E42E31137900F588C5 /* j_init_renderer.o */; };
-		73E213072E31137900F588C5 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E22E31137900F588C5 /* game_loop.o */; };
-		73E213082E31137900F588C5 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E52E31137900F588C5 /* j_init_window.o */; };
-		73E213092E31137900F588C5 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E62E31137900F588C5 /* pc_main.o */; };
-		73E2130A2E31137900F588C5 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E12E31137900F588C5 /* cleanup.o */; };
-		73E2130B2E31137900F588C5 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E32E31137900F588C5 /* j_init_game_state.o */; };
-		73E2130C2E31137900F588C5 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E42E31137900F588C5 /* j_init_renderer.o */; };
-		73E2130D2E31137900F588C5 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E22E31137900F588C5 /* game_loop.o */; };
-		73E2130E2E31137900F588C5 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E52E31137900F588C5 /* j_init_window.o */; };
-		73E2130F2E31137900F588C5 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E62E31137900F588C5 /* pc_main.o */; };
-		73E213102E31137900F588C5 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E12E31137900F588C5 /* cleanup.o */; };
-		73E213112E31137900F588C5 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E32E31137900F588C5 /* j_init_game_state.o */; };
-		73E213122E31137900F588C5 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E42E31137900F588C5 /* j_init_renderer.o */; };
-		73E213132E31137900F588C5 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E22E31137900F588C5 /* game_loop.o */; };
-		73E213142E31137900F588C5 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E52E31137900F588C5 /* j_init_window.o */; };
-		73E213152E31137900F588C5 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E62E31137900F588C5 /* pc_main.o */; };
-		73E213162E31137900F588C5 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E212E12E31137900F588C5 /* cleanup.o */; };
+		73EBE7162E3117A900614083 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7132E3117A900614083 /* j_init_renderer.o */; };
+		73EBE7172E3117A900614083 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7152E3117A900614083 /* pc_main.o */; };
+		73EBE7182E3117A900614083 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7122E3117A900614083 /* j_init_game_state.o */; };
+		73EBE7192E3117A900614083 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7112E3117A900614083 /* game_loop.o */; };
+		73EBE71A2E3117A900614083 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7142E3117A900614083 /* j_init_window.o */; };
+		73EBE71B2E3117A900614083 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7102E3117A900614083 /* cleanup.o */; };
+		73EBE71C2E3117A900614083 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7132E3117A900614083 /* j_init_renderer.o */; };
+		73EBE71D2E3117A900614083 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7152E3117A900614083 /* pc_main.o */; };
+		73EBE71E2E3117A900614083 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7122E3117A900614083 /* j_init_game_state.o */; };
+		73EBE71F2E3117A900614083 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7112E3117A900614083 /* game_loop.o */; };
+		73EBE7202E3117A900614083 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7142E3117A900614083 /* j_init_window.o */; };
+		73EBE7212E3117A900614083 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7102E3117A900614083 /* cleanup.o */; };
+		73EBE7222E3117A900614083 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7132E3117A900614083 /* j_init_renderer.o */; };
+		73EBE7232E3117A900614083 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7152E3117A900614083 /* pc_main.o */; };
+		73EBE7242E3117A900614083 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7122E3117A900614083 /* j_init_game_state.o */; };
+		73EBE7252E3117A900614083 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7112E3117A900614083 /* game_loop.o */; };
+		73EBE7262E3117A900614083 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7142E3117A900614083 /* j_init_window.o */; };
+		73EBE7272E3117A900614083 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7102E3117A900614083 /* cleanup.o */; };
+		73EBE7282E3117A900614083 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7132E3117A900614083 /* j_init_renderer.o */; };
+		73EBE7292E3117A900614083 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7152E3117A900614083 /* pc_main.o */; };
+		73EBE72A2E3117A900614083 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7122E3117A900614083 /* j_init_game_state.o */; };
+		73EBE72B2E3117A900614083 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7112E3117A900614083 /* game_loop.o */; };
+		73EBE72C2E3117A900614083 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7142E3117A900614083 /* j_init_window.o */; };
+		73EBE72D2E3117A900614083 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7102E3117A900614083 /* cleanup.o */; };
+		73EBE72E2E3117A900614083 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7132E3117A900614083 /* j_init_renderer.o */; };
+		73EBE72F2E3117A900614083 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7152E3117A900614083 /* pc_main.o */; };
+		73EBE7302E3117A900614083 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7122E3117A900614083 /* j_init_game_state.o */; };
+		73EBE7312E3117A900614083 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7112E3117A900614083 /* game_loop.o */; };
+		73EBE7322E3117A900614083 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7142E3117A900614083 /* j_init_window.o */; };
+		73EBE7332E3117A900614083 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7102E3117A900614083 /* cleanup.o */; };
+		73EBE7342E3117A900614083 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7132E3117A900614083 /* j_init_renderer.o */; };
+		73EBE7352E3117A900614083 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7152E3117A900614083 /* pc_main.o */; };
+		73EBE7362E3117A900614083 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7122E3117A900614083 /* j_init_game_state.o */; };
+		73EBE7372E3117A900614083 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7112E3117A900614083 /* game_loop.o */; };
+		73EBE7382E3117A900614083 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7142E3117A900614083 /* j_init_window.o */; };
+		73EBE7392E3117A900614083 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7102E3117A900614083 /* cleanup.o */; };
+		73EBE73A2E3117A900614083 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7132E3117A900614083 /* j_init_renderer.o */; };
+		73EBE73B2E3117A900614083 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7152E3117A900614083 /* pc_main.o */; };
+		73EBE73C2E3117A900614083 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7122E3117A900614083 /* j_init_game_state.o */; };
+		73EBE73D2E3117A900614083 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7112E3117A900614083 /* game_loop.o */; };
+		73EBE73E2E3117A900614083 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7142E3117A900614083 /* j_init_window.o */; };
+		73EBE73F2E3117A900614083 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7102E3117A900614083 /* cleanup.o */; };
+		73EBE7402E3117A900614083 /* j_init_renderer.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7132E3117A900614083 /* j_init_renderer.o */; };
+		73EBE7412E3117A900614083 /* pc_main.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7152E3117A900614083 /* pc_main.o */; };
+		73EBE7422E3117A900614083 /* j_init_game_state.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7122E3117A900614083 /* j_init_game_state.o */; };
+		73EBE7432E3117A900614083 /* game_loop.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7112E3117A900614083 /* game_loop.o */; };
+		73EBE7442E3117A900614083 /* j_init_window.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7142E3117A900614083 /* j_init_window.o */; };
+		73EBE7452E3117A900614083 /* cleanup.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 73EBE7102E3117A900614083 /* cleanup.o */; };
 		F3A497102555EE4800E92A8B /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F3A495992555ED0500E92A8B /* libSDL2.a */; };
 		F3A4972F2555EE8A00E92A8B /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F3A495992555ED0500E92A8B /* libSDL2.a */; };
 		F3A497422555EEBE00E92A8B /* libSDL2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F3A495992555ED0500E92A8B /* libSDL2.a */; };
@@ -227,12 +227,12 @@
 		73443D3D2E30FDF40075B8C6 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		73443D3F2E30FE0D0075B8C6 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		73443D822E31017E0075B8C6 /* skeleton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = skeleton.png; sourceTree = "<group>"; };
-		73E212E12E31137900F588C5 /* cleanup.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = cleanup.o; sourceTree = "<group>"; };
-		73E212E22E31137900F588C5 /* game_loop.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = game_loop.o; sourceTree = "<group>"; };
-		73E212E32E31137900F588C5 /* j_init_game_state.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = j_init_game_state.o; sourceTree = "<group>"; };
-		73E212E42E31137900F588C5 /* j_init_renderer.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = j_init_renderer.o; sourceTree = "<group>"; };
-		73E212E52E31137900F588C5 /* j_init_window.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = j_init_window.o; sourceTree = "<group>"; };
-		73E212E62E31137900F588C5 /* pc_main.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = pc_main.o; sourceTree = "<group>"; };
+		73EBE7102E3117A900614083 /* cleanup.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = cleanup.o; sourceTree = "<group>"; };
+		73EBE7112E3117A900614083 /* game_loop.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = game_loop.o; sourceTree = "<group>"; };
+		73EBE7122E3117A900614083 /* j_init_game_state.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = j_init_game_state.o; sourceTree = "<group>"; };
+		73EBE7132E3117A900614083 /* j_init_renderer.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = j_init_renderer.o; sourceTree = "<group>"; };
+		73EBE7142E3117A900614083 /* j_init_window.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = j_init_window.o; sourceTree = "<group>"; };
+		73EBE7152E3117A900614083 /* pc_main.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = pc_main.o; sourceTree = "<group>"; };
 		F3A495802555ED0400E92A8B /* SDL.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SDL.xcodeproj; path = ../../Xcode/SDL/SDL.xcodeproj; sourceTree = "<group>"; };
 		F3C17D9F28E437C300E1A26D /* config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = config.xcconfig; sourceTree = "<group>"; };
 		FA30DE961BBF59D9009C397F /* Happy-TV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Happy-TV.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -285,12 +285,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				F3A497102555EE4800E92A8B /* libSDL2.a in Frameworks */,
-				73E212F32E31137900F588C5 /* j_init_game_state.o in Frameworks */,
-				73E212F42E31137900F588C5 /* j_init_renderer.o in Frameworks */,
-				73E212F52E31137900F588C5 /* game_loop.o in Frameworks */,
-				73E212F62E31137900F588C5 /* j_init_window.o in Frameworks */,
-				73E212F72E31137900F588C5 /* pc_main.o in Frameworks */,
-				73E212F82E31137900F588C5 /* cleanup.o in Frameworks */,
+				73EBE7282E3117A900614083 /* j_init_renderer.o in Frameworks */,
+				73EBE7292E3117A900614083 /* pc_main.o in Frameworks */,
+				73EBE72A2E3117A900614083 /* j_init_game_state.o in Frameworks */,
+				73EBE72B2E3117A900614083 /* game_loop.o in Frameworks */,
+				73EBE72C2E3117A900614083 /* j_init_window.o in Frameworks */,
+				73EBE72D2E3117A900614083 /* cleanup.o in Frameworks */,
 				73443D2C2E30FC410075B8C6 /* libSDL2.a in Frameworks */,
 				73443D2D2E30FC410075B8C6 /* libSDL2_image 2.a in Frameworks */,
 			);
@@ -301,12 +301,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				F3A497462555EEDF00E92A8B /* libSDL2.a in Frameworks */,
-				73E2130B2E31137900F588C5 /* j_init_game_state.o in Frameworks */,
-				73E2130C2E31137900F588C5 /* j_init_renderer.o in Frameworks */,
-				73E2130D2E31137900F588C5 /* game_loop.o in Frameworks */,
-				73E2130E2E31137900F588C5 /* j_init_window.o in Frameworks */,
-				73E2130F2E31137900F588C5 /* pc_main.o in Frameworks */,
-				73E213102E31137900F588C5 /* cleanup.o in Frameworks */,
+				73EBE7402E3117A900614083 /* j_init_renderer.o in Frameworks */,
+				73EBE7412E3117A900614083 /* pc_main.o in Frameworks */,
+				73EBE7422E3117A900614083 /* j_init_game_state.o in Frameworks */,
+				73EBE7432E3117A900614083 /* game_loop.o in Frameworks */,
+				73EBE7442E3117A900614083 /* j_init_window.o in Frameworks */,
+				73EBE7452E3117A900614083 /* cleanup.o in Frameworks */,
 				73443D2E2E30FC410075B8C6 /* libSDL2.a in Frameworks */,
 				73443D2F2E30FC410075B8C6 /* libSDL2_image 2.a in Frameworks */,
 			);
@@ -317,12 +317,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				F3A497442555EECD00E92A8B /* libSDL2.a in Frameworks */,
-				73E212F92E31137900F588C5 /* j_init_game_state.o in Frameworks */,
-				73E212FA2E31137900F588C5 /* j_init_renderer.o in Frameworks */,
-				73E212FB2E31137900F588C5 /* game_loop.o in Frameworks */,
-				73E212FC2E31137900F588C5 /* j_init_window.o in Frameworks */,
-				73E212FD2E31137900F588C5 /* pc_main.o in Frameworks */,
-				73E212FE2E31137900F588C5 /* cleanup.o in Frameworks */,
+				73EBE7342E3117A900614083 /* j_init_renderer.o in Frameworks */,
+				73EBE7352E3117A900614083 /* pc_main.o in Frameworks */,
+				73EBE7362E3117A900614083 /* j_init_game_state.o in Frameworks */,
+				73EBE7372E3117A900614083 /* game_loop.o in Frameworks */,
+				73EBE7382E3117A900614083 /* j_init_window.o in Frameworks */,
+				73EBE7392E3117A900614083 /* cleanup.o in Frameworks */,
 				73443D382E30FC410075B8C6 /* libSDL2.a in Frameworks */,
 				73443D392E30FC410075B8C6 /* libSDL2_image 2.a in Frameworks */,
 			);
@@ -333,12 +333,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				F3A4972F2555EE8A00E92A8B /* libSDL2.a in Frameworks */,
-				73E213052E31137900F588C5 /* j_init_game_state.o in Frameworks */,
-				73E213062E31137900F588C5 /* j_init_renderer.o in Frameworks */,
-				73E213072E31137900F588C5 /* game_loop.o in Frameworks */,
-				73E213082E31137900F588C5 /* j_init_window.o in Frameworks */,
-				73E213092E31137900F588C5 /* pc_main.o in Frameworks */,
-				73E2130A2E31137900F588C5 /* cleanup.o in Frameworks */,
+				73EBE7162E3117A900614083 /* j_init_renderer.o in Frameworks */,
+				73EBE7172E3117A900614083 /* pc_main.o in Frameworks */,
+				73EBE7182E3117A900614083 /* j_init_game_state.o in Frameworks */,
+				73EBE7192E3117A900614083 /* game_loop.o in Frameworks */,
+				73EBE71A2E3117A900614083 /* j_init_window.o in Frameworks */,
+				73EBE71B2E3117A900614083 /* cleanup.o in Frameworks */,
 				73443D342E30FC410075B8C6 /* libSDL2.a in Frameworks */,
 				73443D352E30FC410075B8C6 /* libSDL2_image 2.a in Frameworks */,
 			);
@@ -349,12 +349,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				F3A497492555EF0B00E92A8B /* libSDL2.a in Frameworks */,
-				73E212ED2E31137900F588C5 /* j_init_game_state.o in Frameworks */,
-				73E212EE2E31137900F588C5 /* j_init_renderer.o in Frameworks */,
-				73E212EF2E31137900F588C5 /* game_loop.o in Frameworks */,
-				73E212F02E31137900F588C5 /* j_init_window.o in Frameworks */,
-				73E212F12E31137900F588C5 /* pc_main.o in Frameworks */,
-				73E212F22E31137900F588C5 /* cleanup.o in Frameworks */,
+				73EBE71C2E3117A900614083 /* j_init_renderer.o in Frameworks */,
+				73EBE71D2E3117A900614083 /* pc_main.o in Frameworks */,
+				73EBE71E2E3117A900614083 /* j_init_game_state.o in Frameworks */,
+				73EBE71F2E3117A900614083 /* game_loop.o in Frameworks */,
+				73EBE7202E3117A900614083 /* j_init_window.o in Frameworks */,
+				73EBE7212E3117A900614083 /* cleanup.o in Frameworks */,
 				73443D322E30FC410075B8C6 /* libSDL2.a in Frameworks */,
 				73443D332E30FC410075B8C6 /* libSDL2_image 2.a in Frameworks */,
 			);
@@ -367,14 +367,14 @@
 				73443D402E30FE0D0075B8C6 /* CoreServices.framework in Frameworks */,
 				73443D3E2E30FDF40075B8C6 /* ImageIO.framework in Frameworks */,
 				F3A4974E2555EF9F00E92A8B /* libSDL2.a in Frameworks */,
+				73EBE73A2E3117A900614083 /* j_init_renderer.o in Frameworks */,
+				73EBE73B2E3117A900614083 /* pc_main.o in Frameworks */,
+				73EBE73C2E3117A900614083 /* j_init_game_state.o in Frameworks */,
+				73EBE73D2E3117A900614083 /* game_loop.o in Frameworks */,
+				73EBE73E2E3117A900614083 /* j_init_window.o in Frameworks */,
+				73EBE73F2E3117A900614083 /* cleanup.o in Frameworks */,
 				73443D302E30FC410075B8C6 /* libSDL2.a in Frameworks */,
 				73443D312E30FC410075B8C6 /* libSDL2_image 2.a in Frameworks */,
-				73E213112E31137900F588C5 /* j_init_game_state.o in Frameworks */,
-				73E213122E31137900F588C5 /* j_init_renderer.o in Frameworks */,
-				73E213132E31137900F588C5 /* game_loop.o in Frameworks */,
-				73E213142E31137900F588C5 /* j_init_window.o in Frameworks */,
-				73E213152E31137900F588C5 /* pc_main.o in Frameworks */,
-				73E213162E31137900F588C5 /* cleanup.o in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -383,12 +383,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				F3A497422555EEBE00E92A8B /* libSDL2.a in Frameworks */,
-				73E212FF2E31137900F588C5 /* j_init_game_state.o in Frameworks */,
-				73E213002E31137900F588C5 /* j_init_renderer.o in Frameworks */,
-				73E213012E31137900F588C5 /* game_loop.o in Frameworks */,
-				73E213022E31137900F588C5 /* j_init_window.o in Frameworks */,
-				73E213032E31137900F588C5 /* pc_main.o in Frameworks */,
-				73E213042E31137900F588C5 /* cleanup.o in Frameworks */,
+				73EBE7222E3117A900614083 /* j_init_renderer.o in Frameworks */,
+				73EBE7232E3117A900614083 /* pc_main.o in Frameworks */,
+				73EBE7242E3117A900614083 /* j_init_game_state.o in Frameworks */,
+				73EBE7252E3117A900614083 /* game_loop.o in Frameworks */,
+				73EBE7262E3117A900614083 /* j_init_window.o in Frameworks */,
+				73EBE7272E3117A900614083 /* cleanup.o in Frameworks */,
 				73443D3A2E30FC410075B8C6 /* libSDL2.a in Frameworks */,
 				73443D3B2E30FC410075B8C6 /* libSDL2_image 2.a in Frameworks */,
 			);
@@ -399,12 +399,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				F3A4974B2555EF1B00E92A8B /* libSDL2.a in Frameworks */,
-				73E212E72E31137900F588C5 /* j_init_game_state.o in Frameworks */,
-				73E212E82E31137900F588C5 /* j_init_renderer.o in Frameworks */,
-				73E212E92E31137900F588C5 /* game_loop.o in Frameworks */,
-				73E212EA2E31137900F588C5 /* j_init_window.o in Frameworks */,
-				73E212EB2E31137900F588C5 /* pc_main.o in Frameworks */,
-				73E212EC2E31137900F588C5 /* cleanup.o in Frameworks */,
+				73EBE72E2E3117A900614083 /* j_init_renderer.o in Frameworks */,
+				73EBE72F2E3117A900614083 /* pc_main.o in Frameworks */,
+				73EBE7302E3117A900614083 /* j_init_game_state.o in Frameworks */,
+				73EBE7312E3117A900614083 /* game_loop.o in Frameworks */,
+				73EBE7322E3117A900614083 /* j_init_window.o in Frameworks */,
+				73EBE7332E3117A900614083 /* cleanup.o in Frameworks */,
 				73443D362E30FC410075B8C6 /* libSDL2.a in Frameworks */,
 				73443D372E30FC410075B8C6 /* libSDL2_image 2.a in Frameworks */,
 			);
@@ -481,12 +481,12 @@
 		FD77A0040E26BC0500F39101 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				73E212E12E31137900F588C5 /* cleanup.o */,
-				73E212E22E31137900F588C5 /* game_loop.o */,
-				73E212E32E31137900F588C5 /* j_init_game_state.o */,
-				73E212E42E31137900F588C5 /* j_init_renderer.o */,
-				73E212E52E31137900F588C5 /* j_init_window.o */,
-				73E212E62E31137900F588C5 /* pc_main.o */,
+				73EBE7102E3117A900614083 /* cleanup.o */,
+				73EBE7112E3117A900614083 /* game_loop.o */,
+				73EBE7122E3117A900614083 /* j_init_game_state.o */,
+				73EBE7132E3117A900614083 /* j_init_renderer.o */,
+				73EBE7142E3117A900614083 /* j_init_window.o */,
+				73EBE7152E3117A900614083 /* pc_main.o */,
 				73443D822E31017E0075B8C6 /* skeleton.png */,
 				73443D2A2E30FC410075B8C6 /* libSDL2.a */,
 				73443D2B2E30FC410075B8C6 /* libSDL2_image 2.a */,

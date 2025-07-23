@@ -65,6 +65,9 @@ struct GameState
     quit::Bool
     player_sprite::Ptr{Sprite}
     player::Ptr{Player}
+    fullscreen::Bool
+    camera_x::Float64
+    camera_y::Float64
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -82,6 +85,9 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :quit && return unsafe_load(Ptr{Bool}(x + 88))
     f === :player_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + 96))
     f === :player && return unsafe_load(Ptr{Ptr{Player}}(x + 104))
+    f === :fullscreen && return unsafe_load(Ptr{Bool}(x + 112))
+    f === :camera_x && return unsafe_load(Ptr{Float64}(x + 120))
+    f === :camera_y && return unsafe_load(Ptr{Float64}(x + 128))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
@@ -99,6 +105,9 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + 88), v)
     f === :player_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + 96), v)
     f === :player && return unsafe_store!(Ptr{Ptr{Player}}(x + 104), v)
+    f === :fullscreen && return unsafe_store!(Ptr{Bool}(x + 112), v)
+    f === :camera_x && return unsafe_store!(Ptr{Float64}(x + 120), v)
+    f === :camera_y && return unsafe_store!(Ptr{Float64}(x + 128), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)

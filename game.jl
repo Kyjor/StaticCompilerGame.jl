@@ -92,14 +92,14 @@ function j_init_game_state()::Ptr{GameState}
     keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
     unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
 
-    sprite_init_result::Int32 = init_sprite_system()
-    if sprite_init_result != 0
-        printf(c"Failed to initialize sprite system\n")
-    end
+    # sprite_init_result::Int32 = init_sprite_system()
+    # if sprite_init_result != 0
+    #     printf(c"Failed to initialize sprite system\n")
+    # end
 
     #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL)))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220)))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -107,14 +107,14 @@ function j_init_game_state()::Ptr{GameState}
 end
 
 # In game_loop, update animation state and frame
-function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr{GameState}
+function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
     current_time::UInt64 = llvm_SDL_GetPerformanceCounter()
     delta_time::Float64 = Float64(current_time - game_state.last_frame_time) / Float64(llvm_SDL_GetPerformanceFrequency())
     game_state.last_frame_time = current_time
     # Use persistent key state from GameState
     keys_down_ptr::Ptr{KeyState_down} = game_state.keys_down
     keys_up_ptr::Ptr{KeyState_up} = game_state.keys_up
-    handle_input(keys_down_ptr, keys_up_ptr, game_state)
+    handle_input(keys_down_ptr, keys_up_ptr, game_state, window)
     
     # --- Platformer Physics ---
     gravity::Float64 = Float64(800.0)             # Much stronger gravity
@@ -225,6 +225,22 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
     # Update animation frame
    # update_animation(game_state.player_anim, delta_time)
     
+    # --- Camera: Query window size and compute camera offset ---
+    win_w::Int32 = Int32(0)
+    win_h::Int32 = Int32(0)
+    win_w_ptr = Ref{Int32}(0)
+    win_h_ptr = Ref{Int32}(0)
+    llvm_SDL_GetWindowSize(window, Base.unsafe_convert(Ptr{Int32}, win_w_ptr), Base.unsafe_convert(Ptr{Int32}, win_h_ptr))
+    win_w = win_w_ptr[]
+    win_h = win_h_ptr[]
+    player_width::Float64 = 64.0
+    player_height::Float64 = 64.0
+    target_camera_x::Float64 = game_state.player_x - Float64(win_w) / 2.0 + player_width / 2.0
+    target_camera_y::Float64 = game_state.player_y - Float64(win_h) / 2.0 + player_height / 2.0
+    camera_speed::Float64 = 0.15  # Adjust for smoothness
+    game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
+    game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
+
     # --- Render ---
     # Clear screen to black before drawing
     llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(250), UInt8(0), UInt8(255))
@@ -239,11 +255,11 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Ptr
             game_state.player_sprite.is_flipped = true
             printf(c"Player is facing left\n")
         end
-        render_sprite(renderer, game_state.player_sprite, Float32(game_state.player_x), Float32(game_state.player_y))
-        #render_result::Int32 = j_render_sprite(renderer, game_state.player_sprite, game_state.player_anim, Float32(game_state.player_x), Float32(game_state.player_y))
+        render_sprite(renderer, game_state.player_sprite, Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y))
+        #render_result::Int32 = j_render_sprite(renderer, game_state.player_sprite, game_state.player_anim, Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y))
     else
         # Fallback to rectangle
-        rect::SDL_FRect = SDL_FRect(Float32(game_state.player_x), Float32(game_state.player_y), Float32(64), Float32(64))
+        rect::SDL_FRect = SDL_FRect(Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y), Float32(64), Float32(64))
         rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_FRect)))
         unsafe_store!(Ptr{SDL_FRect}(rect_ptr), rect)
         llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(0), UInt8(0), UInt8(255))
@@ -268,7 +284,7 @@ function move_toward(current::Float64, target::Float64, max_delta::Float64)::Flo
     end
 end
 
-function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, game_state::Ptr{GameState})::Int32
+function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, game_state::Ptr{GameState}, window::Ptr{SDL_Window})::Int32
     # Reset key states for this frame
     keys_up.a = false
     keys_up.d = false
@@ -294,6 +310,15 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
                 keys_down.s = true
             elseif key == SDLK_SPACE
                 keys_down.space = true
+            elseif key == SDLK_ESCAPE
+                game_state.quit = true
+            elseif key == SDLK_RETURN
+                game_state.fullscreen = !game_state.fullscreen
+                if game_state.fullscreen
+                    llvm_SDL_SetWindowFullscreen(window, UInt32(1))
+                else
+                    llvm_SDL_SetWindowFullscreen(window, UInt32(0))
+                end
             end
         elseif eventType == SDL_KEYUP
             key = event_ptr.key.keysym.sym
@@ -369,7 +394,7 @@ function pc_main()::Int32
     renderer::Ptr{SDL_Renderer} = j_init_renderer(window)
     game_state_ptr::Ptr{GameState} = j_init_game_state()
     while !game_state_ptr.quit
-        game_loop(game_state_ptr, renderer)
+        game_loop(game_state_ptr, renderer, window)
     end
 
     cleanup(game_state_ptr, renderer, window)
