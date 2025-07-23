@@ -99,7 +99,7 @@ function j_init_game_state()::Ptr{GameState}
 
     #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220)))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -241,11 +241,37 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
     game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
 
+    # --- Mobile Controls: Define button areas (bottom 25% of screen) ---
+    btn_area_h = win_h / Int32(4)
+    btn_area_y = win_h - btn_area_h
+    btn_w = win_w / Int32(3)
+    left_btn_rect = SDL_FRect(0.0f0, Float32(btn_area_y), Float32(btn_w), Float32(btn_area_h))
+    right_btn_rect = SDL_FRect(Float32(2 * btn_w), Float32(btn_area_y), Float32(btn_w), Float32(btn_area_h))
+    jump_btn_rect = SDL_FRect(Float32(btn_w), Float32(btn_area_y), Float32(btn_w), Float32(btn_area_h))
+    # Store pressed state for visual feedback (optional, could be in GameState)
+    game_state.left_btn_pressed = false
+    game_state.right_btn_pressed = false
+    game_state.jump_btn_pressed = false
+    
     # --- Render ---
     # Clear screen to black before drawing
-    llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(250), UInt8(0), UInt8(255))
-    llvm_SDL_RenderClear(renderer)
     
+    llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
+    llvm_SDL_RenderClear(renderer)
+
+    # Draw ground rectangle
+    ground_rect::SDL_FRect = SDL_FRect(
+        Float32(0.0 - game_state.camera_x),
+        Float32(ground_y - 32.0 - game_state.camera_y),  # 32px thick ground
+        Float32(win_w),
+        32.0f0
+    )
+    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), ground_rect)
+    llvm_SDL_SetRenderDrawColor(renderer, UInt8(80), UInt8(80), UInt8(80), UInt8(255))
+    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
+    wasm_free(Ptr{Cvoid}(rect_ptr))
+
     # Render sprite if available, otherwise render rectangle
     if game_state.player_sprite != Ptr{Sprite}(C_NULL)
         if game_state.player_sprite.is_flipped && keys_down_ptr.d
@@ -266,6 +292,25 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
         llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
         wasm_free(Ptr{Cvoid}(rect_ptr))
     end
+    # --- Draw mobile controls (rectangles) ---
+    # Left button
+    llvm_SDL_SetRenderDrawColor(renderer, game_state.left_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(200), UInt8(180))
+    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), left_btn_rect)
+    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
+    wasm_free(Ptr{Cvoid}(rect_ptr))
+    # Right button
+    llvm_SDL_SetRenderDrawColor(renderer, game_state.right_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(200), UInt8(180))
+    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), right_btn_rect)
+    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
+    wasm_free(Ptr{Cvoid}(rect_ptr))
+    # Jump button
+    llvm_SDL_SetRenderDrawColor(renderer, UInt8(200), game_state.jump_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(180))
+    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), jump_btn_rect)
+    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
+    wasm_free(Ptr{Cvoid}(rect_ptr))
     
     llvm_SDL_RenderPresent(renderer)
     llvm_SDL_Delay(UInt32(16)) # ~60 FPS
@@ -295,7 +340,7 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
     event::SDL_Event = SDL_Event()
     event_ptr::Ptr{SDL_Event} = wasm_malloc(UInt32(56))
     while llvm_SDL_PollEvent(event_ptr) != 0
-        eventType = unsafe_load(Ptr{UInt32}(event_ptr))
+        eventType = event_ptr.type
         if eventType == SDL_QUIT
             game_state.quit = true
         elseif eventType == SDL_KEYDOWN
@@ -333,6 +378,45 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
             elseif key == SDLK_SPACE
                 keys_up.space = true
             end
+        # --- Mobile Touch Events ---
+        elseif eventType == SDL_FINGERDOWN || eventType == SDL_FINGERMOTION
+            # Get window size and button rects (must match render loop)
+            win_w_ptr = Ref{Int32}(0)
+            win_h_ptr = Ref{Int32}(0)
+            llvm_SDL_GetWindowSize(window, Base.unsafe_convert(Ptr{Int32}, win_w_ptr), Base.unsafe_convert(Ptr{Int32}, win_h_ptr))
+            win_w = win_w_ptr[]
+            win_h = win_h_ptr[]
+            btn_area_h = win_h / Int32(4)
+            btn_area_y = win_h - btn_area_h
+            btn_w = win_w / Int32(3)
+            #Get touch position (normalized 0-1)
+            tx = Float64(event_ptr.tfinger.x)
+            ty = Float64(event_ptr.tfinger.y)
+            px = tx * Float64(win_w)
+            py = ty * Float64(win_h)
+            game_state.left_btn_pressed = false
+            game_state.right_btn_pressed = false
+            game_state.jump_btn_pressed = false
+            if px >= 0 && px < btn_w && py >= btn_area_y
+                keys_down.a = true
+                game_state.left_btn_pressed = true
+            end
+            if px >= 2 * btn_w && px < 3 * btn_w && py >= btn_area_y
+                keys_down.d = true
+                game_state.right_btn_pressed = true
+            end
+            if px >= btn_w && px < 2 * btn_w && py >= btn_area_y
+                keys_down.space = true
+                game_state.jump_btn_pressed = true
+            end
+        elseif eventType == SDL_FINGERUP
+            # On finger up, clear all touch key states and pressed states
+            keys_down.a = false
+            keys_down.d = false
+            keys_down.space = false
+            game_state.left_btn_pressed = false
+            game_state.right_btn_pressed = false
+            game_state.jump_btn_pressed = false
         end
     end
 

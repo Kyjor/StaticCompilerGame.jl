@@ -68,6 +68,9 @@ struct GameState
     fullscreen::Bool
     camera_x::Float64
     camera_y::Float64
+    left_btn_pressed::Bool
+    right_btn_pressed::Bool
+    jump_btn_pressed::Bool
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -88,6 +91,9 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :fullscreen && return unsafe_load(Ptr{Bool}(x + 112))
     f === :camera_x && return unsafe_load(Ptr{Float64}(x + 120))
     f === :camera_y && return unsafe_load(Ptr{Float64}(x + 128))
+    f === :left_btn_pressed && return unsafe_load(Ptr{Bool}(x + 136))
+    f === :right_btn_pressed && return unsafe_load(Ptr{Bool}(x + 137))
+    f === :jump_btn_pressed && return unsafe_load(Ptr{Bool}(x + 138))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
@@ -108,6 +114,9 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :fullscreen && return unsafe_store!(Ptr{Bool}(x + 112), v)
     f === :camera_x && return unsafe_store!(Ptr{Float64}(x + 120), v)
     f === :camera_y && return unsafe_store!(Ptr{Float64}(x + 128), v)
+    f === :left_btn_pressed && return unsafe_store!(Ptr{Bool}(x + 136), v)
+    f === :right_btn_pressed && return unsafe_store!(Ptr{Bool}(x + 137), v)
+    f === :jump_btn_pressed && return unsafe_store!(Ptr{Bool}(x + 138), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)
