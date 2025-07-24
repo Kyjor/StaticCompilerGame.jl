@@ -21,7 +21,7 @@ end
 
 function j_init_window()::Ptr{SDL_Window}
     window_name::Ptr{UInt8} = @str_ptr_with_len 4 m"Game"
-    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(0), Int32(0), UInt32(1))
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(800), Int32(600), UInt32(0))
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
         msg_ptr = wasm_malloc(UInt32(100))
@@ -86,7 +86,6 @@ end
 
 # In j_init_game_state, initialize animation state
 function j_init_game_state()::Ptr{GameState}
-
     printf(c"Initializing game state\n")
     @static if Sys.iswindows()
         printf(c"Windows\n")
@@ -302,23 +301,25 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     end
     # --- Draw mobile controls (rectangles) ---
     # Left button
-    llvm_SDL_SetRenderDrawColor(renderer, game_state.left_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(200), UInt8(180))
-    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
-    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), left_btn_rect)
-    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
-    wasm_free(Ptr{Cvoid}(rect_ptr))
-    # Right button
-    llvm_SDL_SetRenderDrawColor(renderer, game_state.right_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(200), UInt8(180))
-    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
-    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), right_btn_rect)
-    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
-    wasm_free(Ptr{Cvoid}(rect_ptr))
-    # Jump button
-    llvm_SDL_SetRenderDrawColor(renderer, UInt8(200), game_state.jump_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(180))
-    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
-    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), jump_btn_rect)
-    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
-    wasm_free(Ptr{Cvoid}(rect_ptr))
+    @static if Sys.isapple()
+        llvm_SDL_SetRenderDrawColor(renderer, game_state.left_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(200), UInt8(180))
+        rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+        unsafe_store!(Ptr{SDL_FRect}(rect_ptr), left_btn_rect)
+        llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
+        wasm_free(Ptr{Cvoid}(rect_ptr))
+        # Right button
+        llvm_SDL_SetRenderDrawColor(renderer, game_state.right_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(200), UInt8(180))
+        rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+        unsafe_store!(Ptr{SDL_FRect}(rect_ptr), right_btn_rect)
+        llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
+        wasm_free(Ptr{Cvoid}(rect_ptr))
+        # Jump button
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(200), game_state.jump_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(180))
+        rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+        unsafe_store!(Ptr{SDL_FRect}(rect_ptr), jump_btn_rect)
+        llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
+        wasm_free(Ptr{Cvoid}(rect_ptr))
+    end
     
     llvm_SDL_RenderPresent(renderer)
     llvm_SDL_Delay(UInt32(16)) # ~60 FPS
