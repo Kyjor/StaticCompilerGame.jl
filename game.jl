@@ -7,20 +7,10 @@ include("game_structs.jl")
 include("sprite.jl")
 include("llvm_wrappers.jl") 
 include("llvm_bindings.jl")
-
-macro str_ptr_with_len(len_expr, str_expr)
-    quote
-        ptr::Ptr{Cvoid} = wasm_malloc(UInt32($len_expr + 1))
-        for i = 1:$len_expr
-            unsafe_store!(Ptr{UInt8}(ptr + i - 1), codeunit($str_expr, i))
-        end
-        unsafe_store!(Ptr{UInt8}(ptr + $len_expr), 0x00)
-        Ptr{UInt8}(ptr)
-    end
-end
+include("wallocstring.jl")
 
 function j_init_window()::Ptr{SDL_Window}
-    window_name::Ptr{UInt8} = @str_ptr_with_len 4 m"Game"
+    window_name = str_ptr(w"Game test")
     window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(800), Int32(600), UInt32(0))
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
@@ -458,25 +448,6 @@ macro static_string(str_expr)
     quote
         NTuple{$N, UInt8}($(Expr(:tuple, bytes...)))
     end
-end
-
-# pass to C function expecting char*
-function str_ptr(str::MallocString)::Ptr{UInt8}
-    #get the length of the string
-    len = 0
-    while str[len + 1] != 0x00
-        len += 1
-    end
-    #allocate memory for the string
-    tes = str.length
-    tes1 = str.length-1
-    ptr::Ptr{Cvoid} = wasm_malloc(UInt32(tes))
-    #copy the string to the allocated memory
-    for i = 1:8
-        unsafe_store!(Ptr{UInt8}(ptr + i - 1), codeunit(str, i))
-    end
-    unsafe_store!(Ptr{UInt8}(ptr + tes), 0x00)
-    return ptr
 end
 
 # PC Entry Point - Main function for desktop builds

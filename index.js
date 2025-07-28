@@ -28,7 +28,7 @@ window.onModuleReady = function() {
     function runMainLoop() {
         frameCount++;
         // Call the C/C++ main_loop function
-        Module._game_loop(game_state_ptr, renderer);
+        Module._game_loop(game_state_ptr, renderer, window);
         // Continue the loop
         requestAnimationFrame(runMainLoop);
     }
