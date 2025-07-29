@@ -32,33 +32,47 @@ function j_init_renderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
 end
 
 # Helper to allocate and initialize an Animation
-function init_animation(frames::Vector{AnimationFrame})::Ptr{Animation}
-    frame_count::Int32 = Int32(length(frames))
-    frames_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(wasm_malloc(UInt32(sizeof(AnimationFrame) * frame_count)))
-    for i in 1:frame_count
-        unsafe_store!(frames_ptr + (i-1), frames[i])
-    end
-    anim_ptr::Ptr{Animation} = Ptr{Animation}(wasm_malloc(UInt32(sizeof(Animation))))
-    unsafe_store!(anim_ptr, Animation(frames_ptr, frame_count, 0, 0.0))
-    return anim_ptr
-end
+# function init_animation(frames::MallocArray{AnimationFrame})::Ptr{Animation}
+#     # frame_count::Int32 = Int32(4)
+#     # frames_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(wasm_malloc(UInt32(sizeof(AnimationFrame) * frame_count)))
+#     # str = m"Test"
+#     # test = MallocArray{Int64}(undef, 4)
+#     # test[1] = 1
+#     # test[2] = 2
+#     # test[3] = 3
+#     # test[4] = 4
+#     # for i in 1:frame_count
+#     #     printf(c"%d\n", i)
+#     #     printf(c"%d\n", test[i])
+#     #     #unsafe_store!(frames_ptr + (i-1), frames[i])
+#     # end
+#     # anim_ptr::Ptr{Animation} = Ptr{Animation}(wasm_malloc(UInt32(sizeof(Animation))))
+#     # unsafe_store!(anim_ptr, Animation(frames_ptr, frame_count, 0, 0.0))
+#     # return anim_ptr
+#     return Ptr{Animation}(C_NULL)
+# end
 
 # Example: define animation frames for idle, run, jump (assume 64x64 frames in a horizontal spritesheet)
-const IDLE_FRAMES = [AnimationFrame(0, 0, 64, 64, 0.2)]
-const RUN_FRAMES = [AnimationFrame(64*i, 0, 64, 64, 0.1) for i in 0:3]
+const IDLE_FRAMES = [AnimationFrame(0, 0, 16, 16, 0.2)]
+const RUN_FRAMES = [AnimationFrame(16*i, 0, 16, 16, 0.1) for i in 0:3]
 const JUMP_FRAMES = [AnimationFrame(256, 0, 64, 64, 0.3)]
 
+TEST_FRAMES = MallocArray{AnimationFrame}(undef, 1)
+TEST_FRAMES[1] = AnimationFrame(0, 0, 16, 16, 0.2)
+
 # Helper to select animation by state
-function j_select_animation(state::Int32)::Ptr{Animation}
+function select_animation(state::Int32)::Ptr{Animation}
     if state == ANIM_IDLE
-        return init_animation(IDLE_FRAMES)
-    elseif state == ANIM_RUN
-        return init_animation(RUN_FRAMES)
-    elseif state == ANIM_JUMP
-        return init_animation(JUMP_FRAMES)
-    else
-        return init_animation(IDLE_FRAMES)
+        
+    # elseif state == ANIM_RUN
+    #     return init_animation(TEST_FRAMES)
+    # elseif state == ANIM_JUMP
+    #     return init_animation(TEST_FRAMES)
+    # else
+    #     return init_animation(TEST_FRAMES)
     end
+
+    return Ptr{Animation}(C_NULL)
 end
 
 # Update animation timer and frame
@@ -75,7 +89,7 @@ function update_animation(anim::Ptr{Animation}, delta::Float64)::Cvoid
 end
 
 # In j_init_game_state, initialize animation state
-function j_init_game_state()::Ptr{GameState}
+function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
     printf(c"Initializing game state\n")
     @static if Sys.iswindows()
         printf(c"Windows\n")
@@ -89,10 +103,10 @@ function j_init_game_state()::Ptr{GameState}
     keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
     unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
 
-    # sprite_init_result::Int32 = init_sprite_system()
-    # if sprite_init_result != 0
-    #     printf(c"Failed to initialize sprite system\n")
-    # end
+    sprite_init_result::Int32 = init_sprite_system()
+    if sprite_init_result != 0
+        printf(c"Failed to initialize sprite system\n")
+    end
 
     #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
@@ -100,6 +114,22 @@ function j_init_game_state()::Ptr{GameState}
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
+
+    # --- Load sprite if not loaded ---
+    if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
+        printf(c"Loading player sprite\n")
+        sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/skeleton.png")
+        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path)
+        wasm_free(Ptr{Cvoid}(sprite_path))
+        
+        if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
+            error_ptr = wasm_malloc(UInt32(100))
+            error = llvm_SDL_GetErrorMsg(error_ptr, Int32(100))
+            printf(c"Error: %s\n", error)
+            wasm_free(Ptr{Cvoid}(error_ptr))
+        end
+    end
+
     return game_state_ptr
 end
 
@@ -187,38 +217,26 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
         game_state.on_ground = Int32(0)
     end
     
-    # --- Load sprite if not loaded ---
-    # if game_state.player_sprite == Ptr{Sprite}(C_NULL)
-    #     printf(c"Loading player sprite\n")
-    #     sprite_path::Ptr{UInt8} = @str_ptr_with_len 12 m"skeleton.png"
-    #     game_state.player_sprite = load_sprite(renderer, sprite_path)
-    #     wasm_free(Ptr{Cvoid}(sprite_path))
-        
-    #     if game_state.player_sprite == Ptr{Sprite}(C_NULL)
-    #         printf(c"Failed to load sprite, falling back to rectangle\n")
-    #     end
-    # end
-    
     # --- Animation state selection (example logic) ---
-    # if game_state.on_ground == Int32(0)
-    #     if game_state.player_anim_state != ANIM_JUMP
-    #         game_state.player_anim_state = ANIM_JUMP
-    #         #free_animation(game_state.player_anim)
-    #         game_state.player_anim = j_select_animation(ANIM_JUMP)
-    #     end
+    if game_state.on_ground == Int32(0)
+        if game_state.player.anim_state == ANIM_JUMP
+            game_state.player.anim_state = ANIM_JUMP
+            #free_animation(game_state.player_anim)
+           game_state.player.anim = select_animation(ANIM_JUMP)
+        end
     # elseif abs(game_state.player_vel_x) > 1.0
     #     if game_state.player_anim_state != ANIM_RUN
     #         game_state.player_anim_state = ANIM_RUN
     #         #free_animation(game_state.player_anim)
-    #         game_state.player_anim = j_select_animation(ANIM_RUN)
+    #         game_state.player_anim = select_animation(ANIM_RUN)
     #     end
     # else
     #     if game_state.player_anim_state != ANIM_IDLE
     #         game_state.player_anim_state = ANIM_IDLE
     #         #free_animation(game_state.player_anim)
-    #         game_state.player_anim = j_select_animation(ANIM_IDLE)
+    #         game_state.player_anim = select_animation(ANIM_IDLE)
     #     end
-    # end
+    end
     # Update animation frame
    # update_animation(game_state.player_anim, delta_time)
     
@@ -456,7 +474,7 @@ function pc_main()::Int32
 
     window::Ptr{SDL_Window} = j_init_window()
     renderer::Ptr{SDL_Renderer} = j_init_renderer(window)
-    game_state_ptr::Ptr{GameState} = j_init_game_state()
+    game_state_ptr::Ptr{GameState} = j_init_game_state(renderer, window)
     while !game_state_ptr.quit
         game_loop(game_state_ptr, renderer, window)
     end

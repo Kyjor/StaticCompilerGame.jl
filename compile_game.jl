@@ -44,7 +44,7 @@ end
 # This helps to expose the functions to the web assembly module
 functions_to_compile = [
     #(call_update_input, (), "call_update_input"),
-    (j_init_game_state, (), "j_init_game_state"),
+    (j_init_game_state, (Ptr{SDL_Renderer}, Ptr{SDL_Window}), "j_init_game_state"),
     (j_init_window, (), "j_init_window"),
     (j_init_renderer, (Ptr{SDL_Window},), "j_init_renderer"),
     (game_loop, (Ptr{GameState}, Ptr{SDL_Renderer}, Ptr{SDL_Window}), "game_loop"),

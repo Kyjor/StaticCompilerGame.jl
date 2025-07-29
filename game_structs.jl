@@ -45,14 +45,15 @@ struct Animation
 end
 
 # Animation state enum
-const ANIM_IDLE = 0
-const ANIM_RUN = 1
-const ANIM_JUMP = 2
+const ANIM_IDLE = Int32(0)
+const ANIM_RUN = Int32(1)
+const ANIM_JUMP = Int32(2)
 
 struct Player
     is_alive::Bool
     anim::Ptr{Animation}
     anim_state::Int32
+    on_ground::Bool
 end
 
 struct GameState
@@ -206,10 +207,12 @@ function Base.getproperty(x::Ptr{Player}, f::Symbol)
     f === :is_alive && return unsafe_load(Ptr{Bool}(x + offsetof(Player, Val(:is_alive))))
     f === :anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(Player, Val(:anim))))
     f === :anim_state && return unsafe_load(Ptr{Int32}(x + offsetof(Player, Val(:anim_state))))
+    f === :on_ground && return unsafe_load(Ptr{Bool}(x + offsetof(Player, Val(:on_ground))))
 end
 
 function Base.setproperty!(x::Ptr{Player}, f::Symbol, v::Any)
     f === :is_alive && return unsafe_store!(Ptr{Bool}(x + offsetof(Player, Val(:is_alive))), v)
     f === :anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(Player, Val(:anim))), v)
     f === :anim_state && return unsafe_store!(Ptr{Int32}(x + offsetof(Player, Val(:anim_state))), v)
+    f === :on_ground && return unsafe_store!(Ptr{Bool}(x + offsetof(Player, Val(:on_ground))), v)
 end

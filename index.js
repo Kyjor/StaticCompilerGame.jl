@@ -16,7 +16,7 @@ window.onModuleReady = function() {
     }
     console.log("SDL initialized successfully");
 
-    let game_state_ptr = Module._j_init_game_state();
+    let game_state_ptr = Module._j_init_game_state(renderer, window);
     console.log("Game state pointer:", game_state_ptr);
     if (game_state_ptr) {
         console.log("Game state pointer is not null");
