@@ -1,0 +1,631 @@
+
+# Build rules for objects
+-include $(OBJECTS:.lo=.d)
+
+# Special dependency for SDL.c, since it depends on SDL_revision.h
+/cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL.c: update-revision
+
+$(objects)/SDL.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_assert.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL_assert.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_dataqueue.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL_dataqueue.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_error.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL_error.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_guid.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL_guid.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hints.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL_hints.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_list.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL_list.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_log.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL_log.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_utils.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/SDL_utils.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_atomic.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/atomic/SDL_atomic.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_spinlock.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/atomic/SDL_spinlock.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_audio.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/SDL_audio.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_audiocvt.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/SDL_audiocvt.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_audiodev.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/SDL_audiodev.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_audiotypecvt.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/SDL_audiotypecvt.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_mixer.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/SDL_mixer.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_wave.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/SDL_wave.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_cpuinfo.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/cpuinfo/SDL_cpuinfo.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_dynapi.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/dynapi/SDL_dynapi.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_clipboardevents.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_clipboardevents.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_displayevents.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_displayevents.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_dropevents.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_dropevents.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_events.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_events.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_gesture.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_gesture.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_keyboard.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_keyboard.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_keysym_to_scancode.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_keysym_to_scancode.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_mouse.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_mouse.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_quit.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_quit.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_scancode_tables.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_scancode_tables.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_touch.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_touch.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowevents.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/SDL_windowevents.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/imKStoUCS.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/events/imKStoUCS.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_rwops.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/file/SDL_rwops.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_haptic.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/haptic/SDL_haptic.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/hidapi/SDL_hidapi.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_gamecontroller.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/SDL_gamecontroller.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_joystick.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/SDL_joystick.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_steam_virtual_gamepad.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/SDL_steam_virtual_gamepad.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/controller_type.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/controller_type.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/e_atan2.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/e_atan2.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/e_exp.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/e_exp.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/e_fmod.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/e_fmod.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/e_log.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/e_log.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/e_log10.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/e_log10.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/e_pow.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/e_pow.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/e_rem_pio2.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/e_rem_pio2.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/e_sqrt.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/e_sqrt.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/k_cos.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/k_cos.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/k_rem_pio2.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/k_rem_pio2.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/k_sin.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/k_sin.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/k_tan.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/k_tan.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/s_atan.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/s_atan.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/s_copysign.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/s_copysign.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/s_cos.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/s_cos.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/s_fabs.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/s_fabs.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/s_floor.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/s_floor.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/s_scalbn.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/s_scalbn.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/s_sin.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/s_sin.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/s_tan.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/libm/s_tan.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_url.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/misc/SDL_url.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_power.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/power/SDL_power.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_d3dmath.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/SDL_d3dmath.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/SDL_render.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_yuv_sw.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/SDL_yuv_sw.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_d3d.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/direct3d/SDL_render_d3d.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_shaders_d3d.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/direct3d/SDL_shaders_d3d.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_d3d11.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/direct3d11/SDL_render_d3d11.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_shaders_d3d11.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/direct3d11/SDL_shaders_d3d11.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_d3d12.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/direct3d12/SDL_render_d3d12.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_shaders_d3d12.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/direct3d12/SDL_shaders_d3d12.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_gl.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/opengl/SDL_render_gl.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_shaders_gl.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/opengl/SDL_shaders_gl.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_gles.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/opengles/SDL_render_gles.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_gles2.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/opengles2/SDL_render_gles2.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_shaders_gles2.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/opengles2/SDL_shaders_gles2.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_ps2.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/ps2/SDL_render_ps2.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_psp.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/psp/SDL_render_psp.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blendfillrect.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/software/SDL_blendfillrect.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blendline.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/software/SDL_blendline.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blendpoint.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/software/SDL_blendpoint.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_drawline.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/software/SDL_drawline.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_drawpoint.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/software/SDL_drawpoint.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_sw.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/software/SDL_render_sw.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_rotate.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/software/SDL_rotate.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_triangle.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/software/SDL_triangle.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_vita_gxm.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/vitagxm/SDL_render_vita_gxm.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_vita_gxm_memory.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/vitagxm/SDL_render_vita_gxm_memory.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_render_vita_gxm_tools.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/render/vitagxm/SDL_render_vita_gxm_tools.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_sensor.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/sensor/SDL_sensor.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_crc16.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_crc16.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_crc32.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_crc32.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_getenv.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_getenv.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_iconv.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_iconv.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_malloc.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_malloc.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_mslibc.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_mslibc.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_qsort.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_qsort.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_stdlib.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_stdlib.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_string.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_string.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_strtokr.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/stdlib/SDL_strtokr.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_thread.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/thread/SDL_thread.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_timer.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/timer/SDL_timer.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_RLEaccel.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_RLEaccel.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blit.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_blit.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blit_0.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_blit_0.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blit_1.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_blit_1.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blit_A.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_blit_A.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blit_N.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_blit_N.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blit_auto.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_blit_auto.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blit_copy.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_blit_copy.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_blit_slow.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_blit_slow.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_bmp.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_bmp.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_clipboard.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_clipboard.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_egl.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_egl.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_fillrect.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_fillrect.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_pixels.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_pixels.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_rect.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_rect.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_shape.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_shape.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_stretch.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_stretch.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_surface.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_surface.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_video.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_video.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_vulkan_utils.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_vulkan_utils.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_yuv.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/SDL_yuv.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/yuv_rgb_lsx.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/yuv2rgb/yuv_rgb_lsx.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/yuv_rgb_sse.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/yuv2rgb/yuv_rgb_sse.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/yuv_rgb_std.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/yuv2rgb/yuv_rgb_std.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_locale.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/locale/SDL_locale.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_nullevents.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/dummy/SDL_nullevents.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_nullframebuffer.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/dummy/SDL_nullframebuffer.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_nullvideo.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/dummy/SDL_nullvideo.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_offscreenevents.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/offscreen/SDL_offscreenevents.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_offscreenframebuffer.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/offscreen/SDL_offscreenframebuffer.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_offscreenopengles.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/offscreen/SDL_offscreenopengles.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_offscreenvideo.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/offscreen/SDL_offscreenvideo.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_offscreenwindow.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/offscreen/SDL_offscreenwindow.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_diskaudio.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/disk/SDL_diskaudio.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_dummyaudio.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/dummy/SDL_dummyaudio.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_combined.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_combined.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_gamecube.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_gamecube.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_luna.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_luna.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_ps3.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_ps3.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_ps4.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_ps4.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_ps5.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_ps5.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_rumble.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_rumble.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_shield.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_shield.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_stadia.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_stadia.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_steam.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_steam.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_steamdeck.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_steamdeck.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_switch.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_switch.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_wii.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_wii.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_xbox360.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_xbox360.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_xbox360w.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_xbox360w.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapi_xboxone.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapi_xboxone.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hidapijoystick.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/hidapi/SDL_hidapijoystick.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_hid.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/core/windows/SDL_hid.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_immdevice.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/core/windows/SDL_immdevice.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windows.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/core/windows/SDL_windows.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_xinput.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/core/windows/SDL_xinput.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_sysurl.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/misc/windows/SDL_sysurl.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_syslocale.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/locale/windows/SDL_syslocale.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsclipboard.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsclipboard.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsevents.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsevents.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsframebuffer.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsframebuffer.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowskeyboard.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowskeyboard.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsmessagebox.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsmessagebox.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsmodes.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsmodes.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsmouse.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsmouse.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsopengl.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsopengl.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsopengles.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsopengles.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsshape.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsshape.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsvideo.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsvideo.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsvulkan.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowsvulkan.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowswindow.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/video/windows/SDL_windowswindow.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_winmm.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/winmm/SDL_winmm.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_wasapi.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/wasapi/SDL_wasapi.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_wasapi_win32.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/audio/wasapi/SDL_wasapi_win32.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_dinputjoystick.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/windows/SDL_dinputjoystick.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_rawinputjoystick.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/windows/SDL_rawinputjoystick.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windows_gaming_input.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/windows/SDL_windows_gaming_input.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowsjoystick.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/windows/SDL_windowsjoystick.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_xinputjoystick.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/windows/SDL_xinputjoystick.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_dinputhaptic.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/haptic/windows/SDL_dinputhaptic.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowshaptic.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/haptic/windows/SDL_windowshaptic.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_xinputhaptic.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/haptic/windows/SDL_xinputhaptic.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_windowssensor.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/sensor/windows/SDL_windowssensor.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_syspower.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/power/windows/SDL_syspower.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_sysfilesystem.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/filesystem/windows/SDL_sysfilesystem.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_syscond_cv.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/thread/windows/SDL_syscond_cv.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_sysmutex.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/thread/windows/SDL_sysmutex.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_syssem.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/thread/windows/SDL_syssem.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_systhread.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/thread/windows/SDL_systhread.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_systls.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/thread/windows/SDL_systls.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_syscond.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/thread/generic/SDL_syscond.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_systimer.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/timer/windows/SDL_systimer.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_sysloadso.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/loadso/windows/SDL_sysloadso.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_virtualjoystick.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/joystick/virtual/SDL_virtualjoystick.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/version.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/main/windows/version.rc $(objects)/.created
+	$(RUN_CMD_RC)$(LIBTOOL) --mode=compile --tag=RC $(RC) -i $< -o $@
+
+$(objects)/SDL_windows_main.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/main/windows/SDL_windows_main.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+
+$(objects)/SDL_test_assert.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_assert.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_common.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_common.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_compare.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_compare.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_crc32.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_crc32.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_font.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_font.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_fuzzer.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_fuzzer.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_harness.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_harness.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_imageBlit.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_imageBlit.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_imageBlitBlend.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_imageBlitBlend.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_imageFace.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_imageFace.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_imagePrimitives.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_imagePrimitives.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_imagePrimitivesBlend.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_imagePrimitivesBlend.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_log.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_log.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_md5.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_md5.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_memory.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_memory.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@ 
+$(objects)/SDL_test_random.lo: /cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/SDL2-2.30.11/src/test/SDL_test_random.c $(objects)/.created
+	$(RUN_CMD_CC)$(LIBTOOL) --tag=CC --mode=compile $(CC) $(CFLAGS) $(EXTRA_CFLAGS) -MMD -MT $@ -c $< -o $@
+

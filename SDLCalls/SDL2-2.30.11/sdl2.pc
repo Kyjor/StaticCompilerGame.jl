@@ -1,0 +1,15 @@
+# sdl pkg-config source file
+
+prefix=/cygdrive/c/Users/Kyjor/Documents/Projects/Julia/StaticCompilerGame.jl/SDLCalls/lib
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: sdl2
+Description: Simple DirectMedia Layer is a cross-platform multimedia library designed to provide low level access to audio, keyboard, mouse, joystick, 3D hardware via OpenGL, and 2D video framebuffer.
+Version: 2.30.11
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lcygwin -lSDL2main -lSDL2 -mwindows 
+Libs.private:  -Wl,--dynamicbase -Wl,--nxcompat -Wl,--high-entropy-va -lm -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lshell32 -lsetupapi -lversion /lib/w32api/libuuid.a
+Cflags: -I${includedir} -I${includedir}/SDL2  -I/usr/include/mingw -Dmain=SDL_main

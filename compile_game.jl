@@ -155,6 +155,13 @@ else
         println("✅ Desktop executable created!")
         println("📁 File: $output_dir/$output_name")
         println("🚀 To run: ./$output_dir/$output_name")
+        # Copy SDL2.dll to output directory (Windows only)
+        if Sys.iswindows()
+            sdl_dll = joinpath(sdl_bin_path, "SDL2.dll")
+            dest_dll = joinpath(output_dir, "SDL2.dll")
+            cp(sdl_dll, dest_dll; force=true)
+            println("🗂️  Copied SDL2.dll to $output_dir/")
+        end
         
     catch e
         println("❌ Compilation failed: $e")
