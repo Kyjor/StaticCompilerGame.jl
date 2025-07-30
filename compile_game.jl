@@ -111,6 +111,30 @@ if build_type == "web"
         println("❌ Compilation failed: $e")
     end
 
+
+#     if Sys.iswindows()
+#         # On Windows, call a batch file to handle emcc compilation
+#         bat_file = "build_game.bat"
+#         if isfile(bat_file)
+#             println("⚡ Calling $bat_file to compile with emcc...")
+#             run(`cmd /C $bat_file`)
+#         else
+#             println("❌ $bat_file not found! Please create it to handle the emcc compilation step on Windows.")
+#         end
+#     else
+#         # Link Julia LLVM IR with SDL2 C code (non-Windows)
+#         cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -O2 -s WASM=1 -s \
+#         EXPORTED_FUNCTIONS="[\n        '_game_loop',\n        '_j_init_game_state',\n        '_j_init_window',\n        '_j_init_renderer',\n        '_pc_main'\n        ]" \
+#         -s EXPORTED_RUNTIME_METHODS="['cwrap']" \
+#         -o $output_dir/game.js`
+#         run(cmd)
+#         println("✅ Combined WebAssembly module created!")
+#         println("📁 Files:")
+#         println("   - $output_dir/game.wasm")
+#         println("   - $output_dir/game.js")
+#     end
+# catch e
+
 else
     println("\n🔨 Compiling to Desktop Executable with SDL2...")
     
