@@ -87,7 +87,7 @@ function update_animation(anim::Ptr{Animation}, delta::Float64)::Cvoid
         anim.current_frame = (anim.current_frame + 1) % anim.frame_count
     end
 end
-
+ 
 # In j_init_game_state, initialize animation state
 function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
     printf(c"Initializing game state\n")
@@ -95,6 +95,8 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
         printf(c"Windows\n")
     elseif Sys.isapple()
         printf(c"macOS\n")
+        platform = llvm_SDL_GetPlatform()
+        printf(c"Platform: %s\n", platform)
     else
         printf(c"Linux\n")
     end

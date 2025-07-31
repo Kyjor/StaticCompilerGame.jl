@@ -2657,7 +2657,7 @@
     end
 
     # Original C signature: const char * SDL_GetPlatform()
-    function llvm_SDL_GetPlatform()::Ptr{Cvoid}
+    function llvm_SDL_GetPlatform()::Ptr{UInt8}
         Base.llvmcall(("""
         declare i8* @SDL_GetPlatform() nounwind
 
