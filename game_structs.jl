@@ -19,6 +19,14 @@ struct KeyState_up
     space::Bool
 end
 
+struct KeyState_pressed
+    a::Bool
+    d::Bool
+    w::Bool
+    s::Bool
+    space::Bool
+end
+
 struct Sprite
     texture::Ptr{SDL_Texture}
     width::Int32
@@ -67,6 +75,7 @@ struct GameState
     is_jumping::Int32
     keys_up::Ptr{KeyState_up}   
     keys_down::Ptr{KeyState_down}
+    keys_pressed::Ptr{KeyState_pressed}
     last_frame_time::UInt64
     quit::Bool
     player_sprite::Ptr{Sprite}
@@ -90,6 +99,7 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :is_jumping && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:is_jumping))))
     f === :keys_up && return unsafe_load(Ptr{Ptr{KeyState_up}}(x + offsetof(GameState, Val(:keys_up))))
     f === :keys_down && return unsafe_load(Ptr{Ptr{KeyState_down}}(x + offsetof(GameState, Val(:keys_down))))
+    f === :keys_pressed && return unsafe_load(Ptr{Ptr{KeyState_pressed}}(x + offsetof(GameState, Val(:keys_pressed))))
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))))
     f === :quit && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:quit))))
     f === :player_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))))
@@ -113,6 +123,7 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :is_jumping && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:is_jumping))), v)
     f === :keys_up && return unsafe_store!(Ptr{Ptr{KeyState_up}}(x + offsetof(GameState, Val(:keys_up))), v)
     f === :keys_down && return unsafe_store!(Ptr{Ptr{KeyState_down}}(x + offsetof(GameState, Val(:keys_down))), v)
+    f === :keys_pressed && return unsafe_store!(Ptr{Ptr{KeyState_pressed}}(x + offsetof(GameState, Val(:keys_pressed))), v)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:quit))), v)
     f === :player_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))), v)
@@ -155,6 +166,22 @@ function Base.setproperty!(x::Ptr{KeyState_up}, f::Symbol, v::Any)
     f === :w && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:w))), v)
     f === :s && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:s))), v)
     f === :space && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:space))), v)
+end
+
+function Base.getproperty(x::Ptr{KeyState_pressed}, f::Symbol)
+    f === :a && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:a))))
+    f === :d && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:d))))
+    f === :w && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:w))))
+    f === :s && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:s))))
+    f === :space && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:space))))
+end
+
+function Base.setproperty!(x::Ptr{KeyState_pressed}, f::Symbol, v::Any)
+    f === :a && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:a))), v)
+    f === :d && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:d))), v)
+    f === :w && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:w))), v)
+    f === :s && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:s))), v)
+    f === :space && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:space))), v)
 end
 
 function Base.getproperty(x::Ptr{Sprite}, f::Symbol)
