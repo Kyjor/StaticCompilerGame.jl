@@ -32,3 +32,5 @@ Build/
 game_desktop/
 
 .vscode/
+
+emsdk

@@ -114,7 +114,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
 
     #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(364), Float64(952), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -165,7 +165,10 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     # --- Platformer Physics ---
     gravity::Float64 = Float64(0.0)             # Much stronger gravity
     jump_velocity::Float64 = Float64(-400.0)      # Much stronger jump
-    ground_y::Float64 = Float64(768.0)           # Closer ground level
+    min_x::Float64 = Float64(364)
+    max_x::Float64 = Float64(812)
+    min_y::Float64 = Float64(284)
+    max_y::Float64 = Float64(732.0)           # Closer ground level
     move_accel::Float64 = Float64(2000.0)        
     ground_decel::Float64 = Float64(4000.0)      
     air_decel::Float64 = Float64(1200.0)         
@@ -189,15 +192,15 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     end
     
     # --- Horizontal movement (one unit per key press) ---
-    if keys_pressed_ptr.a     # A - move left one unit
+    if keys_pressed_ptr.a && game_state.player_x > min_x    # A - move left one unit
         game_state.player_x -= Float64(64.0)
-    elseif keys_pressed_ptr.d  # D - move right one unit
+    elseif keys_pressed_ptr.d && game_state.player_x < max_x  # D - move right one unit
         game_state.player_x += Float64(64.0)
     end
 
-    if keys_pressed_ptr.w
+    if keys_pressed_ptr.w && game_state.player_y > min_y
         game_state.player_y -= Float64(64.0)
-    elseif keys_pressed_ptr.s
+    elseif keys_pressed_ptr.s && game_state.player_y < max_y
         game_state.player_y += Float64(64.0)
     end
     
@@ -230,8 +233,8 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     game_state.player_y += Float64(game_state.player_vel_y * delta_time)
     
     # --- Ground Collision ---
-    if game_state.player_y >= ground_y
-        game_state.player_y = ground_y
+    if game_state.player_y >= max_y
+        game_state.player_y = max_y
         game_state.player_vel_y = Float64(0)
         game_state.on_ground = Int32(1)
     else
@@ -298,7 +301,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     # Draw ground rectangle
     ground_rect::SDL_FRect = SDL_FRect(
         Float32(0.0 - game_state.camera_x),
-        Float32(ground_y - 32.0 - game_state.camera_y),  # 32px thick ground
+        Float32(max_y - 32.0 - game_state.camera_y),  # 32px thick ground
         Float32(win_w),
         32.0f0
     )
