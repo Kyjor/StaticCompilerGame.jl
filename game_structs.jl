@@ -31,6 +31,10 @@ struct Sprite
     texture::Ptr{SDL_Texture}
     width::Int32
     height::Int32
+    crop_x::Int32
+    crop_y::Int32
+    crop_w::Int32
+    crop_h::Int32
     loaded::Bool
     is_flipped::Bool
 end
@@ -79,6 +83,7 @@ struct GameState
     last_frame_time::UInt64
     quit::Bool
     player_sprite::Ptr{Sprite}
+    background_sprite::Ptr{Sprite}
     player::Ptr{Player}
     fullscreen::Bool
     camera_x::Float64
@@ -103,6 +108,7 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))))
     f === :quit && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:quit))))
     f === :player_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))))
+    f === :background_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:background_sprite))))
     f === :player && return unsafe_load(Ptr{Ptr{Player}}(x + offsetof(GameState, Val(:player))))
     f === :fullscreen && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:fullscreen))))
     f === :camera_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_x))))
@@ -127,6 +133,7 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:quit))), v)
     f === :player_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))), v)
+    f === :background_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:background_sprite))), v)
     f === :player && return unsafe_store!(Ptr{Ptr{Player}}(x + offsetof(GameState, Val(:player))), v)
     f === :fullscreen && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:fullscreen))), v)
     f === :camera_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_x))), v)
@@ -188,6 +195,10 @@ function Base.getproperty(x::Ptr{Sprite}, f::Symbol)
     f === :texture && return unsafe_load(Ptr{Ptr{SDL_Texture}}(x + 0))
     f === :width && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:width))))
     f === :height && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:height))))
+    f === :crop_x && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_x))))
+    f === :crop_y && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_y))))
+    f === :crop_w && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_w))))
+    f === :crop_h && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_h))))
     f === :loaded && return unsafe_load(Ptr{Bool}(x + offsetof(Sprite, Val(:loaded))))
     f === :is_flipped && return unsafe_load(Ptr{Bool}(x + offsetof(Sprite, Val(:is_flipped))))
 end
@@ -196,6 +207,10 @@ function Base.setproperty!(x::Ptr{Sprite}, f::Symbol, v::Any)
     f === :texture && return unsafe_store!(Ptr{Ptr{SDL_Texture}}(x + 0), v)
     f === :width && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:width))), v)
     f === :height && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:height))), v)
+    f === :crop_x && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_x))), v)
+    f === :crop_y && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_y))), v)
+    f === :crop_w && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_w))), v)
+    f === :crop_h && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_h))), v)
     f === :loaded && return unsafe_store!(Ptr{Bool}(x + offsetof(Sprite, Val(:loaded))), v)
     f === :is_flipped && return unsafe_store!(Ptr{Bool}(x + offsetof(Sprite, Val(:is_flipped))), v)
 end

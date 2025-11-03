@@ -97,7 +97,8 @@ if build_type == "web"
         ]" 
         -s EXPORTED_RUNTIME_METHODS="['cwrap']" 
         -o $output_dir/game.js
-        --preload-file=assets/images/skeleton.png
+        --preload-file ./assets/images
+        
         --use-preload-plugins
         `
         # -s ENVIRONMENT=web
@@ -108,6 +109,8 @@ if build_type == "web"
         println("📁 Files:")
         println("   - $output_dir/game.wasm")
         println("   - $output_dir/game.js")
+        # copy game_wasm/game.data to ./
+        cp(joinpath(output_dir, "game.data"), "./game.data"; force=true)
         
     catch e
         println("❌ Compilation failed: $e")

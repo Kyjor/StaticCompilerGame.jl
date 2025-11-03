@@ -12,7 +12,7 @@ function init_sprite_system()::Int32
     return Int32(0)
 end
 
-function load_sprite(renderer::Ptr{SDL_Renderer}, file_path::Ptr{UInt8})::Ptr{Sprite}
+function load_sprite(renderer::Ptr{SDL_Renderer}, file_path::Ptr{UInt8}, crop_x::Int32, crop_y::Int32, crop_w::Int32, crop_h::Int32)::Ptr{Sprite}
     printf(c"Loading PNG sprite\n")
     # Load PNG surface
     surface::Ptr{SDL_Surface} = llvm_IMG_Load(file_path)
@@ -43,7 +43,7 @@ function load_sprite(renderer::Ptr{SDL_Renderer}, file_path::Ptr{UInt8})::Ptr{Sp
     printf(c"Surface width: %d, Surface height: %d\n", surface_width, surface_height)
     # Create sprite structure
     sprite_ptr::Ptr{Sprite} = Ptr{Sprite}(wasm_malloc(UInt32(sizeof(Sprite))))
-    unsafe_store!(Ptr{Sprite}(sprite_ptr), Sprite(texture, surface_width, surface_height, true, false))
+    unsafe_store!(Ptr{Sprite}(sprite_ptr), Sprite(texture, surface_width, surface_height, crop_x, crop_y, crop_w, crop_h, true, false))
     
     printf(c"PNG sprite loaded successfully\n")
     return sprite_ptr
@@ -60,12 +60,12 @@ function render_sprite(renderer::Ptr{SDL_Renderer}, sprite::Ptr{Sprite}, x::Floa
     end
     
     # Create source rectangle
-    src_rect::SDL_Rect = SDL_Rect(0, 48, 16, 16)
+    src_rect::SDL_Rect = SDL_Rect(sprite_data.crop_x, sprite_data.crop_y, sprite_data.crop_w, sprite_data.crop_h)
     src_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_Rect)))
     unsafe_store!(Ptr{SDL_Rect}(src_rect_ptr), src_rect)
 
     # Create destination rectangle
-    dst_rect::SDL_FRect = SDL_FRect(x, y, Float32(64), Float32(64))
+    dst_rect::SDL_FRect = SDL_FRect(x, y, Float32(sprite_data.crop_w), Float32(sprite_data.crop_h))
     dst_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_FRect)))
     unsafe_store!(Ptr{SDL_FRect}(dst_rect_ptr), dst_rect)
     

@@ -11,7 +11,7 @@ include("wallocstring.jl")
 
 function j_init_window()::Ptr{SDL_Window}
     window_name = str_ptr(w"Game test")
-    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(800), Int32(600), UInt32(0))
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(640), UInt32(0))
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
         msg_ptr = wasm_malloc(UInt32(100))
@@ -114,7 +114,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
 
     #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(364), Float64(952), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -122,11 +122,25 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     # --- Load sprite if not loaded ---
     if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
         printf(c"Loading player sprite\n")
-        sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/skeleton.png")
-        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path)
+        sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/spider.png")
+        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path, Int32(0), Int32(0), Int32(64), Int32(64))
         wasm_free(Ptr{Cvoid}(sprite_path))
         
         if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
+            error_ptr = wasm_malloc(UInt32(100))
+            error = llvm_SDL_GetErrorMsg(error_ptr, Int32(100))
+            printf(c"Error: %s\n", error)
+            wasm_free(Ptr{Cvoid}(error_ptr))
+        end
+    end
+
+    if game_state_ptr.background_sprite == Ptr{Sprite}(C_NULL)
+        printf(c"Loading background sprite\n")
+        sprite_path_1::Ptr{UInt8} = str_ptr(w"assets/images/map.png")
+        game_state_ptr.background_sprite = load_sprite(renderer, sprite_path_1, Int32(0), Int32(0), Int32(640), Int32(640))
+        wasm_free(Ptr{Cvoid}(sprite_path_1))
+
+        if game_state_ptr.background_sprite == Ptr{Sprite}(C_NULL)
             error_ptr = wasm_malloc(UInt32(100))
             error = llvm_SDL_GetErrorMsg(error_ptr, Int32(100))
             printf(c"Error: %s\n", error)
@@ -151,7 +165,10 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     # --- Platformer Physics ---
     gravity::Float64 = Float64(0.0)             # Much stronger gravity
     jump_velocity::Float64 = Float64(-400.0)      # Much stronger jump
-    ground_y::Float64 = Float64(400.0)           # Closer ground level
+    min_x::Float64 = Float64(364)
+    max_x::Float64 = Float64(812)
+    min_y::Float64 = Float64(284)
+    max_y::Float64 = Float64(732.0)           # Closer ground level
     move_accel::Float64 = Float64(2000.0)        
     ground_decel::Float64 = Float64(4000.0)      
     air_decel::Float64 = Float64(1200.0)         
@@ -175,10 +192,16 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     end
     
     # --- Horizontal movement (one unit per key press) ---
-    if keys_pressed_ptr.a     # A - move left one unit
+    if keys_pressed_ptr.a && game_state.player_x > min_x    # A - move left one unit
         game_state.player_x -= Float64(64.0)
-    elseif keys_pressed_ptr.d  # D - move right one unit
+    elseif keys_pressed_ptr.d && game_state.player_x < max_x  # D - move right one unit
         game_state.player_x += Float64(64.0)
+    end
+
+    if keys_pressed_ptr.w && game_state.player_y > min_y
+        game_state.player_y -= Float64(64.0)
+    elseif keys_pressed_ptr.s && game_state.player_y < max_y
+        game_state.player_y += Float64(64.0)
     end
     
     # Reset horizontal velocity since we're using direct position movement
@@ -210,8 +233,8 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     game_state.player_y += Float64(game_state.player_vel_y * delta_time)
     
     # --- Ground Collision ---
-    if game_state.player_y >= ground_y
-        game_state.player_y = ground_y
+    if game_state.player_y >= max_y
+        game_state.player_y = max_y
         game_state.player_vel_y = Float64(0)
         game_state.on_ground = Int32(1)
     else
@@ -251,11 +274,11 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     win_h = win_h_ptr[]
     player_width::Float64 = 64.0
     player_height::Float64 = 64.0
-    target_camera_x::Float64 = game_state.player_x - Float64(win_w) / 2.0 + player_width / 2.0
-    target_camera_y::Float64 = game_state.player_y - Float64(win_h) / 2.0 + player_height / 2.0
+    target_camera_x::Float64 = 0.0f0# game_state.player_x - Float64(win_w) / 2.0 + player_width / 2.0
+    target_camera_y::Float64 = 0.0f0# game_state.player_y - Float64(win_h) / 2.0 + player_height / 2.0
     camera_speed::Float64 = 0.15  # Adjust for smoothness
-    game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
-    game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
+    #game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
+    #game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
 
     # --- Mobile Controls: Define button areas (bottom 25% of screen) ---
     btn_area_h = win_h / Int32(4)
@@ -278,7 +301,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     # Draw ground rectangle
     ground_rect::SDL_FRect = SDL_FRect(
         Float32(0.0 - game_state.camera_x),
-        Float32(ground_y - 32.0 - game_state.camera_y),  # 32px thick ground
+        Float32(max_y - 32.0 - game_state.camera_y),  # 32px thick ground
         Float32(win_w),
         32.0f0
     )
@@ -289,6 +312,9 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     wasm_free(Ptr{Cvoid}(rect_ptr))
 
     # Render sprite if available, otherwise render rectangle
+    if game_state.background_sprite != Ptr{Sprite}(C_NULL)
+        render_sprite(renderer, game_state.background_sprite, 0.0f0, 0.0f0)
+    end
     if game_state.player_sprite != Ptr{Sprite}(C_NULL)
         if game_state.player_sprite.is_flipped && keys_down_ptr.d
             game_state.player_sprite.is_flipped = false
@@ -298,7 +324,6 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
             printf(c"Player is facing left\n")
         end
         render_sprite(renderer, game_state.player_sprite, Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y))
-        #render_result::Int32 = j_render_sprite(renderer, game_state.player_sprite, game_state.player_anim, Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y))
     else
         # Fallback to rectangle
         rect::SDL_FRect = SDL_FRect(Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y), Float32(64), Float32(64))
@@ -468,17 +493,6 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
 
     wasm_free(Ptr{Cvoid}(event_ptr))
     return Int32(0)
-end
-
-macro static_string(str_expr)
-    str = eval(str_expr)
-    bytes = [UInt8(c) for c in str]
-    push!(bytes, 0x00)  # null-terminate
-
-    N = length(bytes)
-    quote
-        NTuple{$N, UInt8}($(Expr(:tuple, bytes...)))
-    end
 end
 
 # PC Entry Point - Main function for desktop builds
