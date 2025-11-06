@@ -19,10 +19,22 @@ struct KeyState_up
     space::Bool
 end
 
+struct KeyState_pressed
+    a::Bool
+    d::Bool
+    w::Bool
+    s::Bool
+    space::Bool
+end
+
 struct Sprite
     texture::Ptr{SDL_Texture}
     width::Int32
     height::Int32
+    crop_x::Int32
+    crop_y::Int32
+    crop_w::Int32
+    crop_h::Int32
     loaded::Bool
     is_flipped::Bool
 end
@@ -67,9 +79,11 @@ struct GameState
     is_jumping::Int32
     keys_up::Ptr{KeyState_up}   
     keys_down::Ptr{KeyState_down}
+    keys_pressed::Ptr{KeyState_pressed}
     last_frame_time::UInt64
     quit::Bool
     player_sprite::Ptr{Sprite}
+    background_sprite::Ptr{Sprite}
     player::Ptr{Player}
     fullscreen::Bool
     camera_x::Float64
@@ -90,9 +104,11 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :is_jumping && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:is_jumping))))
     f === :keys_up && return unsafe_load(Ptr{Ptr{KeyState_up}}(x + offsetof(GameState, Val(:keys_up))))
     f === :keys_down && return unsafe_load(Ptr{Ptr{KeyState_down}}(x + offsetof(GameState, Val(:keys_down))))
+    f === :keys_pressed && return unsafe_load(Ptr{Ptr{KeyState_pressed}}(x + offsetof(GameState, Val(:keys_pressed))))
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))))
     f === :quit && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:quit))))
     f === :player_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))))
+    f === :background_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:background_sprite))))
     f === :player && return unsafe_load(Ptr{Ptr{Player}}(x + offsetof(GameState, Val(:player))))
     f === :fullscreen && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:fullscreen))))
     f === :camera_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_x))))
@@ -113,9 +129,11 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :is_jumping && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:is_jumping))), v)
     f === :keys_up && return unsafe_store!(Ptr{Ptr{KeyState_up}}(x + offsetof(GameState, Val(:keys_up))), v)
     f === :keys_down && return unsafe_store!(Ptr{Ptr{KeyState_down}}(x + offsetof(GameState, Val(:keys_down))), v)
+    f === :keys_pressed && return unsafe_store!(Ptr{Ptr{KeyState_pressed}}(x + offsetof(GameState, Val(:keys_pressed))), v)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:quit))), v)
     f === :player_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))), v)
+    f === :background_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:background_sprite))), v)
     f === :player && return unsafe_store!(Ptr{Ptr{Player}}(x + offsetof(GameState, Val(:player))), v)
     f === :fullscreen && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:fullscreen))), v)
     f === :camera_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_x))), v)
@@ -157,10 +175,30 @@ function Base.setproperty!(x::Ptr{KeyState_up}, f::Symbol, v::Any)
     f === :space && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:space))), v)
 end
 
+function Base.getproperty(x::Ptr{KeyState_pressed}, f::Symbol)
+    f === :a && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:a))))
+    f === :d && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:d))))
+    f === :w && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:w))))
+    f === :s && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:s))))
+    f === :space && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:space))))
+end
+
+function Base.setproperty!(x::Ptr{KeyState_pressed}, f::Symbol, v::Any)
+    f === :a && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:a))), v)
+    f === :d && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:d))), v)
+    f === :w && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:w))), v)
+    f === :s && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:s))), v)
+    f === :space && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:space))), v)
+end
+
 function Base.getproperty(x::Ptr{Sprite}, f::Symbol)
     f === :texture && return unsafe_load(Ptr{Ptr{SDL_Texture}}(x + 0))
     f === :width && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:width))))
     f === :height && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:height))))
+    f === :crop_x && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_x))))
+    f === :crop_y && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_y))))
+    f === :crop_w && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_w))))
+    f === :crop_h && return unsafe_load(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_h))))
     f === :loaded && return unsafe_load(Ptr{Bool}(x + offsetof(Sprite, Val(:loaded))))
     f === :is_flipped && return unsafe_load(Ptr{Bool}(x + offsetof(Sprite, Val(:is_flipped))))
 end
@@ -169,6 +207,10 @@ function Base.setproperty!(x::Ptr{Sprite}, f::Symbol, v::Any)
     f === :texture && return unsafe_store!(Ptr{Ptr{SDL_Texture}}(x + 0), v)
     f === :width && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:width))), v)
     f === :height && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:height))), v)
+    f === :crop_x && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_x))), v)
+    f === :crop_y && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_y))), v)
+    f === :crop_w && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_w))), v)
+    f === :crop_h && return unsafe_store!(Ptr{Int32}(x + offsetof(Sprite, Val(:crop_h))), v)
     f === :loaded && return unsafe_store!(Ptr{Bool}(x + offsetof(Sprite, Val(:loaded))), v)
     f === :is_flipped && return unsafe_store!(Ptr{Bool}(x + offsetof(Sprite, Val(:is_flipped))), v)
 end

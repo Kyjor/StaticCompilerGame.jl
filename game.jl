@@ -11,7 +11,7 @@ include("wallocstring.jl")
 
 function j_init_window()::Ptr{SDL_Window}
     window_name = str_ptr(w"Game test")
-    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(800), Int32(600), UInt32(0))
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(640), UInt32(0))
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
         msg_ptr = wasm_malloc(UInt32(100))
@@ -87,7 +87,7 @@ function update_animation(anim::Ptr{Animation}, delta::Float64)::Cvoid
         anim.current_frame = (anim.current_frame + 1) % anim.frame_count
     end
 end
-
+ 
 # In j_init_game_state, initialize animation state
 function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
     printf(c"Initializing game state\n")
@@ -95,6 +95,8 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
         printf(c"Windows\n")
     elseif Sys.isapple()
         printf(c"macOS\n")
+        platform = llvm_SDL_GetPlatform()
+        printf(c"Platform: %s\n", platform)
     else
         printf(c"Linux\n")
     end
@@ -102,6 +104,8 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     unsafe_store!(Ptr{KeyState_up}(keys_up), KeyState_up(false, false, false, false, false))
     keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
     unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
+    keys_pressed::Ptr{KeyState_pressed} = Ptr{KeyState_pressed}(wasm_malloc(UInt32(sizeof(KeyState_pressed))))
+    unsafe_store!(Ptr{KeyState_pressed}(keys_pressed), KeyState_pressed(false, false, false, false, false))
 
     sprite_init_result::Int32 = init_sprite_system()
     if sprite_init_result != 0
@@ -110,7 +114,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
 
     #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(300), Float64(220), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(364), Float64(952), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -118,11 +122,25 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     # --- Load sprite if not loaded ---
     if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
         printf(c"Loading player sprite\n")
-        sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/skeleton.png")
-        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path)
+        sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/spider.png")
+        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path, Int32(0), Int32(0), Int32(64), Int32(64))
         wasm_free(Ptr{Cvoid}(sprite_path))
         
         if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
+            error_ptr = wasm_malloc(UInt32(100))
+            error = llvm_SDL_GetErrorMsg(error_ptr, Int32(100))
+            printf(c"Error: %s\n", error)
+            wasm_free(Ptr{Cvoid}(error_ptr))
+        end
+    end
+
+    if game_state_ptr.background_sprite == Ptr{Sprite}(C_NULL)
+        printf(c"Loading background sprite\n")
+        sprite_path_1::Ptr{UInt8} = str_ptr(w"assets/images/map.png")
+        game_state_ptr.background_sprite = load_sprite(renderer, sprite_path_1, Int32(0), Int32(0), Int32(640), Int32(640))
+        wasm_free(Ptr{Cvoid}(sprite_path_1))
+
+        if game_state_ptr.background_sprite == Ptr{Sprite}(C_NULL)
             error_ptr = wasm_malloc(UInt32(100))
             error = llvm_SDL_GetErrorMsg(error_ptr, Int32(100))
             printf(c"Error: %s\n", error)
@@ -139,14 +157,18 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     delta_time::Float64 = Float64(current_time - game_state.last_frame_time) / Float64(llvm_SDL_GetPerformanceFrequency())
     game_state.last_frame_time = current_time
     # Use persistent key state from GameState
-    keys_down_ptr::Ptr{KeyState_down} = game_state.keys_down
+    keys_down_ptr::Ptr{KeyState_down} = game_state.keys_down  
     keys_up_ptr::Ptr{KeyState_up} = game_state.keys_up
-    handle_input(keys_down_ptr, keys_up_ptr, game_state, window)
+    keys_pressed_ptr::Ptr{KeyState_pressed} = game_state.keys_pressed
+    handle_input(keys_down_ptr, keys_up_ptr, keys_pressed_ptr, game_state, window)
     
     # --- Platformer Physics ---
-    gravity::Float64 = Float64(800.0)             # Much stronger gravity
+    gravity::Float64 = Float64(0.0)             # Much stronger gravity
     jump_velocity::Float64 = Float64(-400.0)      # Much stronger jump
-    ground_y::Float64 = Float64(400.0)           # Closer ground level
+    min_x::Float64 = Float64(364)
+    max_x::Float64 = Float64(812)
+    min_y::Float64 = Float64(284)
+    max_y::Float64 = Float64(732.0)           # Closer ground level
     move_accel::Float64 = Float64(2000.0)        
     ground_decel::Float64 = Float64(4000.0)      
     air_decel::Float64 = Float64(1200.0)         
@@ -169,20 +191,21 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
         game_state.jump_buffer -= delta_time
     end
     
-    # --- Horizontal movement (simplified) ---
-    target_vel_x::Float64 = Float64(0)
-    if keys_down_ptr.a     # A
-        target_vel_x = -max_speed
-    elseif keys_down_ptr.d  # D
-        target_vel_x = max_speed
+    # --- Horizontal movement (one unit per key press) ---
+    if keys_pressed_ptr.a && game_state.player_x > min_x    # A - move left one unit
+        game_state.player_x -= Float64(64.0)
+    elseif keys_pressed_ptr.d && game_state.player_x < max_x  # D - move right one unit
+        game_state.player_x += Float64(64.0)
+    end
+
+    if keys_pressed_ptr.w && game_state.player_y > min_y
+        game_state.player_y -= Float64(64.0)
+    elseif keys_pressed_ptr.s && game_state.player_y < max_y
+        game_state.player_y += Float64(64.0)
     end
     
-    # Apply movement (simplified logic)
-    if game_state.on_ground == Int32(1)
-        game_state.player_vel_x = move_toward(game_state.player_vel_x, target_vel_x, Float64(move_accel * delta_time))
-    else
-        game_state.player_vel_x = move_toward(game_state.player_vel_x, target_vel_x, Float64(air_decel * delta_time))
-    end
+    # Reset horizontal velocity since we're using direct position movement
+    game_state.player_vel_x = Float64(0.0)
     
     # --- Jumping ---
     # Simple jump: if on ground and space pressed, jump
@@ -205,12 +228,13 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     end
     
     # --- Update Position ---
-    game_state.player_x += Float64(game_state.player_vel_x * delta_time)
+    # Horizontal position is updated directly in key press section
+    # Only apply vertical velocity for jumping/falling
     game_state.player_y += Float64(game_state.player_vel_y * delta_time)
     
     # --- Ground Collision ---
-    if game_state.player_y >= ground_y
-        game_state.player_y = ground_y
+    if game_state.player_y >= max_y
+        game_state.player_y = max_y
         game_state.player_vel_y = Float64(0)
         game_state.on_ground = Int32(1)
     else
@@ -250,11 +274,11 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     win_h = win_h_ptr[]
     player_width::Float64 = 64.0
     player_height::Float64 = 64.0
-    target_camera_x::Float64 = game_state.player_x - Float64(win_w) / 2.0 + player_width / 2.0
-    target_camera_y::Float64 = game_state.player_y - Float64(win_h) / 2.0 + player_height / 2.0
+    target_camera_x::Float64 = 0.0f0# game_state.player_x - Float64(win_w) / 2.0 + player_width / 2.0
+    target_camera_y::Float64 = 0.0f0# game_state.player_y - Float64(win_h) / 2.0 + player_height / 2.0
     camera_speed::Float64 = 0.15  # Adjust for smoothness
-    game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
-    game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
+    #game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
+    #game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
 
     # --- Mobile Controls: Define button areas (bottom 25% of screen) ---
     btn_area_h = win_h / Int32(4)
@@ -277,7 +301,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     # Draw ground rectangle
     ground_rect::SDL_FRect = SDL_FRect(
         Float32(0.0 - game_state.camera_x),
-        Float32(ground_y - 32.0 - game_state.camera_y),  # 32px thick ground
+        Float32(max_y - 32.0 - game_state.camera_y),  # 32px thick ground
         Float32(win_w),
         32.0f0
     )
@@ -288,6 +312,9 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     wasm_free(Ptr{Cvoid}(rect_ptr))
 
     # Render sprite if available, otherwise render rectangle
+    if game_state.background_sprite != Ptr{Sprite}(C_NULL)
+        render_sprite(renderer, game_state.background_sprite, 0.0f0, 0.0f0)
+    end
     if game_state.player_sprite != Ptr{Sprite}(C_NULL)
         if game_state.player_sprite.is_flipped && keys_down_ptr.d
             game_state.player_sprite.is_flipped = false
@@ -297,7 +324,6 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
             printf(c"Player is facing left\n")
         end
         render_sprite(renderer, game_state.player_sprite, Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y))
-        #render_result::Int32 = j_render_sprite(renderer, game_state.player_sprite, game_state.player_anim, Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y))
     else
         # Fallback to rectangle
         rect::SDL_FRect = SDL_FRect(Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y), Float32(64), Float32(64))
@@ -346,13 +372,20 @@ function move_toward(current::Float64, target::Float64, max_delta::Float64)::Flo
     end
 end
 
-function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, game_state::Ptr{GameState}, window::Ptr{SDL_Window})::Int32
+function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, keys_pressed::Ptr{KeyState_pressed}, game_state::Ptr{GameState}, window::Ptr{SDL_Window})::Int32
     # Reset key states for this frame
     keys_up.a = false
     keys_up.d = false
     keys_up.w = false
     keys_up.s = false
     keys_up.space = false
+    
+    # Reset key press states for this frame (these are one-time events)
+    keys_pressed.a = false
+    keys_pressed.d = false
+    keys_pressed.w = false
+    keys_pressed.s = false
+    keys_pressed.space = false
 
     event::SDL_Event = SDL_Event()
     event_ptr::Ptr{SDL_Event} = wasm_malloc(UInt32(56))
@@ -364,14 +397,19 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
             key = event_ptr.key.keysym.sym
             if key == SDLK_a
                 keys_down.a = true
+                keys_pressed.a = true
             elseif key == SDLK_d
                 keys_down.d = true
+                keys_pressed.d = true
             elseif key == SDLK_w
                 keys_down.w = true
+                keys_pressed.w = true
             elseif key == SDLK_s
                 keys_down.s = true
+                keys_pressed.s = true
             elseif key == SDLK_SPACE
                 keys_down.space = true
+                keys_pressed.space = true
             elseif key == SDLK_ESCAPE
                 game_state.quit = true
             elseif key == SDLK_RETURN
@@ -457,17 +495,6 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
     return Int32(0)
 end
 
-macro static_string(str_expr)
-    str = eval(str_expr)
-    bytes = [UInt8(c) for c in str]
-    push!(bytes, 0x00)  # null-terminate
-
-    N = length(bytes)
-    quote
-        NTuple{$N, UInt8}($(Expr(:tuple, bytes...)))
-    end
-end
-
 # PC Entry Point - Main function for desktop builds
 function pc_main()::Int32
     llvm_SDL_Init(UInt32(32))
@@ -492,6 +519,7 @@ function cleanup(game_state_ptr::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wi
     
     wasm_free(Ptr{Cvoid}(game_state_ptr.keys_down))
     wasm_free(Ptr{Cvoid}(game_state_ptr.keys_up))
+    wasm_free(Ptr{Cvoid}(game_state_ptr.keys_pressed))
     llvm_SDL_DestroyRenderer(renderer)
     llvm_SDL_DestroyWindow(window)
     #llvm_IMG_Quit()  # Cleanup SDL2_image

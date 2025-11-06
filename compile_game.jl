@@ -86,7 +86,7 @@ if build_type == "web"
         println(" Linking files: $ll_files_str")
         
         # Link Julia LLVM IR with SDL2 C code
-        cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -O2 -s WASM=1 -s 
+        cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_game_loop',
         '_j_init_game_state',
@@ -97,6 +97,9 @@ if build_type == "web"
         ]" 
         -s EXPORTED_RUNTIME_METHODS="['cwrap']" 
         -o $output_dir/game.js
+        --preload-file ./assets/images
+        
+        --use-preload-plugins
         `
         # -s ENVIRONMENT=web
         # -s ALLOW_MEMORY_GROWTH=1
@@ -106,6 +109,8 @@ if build_type == "web"
         println("📁 Files:")
         println("   - $output_dir/game.wasm")
         println("   - $output_dir/game.js")
+        # copy game_wasm/game.data to ./
+        cp(joinpath(output_dir, "game.data"), "./game.data"; force=true)
         
     catch e
         println("❌ Compilation failed: $e")
