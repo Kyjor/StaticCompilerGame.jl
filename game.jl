@@ -122,8 +122,8 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     # --- Load sprite if not loaded ---
     if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
         printf(c"Loading player sprite\n")
-        sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/spider.png")
-        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path, Int32(0), Int32(0), Int32(64), Int32(64))
+        sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/game.png")
+        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path, Int32(120), Int32(360), Int32(8), Int32(8))
         wasm_free(Ptr{Cvoid}(sprite_path))
         
         if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
