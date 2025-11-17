@@ -92,7 +92,8 @@ function render_sprite_animated(renderer::Ptr{SDL_Renderer}, sprite::Ptr{Sprite}
     # Get current animation frame
     frame_ptr::Ptr{AnimationFrame} = anim.frames + (anim.current_frame * sizeof(AnimationFrame))
     current_frame::AnimationFrame = unsafe_load(frame_ptr)
-    
+    printf(c"Current frame: %d\n", current_frame.crop_x)
+
     # Create source rectangle from animation frame
     src_rect::SDL_Rect = SDL_Rect(current_frame.crop_x, current_frame.crop_y, current_frame.crop_w, current_frame.crop_h)
     src_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_Rect)))

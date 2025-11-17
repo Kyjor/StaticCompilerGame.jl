@@ -158,9 +158,9 @@ function reset_animation(anim::Ptr{Animation})::Int32
         return Int32(-1)
     end
 
-    # anim.current_frame = Int32(0)
-    # anim.timer = Float64(0)
-    # anim.finished = false
+    anim.current_frame = Int32(0)
+    anim.timer = Float64(0)
+    anim.finished = false
 
     return Int32(0)
 end
@@ -386,8 +386,8 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
         reset_animation(game_state.current_player_anim)
     end
     
-    # # Update current animation
-    # update_animation(game_state.current_player_anim, delta_time)
+    # Update current animation
+    update_animation(game_state.current_player_anim, delta_time)
     
     # --- Camera: Query window size and compute camera offset ---
     win_w::Int32 = Int32(0)
