@@ -114,7 +114,8 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
 
     #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(364), Float64(952), Float64(0), Float64(0), Int32(0), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
+    # Initialize player at ground level (732.0) minus player height (64)
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(500), Float64(668), Float64(0), Float64(0), Int32(1), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -123,7 +124,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
         printf(c"Loading player sprite\n")
         sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/game.png")
-        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path, Int32(120), Int32(360), Int32(8), Int32(8))
+        game_state_ptr.player_sprite = load_sprite(renderer, sprite_path, Int32(120), Int32(360), Int32(8), Int32(8), Int32(64), Int32(64))
         wasm_free(Ptr{Cvoid}(sprite_path))
         
         if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
@@ -137,7 +138,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     if game_state_ptr.background_sprite == Ptr{Sprite}(C_NULL)
         printf(c"Loading background sprite\n")
         sprite_path_1::Ptr{UInt8} = str_ptr(w"assets/images/map.png")
-        game_state_ptr.background_sprite = load_sprite(renderer, sprite_path_1, Int32(0), Int32(0), Int32(640), Int32(640))
+        game_state_ptr.background_sprite = load_sprite(renderer, sprite_path_1, Int32(0), Int32(0), Int32(640), Int32(640), Int32(640), Int32(640))
         wasm_free(Ptr{Cvoid}(sprite_path_1))
 
         if game_state_ptr.background_sprite == Ptr{Sprite}(C_NULL)
@@ -163,16 +164,17 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     handle_input(keys_down_ptr, keys_up_ptr, keys_pressed_ptr, game_state, window)
     
     # --- Platformer Physics ---
-    gravity::Float64 = Float64(0.0)             # Much stronger gravity
-    jump_velocity::Float64 = Float64(-400.0)      # Much stronger jump
+    gravity::Float64 = Float64(1500.0)           # Gravity acceleration
+    jump_velocity::Float64 = Float64(-500.0)     # Jump velocity (negative = up)
     min_x::Float64 = Float64(364)
     max_x::Float64 = Float64(812)
     min_y::Float64 = Float64(284)
-    max_y::Float64 = Float64(732.0)           # Closer ground level
+    max_y::Float64 = Float64(732.0)              # Ground level
+    move_speed::Float64 = Float64(300.0)         # Horizontal movement speed
     move_accel::Float64 = Float64(2000.0)        
     ground_decel::Float64 = Float64(4000.0)      
     air_decel::Float64 = Float64(1200.0)         
-    max_speed::Float64 = Float64(400.0)          
+    max_speed::Float64 = Float64(300.0)          
     coyote_duration::Float64 = Float64(0.1)      # Time window for coyote time
     jump_buffer_duration::Float64 = Float64(0.1) # Time window for jump buffering
     jump_cancel_gravity_scale::Float64 = Float64(0.5) # Reduce gravity when jump button released
@@ -185,39 +187,49 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     end
     
     # --- Jump Buffering Update ---
-    if keys_down_ptr.space  # Jump button pressed
+    if keys_pressed_ptr.space  # Jump button pressed this frame
         game_state.jump_buffer = jump_buffer_duration
     else
         game_state.jump_buffer -= delta_time
     end
     
-    # --- Horizontal movement (one unit per key press) ---
-    if keys_pressed_ptr.a && game_state.player_x > min_x    # A - move left one unit
-        game_state.player_x -= Float64(64.0)
-    elseif keys_pressed_ptr.d && game_state.player_x < max_x  # D - move right one unit
-        game_state.player_x += Float64(64.0)
-    end
-
-    if keys_pressed_ptr.w && game_state.player_y > min_y
-        game_state.player_y -= Float64(64.0)
-    elseif keys_pressed_ptr.s && game_state.player_y < max_y
-        game_state.player_y += Float64(64.0)
+    # --- Horizontal movement (smooth platformer style) ---
+    target_vel_x::Float64 = Float64(0)
+    if keys_down_ptr.a && game_state.player_x > min_x    # A - move left
+        target_vel_x = -move_speed
+    elseif keys_down_ptr.d && game_state.player_x < max_x  # D - move right
+        target_vel_x = move_speed
     end
     
-    # Reset horizontal velocity since we're using direct position movement
-    game_state.player_vel_x = Float64(0.0)
+    # Apply acceleration/deceleration
+    if game_state.on_ground == Int32(1)
+        game_state.player_vel_x = move_toward(game_state.player_vel_x, target_vel_x, Float64(move_accel * delta_time))
+    else
+        game_state.player_vel_x = move_toward(game_state.player_vel_x, target_vel_x, Float64(air_decel * delta_time))
+    end
+    
+    # Clamp horizontal velocity
+    if game_state.player_vel_x > max_speed
+        game_state.player_vel_x = max_speed
+    elseif game_state.player_vel_x < -max_speed
+        game_state.player_vel_x = -max_speed
+    end
     
     # --- Jumping ---
-    # Simple jump: if on ground and space pressed, jump
-    if game_state.on_ground == Int32(1) && keys_down_ptr.space
+    # Jump with coyote time (allows jumping shortly after leaving ground)
+    # and jump buffering (allows pressing jump slightly before landing)
+    if game_state.coyote_time > Float64(0) && game_state.jump_buffer > Float64(0)
         game_state.player_vel_y = jump_velocity
         game_state.on_ground = Int32(0)
         game_state.is_jumping = Int32(1)
+        game_state.coyote_time = Float64(0)  # Consume coyote time
+        game_state.jump_buffer = Float64(0)   # Consume jump buffer
     end
     
-    # # Variable jump height (cancel jump when button released)
+    # Variable jump height (cancel jump when button released)
     if game_state.is_jumping == Int32(1) && game_state.player_vel_y < Float64(0) && keys_up_ptr.space
         game_state.player_vel_y *= jump_cancel_gravity_scale
+        game_state.is_jumping = Int32(0)  # Cancel jump
     end
     
     # --- Gravity ---
@@ -228,9 +240,17 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     end
     
     # --- Update Position ---
-    # Horizontal position is updated directly in key press section
-    # Only apply vertical velocity for jumping/falling
+    game_state.player_x += Float64(game_state.player_vel_x * delta_time)
     game_state.player_y += Float64(game_state.player_vel_y * delta_time)
+    
+    # Clamp horizontal position to bounds
+    if game_state.player_x < min_x
+        game_state.player_x = min_x
+        game_state.player_vel_x = Float64(0)
+    elseif game_state.player_x > max_x
+        game_state.player_x = max_x
+        game_state.player_vel_x = Float64(0)
+    end
     
     # --- Ground Collision ---
     if game_state.player_y >= max_y
@@ -274,11 +294,11 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     win_h = win_h_ptr[]
     player_width::Float64 = 64.0
     player_height::Float64 = 64.0
-    target_camera_x::Float64 = 0.0f0# game_state.player_x - Float64(win_w) / 2.0 + player_width / 2.0
-    target_camera_y::Float64 = 0.0f0# game_state.player_y - Float64(win_h) / 2.0 + player_height / 2.0
+    target_camera_x::Float64 = game_state.player_x - Float64(win_w) / 2.0 + player_width / 2.0
+    target_camera_y::Float64 = game_state.player_y - Float64(win_h) / 2.0 + player_height / 2.0
     camera_speed::Float64 = 0.15  # Adjust for smoothness
-    #game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
-    #game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
+    game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
+    game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
 
     # --- Mobile Controls: Define button areas (bottom 25% of screen) ---
     btn_area_h = win_h / Int32(4)
@@ -298,22 +318,22 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
     llvm_SDL_RenderClear(renderer)
 
-    # Draw ground rectangle
+    # Draw ground rectangle (from ground level to bottom of screen)
     ground_rect::SDL_FRect = SDL_FRect(
         Float32(0.0 - game_state.camera_x),
-        Float32(max_y - 32.0 - game_state.camera_y),  # 32px thick ground
+        Float32(max_y - game_state.camera_y),  # Start at ground level
         Float32(win_w),
-        32.0f0
+        Float32(win_h - max_y)  # Extend to bottom of screen
     )
     rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
     unsafe_store!(Ptr{SDL_FRect}(rect_ptr), ground_rect)
-    llvm_SDL_SetRenderDrawColor(renderer, UInt8(80), UInt8(80), UInt8(80), UInt8(255))
+    llvm_SDL_SetRenderDrawColor(renderer, UInt8(100), UInt8(70), UInt8(50), UInt8(255))  # Brown ground color
     llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
     wasm_free(Ptr{Cvoid}(rect_ptr))
 
-    # Render sprite if available, otherwise render rectangle
+    # Render background sprite as a world item (affected by camera)
     if game_state.background_sprite != Ptr{Sprite}(C_NULL)
-        render_sprite(renderer, game_state.background_sprite, 0.0f0, 0.0f0)
+        render_sprite(renderer, game_state.background_sprite, Float32(0.0 - game_state.camera_x), Float32(0.0 - game_state.camera_y))
     end
     if game_state.player_sprite != Ptr{Sprite}(C_NULL)
         if game_state.player_sprite.is_flipped && keys_down_ptr.d

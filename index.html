@@ -14,7 +14,14 @@
 div.emscripten { text-align: center; }
 div.emscripten_border { border: 1px solid black; }
 /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-canvas.emscripten { border: 0px none; background-color: black; }
+canvas.emscripten { 
+  border: 0px none; 
+  background-color: black; 
+  width: 640px; 
+  height: 640px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
 
 #emscripten_logo {
   display: inline-block;
@@ -139,6 +146,10 @@ canvas.emscripten { border: 0px none; background-color: black; }
         e.preventDefault();
       }, false);
 
+      // Set canvas dimensions explicitly
+      canvasElement.width = 640;
+      canvasElement.height = 640;
+      
       // Set up Module before WASM loads
       var Module = {
         print(...args) {
