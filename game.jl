@@ -52,40 +52,138 @@ end
 #     return Ptr{Animation}(C_NULL)
 # end
 
-# Example: define animation frames for idle, run, jump (assume 64x64 frames in a horizontal spritesheet)
-const IDLE_FRAMES = [AnimationFrame(0, 0, 16, 16, 0.2)]
-const RUN_FRAMES = [AnimationFrame(16*i, 0, 16, 16, 0.1) for i in 0:3]
-const JUMP_FRAMES = [AnimationFrame(256, 0, 64, 64, 0.3)]
+# ============================================================================
+# ANIMATION SYSTEM
+# ============================================================================
 
-TEST_FRAMES = MallocArray{AnimationFrame}(undef, 1)
-TEST_FRAMES[1] = AnimationFrame(0, 0, 16, 16, 0.2)
-
-# Helper to select animation by state
-function select_animation(state::Int32)::Ptr{Animation}
-    if state == ANIM_IDLE
-        
-    # elseif state == ANIM_RUN
-    #     return init_animation(TEST_FRAMES)
-    # elseif state == ANIM_JUMP
-    #     return init_animation(TEST_FRAMES)
-    # else
-    #     return init_animation(TEST_FRAMES)
-    end
-
-    return Ptr{Animation}(C_NULL)
+# Utility helpers for manual pointer arithmetic without Julia runtime conversions
+@inline function byte_ptr(ptr::Ptr{T}) where {T}
+    return Ptr{UInt8}(ptr)
 end
 
-# Update animation timer and frame
-function update_animation(anim::Ptr{Animation}, delta::Float64)::Cvoid
+@inline function ptr_at(ptr::Ptr{T}, offset::Int64, ::Type{R}) where {T,R}
+    return Ptr{R}(byte_ptr(ptr) + offset)
+end
+
+# Create an animation from an array of frames
+# fps: frames per second for the animation
+# loop: should the animation loop?
+function create_animation(frames::Ptr{AnimationFrame}, frame_count::Int32, fps::Float64, loop::Bool)::Ptr{Animation}
+    anim_ptr::Ptr{Animation} = Ptr{Animation}(wasm_malloc(UInt32(sizeof(Animation))))
+    # Manually store each field to avoid struct constructor runtime checks
+    unsafe_store!(ptr_at(anim_ptr, Int64(offsetof(Animation, Val(:frames))), Ptr{AnimationFrame}), frames)
+    unsafe_store!(ptr_at(anim_ptr, Int64(offsetof(Animation, Val(:frame_count))), Int32), frame_count)
+    unsafe_store!(ptr_at(anim_ptr, Int64(offsetof(Animation, Val(:fps))), Float64), fps)
+    unsafe_store!(ptr_at(anim_ptr, Int64(offsetof(Animation, Val(:loop))), Bool), loop)
+    unsafe_store!(ptr_at(anim_ptr, Int64(offsetof(Animation, Val(:current_frame))), Int32), Int32(0))
+    unsafe_store!(ptr_at(anim_ptr, Int64(offsetof(Animation, Val(:timer))), Float64), Float64(0))
+    unsafe_store!(ptr_at(anim_ptr, Int64(offsetof(Animation, Val(:finished))), Bool), false)
+    return anim_ptr
+end
+
+# Update animation timer and advance frames based on delta time
+function update_animation(anim::Ptr{Animation}, delta_time::Float64)::Cvoid
     if anim == Ptr{Animation}(C_NULL)
         return
     end
-    anim.timer += delta
-    frame::AnimationFrame = unsafe_load(anim.frames + anim.current_frame)
-    if anim.timer >= frame.duration
-        anim.timer -= frame.duration
-        anim.current_frame = (anim.current_frame + 1) % anim.frame_count
+    
+    # Don't update if animation is finished and not looping
+    if anim.finished && !anim.loop
+        return
     end
+    
+    # Accumulate time
+    anim.timer += delta_time
+    
+    # Calculate frame duration based on fps
+    frame_duration::Float64 = Float64(1.0) / anim.fps
+    
+    # Check if we should advance to next frame
+    if anim.timer >= frame_duration
+        anim.timer -= frame_duration
+        
+        # Advance frame
+        next_frame::Int32 = anim.current_frame + Int32(1)
+        
+        if next_frame >= anim.frame_count
+            if anim.loop
+                # Loop back to start
+                anim.current_frame = Int32(0)
+            else
+                # Stay on last frame and mark as finished
+                anim.current_frame = anim.frame_count - Int32(1)
+                anim.finished = true
+            end
+        else
+            anim.current_frame = next_frame
+        end
+    end
+end
+
+# Reset animation to first frame
+function reset_animation(anim::Ptr{Animation})::Cvoid
+    if anim == Ptr{Animation}(C_NULL)
+        return
+    end
+    anim.current_frame = Int32(0)
+    anim.timer = Float64(0)
+    anim.finished = false
+end
+
+# Get the current frame's crop data
+function get_current_frame(anim::Ptr{Animation})::AnimationFrame
+    # Return a zero frame by manually constructing it field-by-field
+    # This avoids the AnimationFrame constructor which triggers Julia runtime
+    if anim == Ptr{Animation}(C_NULL)
+        # Create a temporary location to build the zero frame
+        temp_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(wasm_malloc(UInt32(16)))
+        temp_bytes::Ptr{UInt8} = byte_ptr(temp_ptr)
+        unsafe_store!(Ptr{Int32}(temp_bytes + Int64(0)), Int32(0))    # crop_x
+        unsafe_store!(Ptr{Int32}(temp_bytes + Int64(4)), Int32(0))    # crop_y
+        unsafe_store!(Ptr{Int32}(temp_bytes + Int64(8)), Int32(0))    # crop_w
+        unsafe_store!(Ptr{Int32}(temp_bytes + Int64(12)), Int32(0))   # crop_h
+        result::AnimationFrame = unsafe_load(temp_ptr)
+        wasm_free(Ptr{Cvoid}(temp_ptr))
+        return result
+    end
+    
+    offset::Int64 = Int64(anim.current_frame) * Int64(16)  # 16 = size of AnimationFrame (4 Int32s)
+    # Use direct pointer arithmetic - pointers can be added to integers
+    frame_ptr_bytes::Ptr{UInt8} = byte_ptr(anim.frames)
+    frame_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(frame_ptr_bytes + offset)
+    return unsafe_load(frame_ptr)
+end
+
+# Free animation memory
+function free_animation(anim::Ptr{Animation})::Cvoid
+    if anim == Ptr{Animation}(C_NULL)
+        return
+    end
+    if anim.frames != Ptr{AnimationFrame}(C_NULL)
+        wasm_free(Ptr{Cvoid}(anim.frames))
+    end
+    wasm_free(Ptr{Cvoid}(anim))
+end
+
+# Helper function to create frames array manually
+function create_frames_array(count::Int32)::Ptr{AnimationFrame}
+    size::UInt32 = UInt32(16) * UInt32(count)  # 16 = size of AnimationFrame
+    frames_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(wasm_malloc(size))
+    return frames_ptr
+end
+
+# Helper to set a specific frame in a frames array
+function set_frame(frames::Ptr{AnimationFrame}, index::Int32, crop_x::Int32, crop_y::Int32, crop_w::Int32, crop_h::Int32)::Cvoid
+    offset::Int64 = Int64(index) * Int64(16)  # 16 = size of AnimationFrame
+    # Use direct pointer arithmetic - pointers can be added to integers
+    frame_ptr_bytes::Ptr{UInt8} = byte_ptr(frames)
+    frame_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(frame_ptr_bytes + offset)
+    # Manually store each field to avoid struct constructor runtime checks
+    frame_bytes::Ptr{UInt8} = byte_ptr(frame_ptr)
+    unsafe_store!(Ptr{Int32}(frame_bytes + Int64(0)), crop_x)    # crop_x at offset 0
+    unsafe_store!(Ptr{Int32}(frame_bytes + Int64(4)), crop_y)    # crop_y at offset 4
+    unsafe_store!(Ptr{Int32}(frame_bytes + Int64(8)), crop_w)    # crop_w at offset 8
+    unsafe_store!(Ptr{Int32}(frame_bytes + Int64(12)), crop_h)   # crop_h at offset 12
 end
  
 # In j_init_game_state, initialize animation state
@@ -112,10 +210,32 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
         printf(c"Failed to initialize sprite system\n")
     end
 
-    #anim_ptr::Ptr{Animation} = init_animation(IDLE_FRAMES)
+    # Create player animations
+    printf(c"Creating player animations\n")
+    
+    # IDLE Animation - 1 frame at (120, 360), looping at 2 FPS
+    idle_frames::Ptr{AnimationFrame} = create_frames_array(Int32(1))
+    set_frame(idle_frames, Int32(0), Int32(120), Int32(360), Int32(8), Int32(8))
+    idle_anim::Ptr{Animation} = create_animation(idle_frames, Int32(1), Float64(2.0), true)
+    
+    # RUN Animation - 4 frames at y=368, looping at 8 FPS
+    run_frames::Ptr{AnimationFrame} = create_frames_array(Int32(4))
+    set_frame(run_frames, Int32(0), Int32(16), Int32(368), Int32(8), Int32(8))
+    set_frame(run_frames, Int32(1), Int32(24), Int32(368), Int32(8), Int32(8))
+    set_frame(run_frames, Int32(2), Int32(32), Int32(368), Int32(8), Int32(8))
+    set_frame(run_frames, Int32(3), Int32(40), Int32(368), Int32(8), Int32(8))
+    run_anim::Ptr{Animation} = create_animation(run_frames, Int32(4), Float64(8.0), true)
+    
+    # JUMP Animation - 1 frame at (8, 368), non-looping
+    jump_frames::Ptr{AnimationFrame} = create_frames_array(Int32(1))
+    set_frame(jump_frames, Int32(0), Int32(8), Int32(368), Int32(8), Int32(8))
+    jump_anim::Ptr{Animation} = create_animation(jump_frames, Int32(1), Float64(1.0), false)
+    
+    printf(c"Animations created\n")
+    
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
     # Initialize player at ground level (732.0) minus player height (64)
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(500), Float64(668), Float64(0), Float64(0), Int32(1), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(500), Float64(668), Float64(0), Float64(0), Int32(1), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false, idle_anim, run_anim, jump_anim, idle_anim, ANIM_IDLE))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
@@ -261,28 +381,34 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
         game_state.on_ground = Int32(0)
     end
     
-    # --- Animation state selection (example logic) ---
+    # --- Player Animation Selection ---
+    new_anim_state::Int32 = ANIM_IDLE
+    
     if game_state.on_ground == Int32(0)
-        if game_state.player.anim_state == ANIM_JUMP
-            game_state.player.anim_state = ANIM_JUMP
-            #free_animation(game_state.player_anim)
-           game_state.player.anim = select_animation(ANIM_JUMP)
-        end
-    # elseif abs(game_state.player_vel_x) > 1.0
-    #     if game_state.player_anim_state != ANIM_RUN
-    #         game_state.player_anim_state = ANIM_RUN
-    #         #free_animation(game_state.player_anim)
-    #         game_state.player_anim = select_animation(ANIM_RUN)
-    #     end
-    # else
-    #     if game_state.player_anim_state != ANIM_IDLE
-    #         game_state.player_anim_state = ANIM_IDLE
-    #         #free_animation(game_state.player_anim)
-    #         game_state.player_anim = select_animation(ANIM_IDLE)
-    #     end
+        new_anim_state = ANIM_JUMP
+    elseif abs(game_state.player_vel_x) > Float64(1.0)
+        new_anim_state = ANIM_RUN
+    else
+        new_anim_state = ANIM_IDLE
     end
-    # Update animation frame
-   # update_animation(game_state.player_anim, delta_time)
+    
+    # Switch animation if state changed
+    if new_anim_state != game_state.current_anim_state
+        game_state.current_anim_state = new_anim_state
+        
+        if new_anim_state == ANIM_IDLE
+            game_state.current_player_anim = game_state.player_idle_anim
+        elseif new_anim_state == ANIM_RUN
+            game_state.current_player_anim = game_state.player_run_anim
+        elseif new_anim_state == ANIM_JUMP
+            game_state.current_player_anim = game_state.player_jump_anim
+        end
+        
+        reset_animation(game_state.current_player_anim)
+    end
+    
+    # Update current animation
+    update_animation(game_state.current_player_anim, delta_time)
     
     # --- Camera: Query window size and compute camera offset ---
     win_w::Int32 = Int32(0)
@@ -343,7 +469,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
             game_state.player_sprite.is_flipped = true
             printf(c"Player is facing left\n")
         end
-        render_sprite(renderer, game_state.player_sprite, Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y))
+        render_sprite_animated(renderer, game_state.player_sprite, game_state.current_player_anim, Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y))
     else
         # Fallback to rectangle
         rect::SDL_FRect = SDL_FRect(Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y), Float32(64), Float32(64))
@@ -532,6 +658,11 @@ function pc_main()::Int32
 end
 
 function cleanup(game_state_ptr::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
+    # Free animations
+    free_animation(game_state_ptr.player_idle_anim)
+    free_animation(game_state_ptr.player_run_anim)
+    free_animation(game_state_ptr.player_jump_anim)
+    
     # Free sprite resources
     # if game_state_ptr.player_sprite != Ptr{Sprite}(C_NULL)
     #     free_sprite(game_state_ptr.player_sprite)

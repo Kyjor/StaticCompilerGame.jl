@@ -78,6 +78,40 @@ function render_sprite(renderer::Ptr{SDL_Renderer}, sprite::Ptr{Sprite}, x::Floa
     return render_result
 end
 
+# Render sprite with animation frame
+function render_sprite_animated(renderer::Ptr{SDL_Renderer}, sprite::Ptr{Sprite}, anim::Ptr{Animation}, x::Float32, y::Float32)::Int32
+    if sprite == Ptr{Sprite}(C_NULL) || anim == Ptr{Animation}(C_NULL)
+        return Int32(-1)
+    end
+    
+    sprite_data::Sprite = unsafe_load(Ptr{Sprite}(sprite))
+    if !sprite_data.loaded
+        return Int32(-1)
+    end
+    
+    # Get current animation frame
+    frame_ptr::Ptr{AnimationFrame} = anim.frames + (anim.current_frame * sizeof(AnimationFrame))
+    current_frame::AnimationFrame = unsafe_load(frame_ptr)
+    
+    # Create source rectangle from animation frame
+    src_rect::SDL_Rect = SDL_Rect(current_frame.crop_x, current_frame.crop_y, current_frame.crop_w, current_frame.crop_h)
+    src_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_Rect)))
+    unsafe_store!(Ptr{SDL_Rect}(src_rect_ptr), src_rect)
+
+    # Create destination rectangle (use sprite's display size)
+    dst_rect::SDL_FRect = SDL_FRect(x, y, Float32(sprite_data.width), Float32(sprite_data.height))
+    dst_rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_FRect)))
+    unsafe_store!(Ptr{SDL_FRect}(dst_rect_ptr), dst_rect)
+    
+    # Render the texture
+    flip::UInt32 = sprite_data.is_flipped ? UInt32(SDL_FLIP_HORIZONTAL) : UInt32(SDL_FLIP_NONE)
+    render_result::Int32 = llvm_SDL_RenderCopyExF(renderer, sprite_data.texture, Ptr{SDL_Rect}(src_rect_ptr), Ptr{SDL_FRect}(dst_rect_ptr), Float64(0.0), Ptr{SDL_FPoint}(C_NULL), flip)
+    wasm_free(Ptr{Cvoid}(dst_rect_ptr))
+    wasm_free(Ptr{Cvoid}(src_rect_ptr))
+    
+    return render_result
+end
+
 function free_sprite(sprite::Ptr{Sprite})::Cvoid
     if sprite == Ptr{Sprite}(C_NULL)
         return

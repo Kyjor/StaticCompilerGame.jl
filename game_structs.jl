@@ -39,27 +39,30 @@ struct Sprite
     is_flipped::Bool
 end
 
-# Animation frame info
+# Animation frame info - defines a crop region in a sprite sheet
 struct AnimationFrame
-    x::Int32
-    y::Int32
-    w::Int32
-    h::Int32
-    duration::Float64 # seconds
+    crop_x::Int32      # X position in sprite sheet
+    crop_y::Int32      # Y position in sprite sheet
+    crop_w::Int32      # Width of this frame
+    crop_h::Int32      # Height of this frame
 end
 
-# Animation sequence
+# Animation sequence - a collection of frames that play in order
 struct Animation
-    frames::Ptr{AnimationFrame} # pointer to array of frames
-    frame_count::Int32
-    current_frame::Int32
-    timer::Float64
+    frames::Ptr{AnimationFrame}  # Pointer to array of frames
+    frame_count::Int32           # Number of frames in this animation
+    fps::Float64                 # Frames per second (same for all frames)
+    loop::Bool                   # Should the animation loop?
+    current_frame::Int32         # Current frame index
+    timer::Float64               # Time accumulated for current frame
+    finished::Bool               # Has the animation completed? (for non-looping)
 end
 
 # Animation state enum
 const ANIM_IDLE = Int32(0)
-const ANIM_RUN = Int32(1)
-const ANIM_JUMP = Int32(2)
+const ANIM_WALK = Int32(1)
+const ANIM_RUN = Int32(2)
+const ANIM_JUMP = Int32(3)
 
 struct Player
     is_alive::Bool
@@ -91,6 +94,11 @@ struct GameState
     left_btn_pressed::Bool
     right_btn_pressed::Bool
     jump_btn_pressed::Bool
+    player_idle_anim::Ptr{Animation}
+    player_run_anim::Ptr{Animation}
+    player_jump_anim::Ptr{Animation}
+    current_player_anim::Ptr{Animation}
+    current_anim_state::Int32
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -116,6 +124,11 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :left_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:left_btn_pressed))))
     f === :right_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:right_btn_pressed))))
     f === :jump_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:jump_btn_pressed))))
+    f === :player_idle_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_idle_anim))))
+    f === :player_run_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_run_anim))))
+    f === :player_jump_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_jump_anim))))
+    f === :current_player_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:current_player_anim))))
+    f === :current_anim_state && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:current_anim_state))))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
@@ -141,6 +154,11 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :left_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:left_btn_pressed))), v)
     f === :right_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:right_btn_pressed))), v)
     f === :jump_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:jump_btn_pressed))), v)
+    f === :player_idle_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_idle_anim))), v)
+    f === :player_run_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_run_anim))), v)
+    f === :player_jump_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_jump_anim))), v)
+    f === :current_player_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:current_player_anim))), v)
+    f === :current_anim_state && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:current_anim_state))), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)
@@ -216,33 +234,37 @@ function Base.setproperty!(x::Ptr{Sprite}, f::Symbol, v::Any)
 end
 
 function Base.getproperty(x::Ptr{AnimationFrame}, f::Symbol)
-    f === :x && return unsafe_load(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:x))))
-    f === :y && return unsafe_load(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:y))))
-    f === :w && return unsafe_load(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:w))))
-    f === :h && return unsafe_load(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:h))))
-    f === :duration && return unsafe_load(Ptr{Float64}(x + offsetof(AnimationFrame, Val(:duration))))
+    f === :crop_x && return unsafe_load(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:crop_x))))
+    f === :crop_y && return unsafe_load(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:crop_y))))
+    f === :crop_w && return unsafe_load(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:crop_w))))
+    f === :crop_h && return unsafe_load(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:crop_h))))
 end
 
 function Base.setproperty!(x::Ptr{AnimationFrame}, f::Symbol, v::Any)
-    f === :x && return unsafe_store!(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:x))), v)
-    f === :y && return unsafe_store!(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:y))), v)
-    f === :w && return unsafe_store!(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:w))), v)
-    f === :h && return unsafe_store!(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:h))), v)
-    f === :duration && return unsafe_store!(Ptr{Float64}(x + offsetof(AnimationFrame, Val(:duration))), v)
+    f === :crop_x && return unsafe_store!(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:crop_x))), v)
+    f === :crop_y && return unsafe_store!(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:crop_y))), v)
+    f === :crop_w && return unsafe_store!(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:crop_w))), v)
+    f === :crop_h && return unsafe_store!(Ptr{Int32}(x + offsetof(AnimationFrame, Val(:crop_h))), v)
 end
 
 function Base.getproperty(x::Ptr{Animation}, f::Symbol)
     f === :frames && return unsafe_load(Ptr{Ptr{AnimationFrame}}(x + offsetof(Animation, Val(:frames))))
     f === :frame_count && return unsafe_load(Ptr{Int32}(x + offsetof(Animation, Val(:frame_count))))
+    f === :fps && return unsafe_load(Ptr{Float64}(x + offsetof(Animation, Val(:fps))))
+    f === :loop && return unsafe_load(Ptr{Bool}(x + offsetof(Animation, Val(:loop))))
     f === :current_frame && return unsafe_load(Ptr{Int32}(x + offsetof(Animation, Val(:current_frame))))
     f === :timer && return unsafe_load(Ptr{Float64}(x + offsetof(Animation, Val(:timer))))
+    f === :finished && return unsafe_load(Ptr{Bool}(x + offsetof(Animation, Val(:finished))))
 end
 
 function Base.setproperty!(x::Ptr{Animation}, f::Symbol, v::Any)
     f === :frames && return unsafe_store!(Ptr{Ptr{AnimationFrame}}(x + offsetof(Animation, Val(:frames))), v)
     f === :frame_count && return unsafe_store!(Ptr{Int32}(x + offsetof(Animation, Val(:frame_count))), v)
+    f === :fps && return unsafe_store!(Ptr{Float64}(x + offsetof(Animation, Val(:fps))), v)
+    f === :loop && return unsafe_store!(Ptr{Bool}(x + offsetof(Animation, Val(:loop))), v)
     f === :current_frame && return unsafe_store!(Ptr{Int32}(x + offsetof(Animation, Val(:current_frame))), v)
     f === :timer && return unsafe_store!(Ptr{Float64}(x + offsetof(Animation, Val(:timer))), v)
+    f === :finished && return unsafe_store!(Ptr{Bool}(x + offsetof(Animation, Val(:finished))), v)
 end
 
 function Base.getproperty(x::Ptr{Player}, f::Symbol)
