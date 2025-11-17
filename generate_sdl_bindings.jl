@@ -13,8 +13,8 @@ using Base: llvmcall
 using Dates
 
 # Configuration
-const SDL_HEADERS_DIR = "SDLCalls/SDL2-2.30.11/include"
-const OUTPUT_FILE = "llvm_bindings.jl"
+const SDL_HEADERS_DIR = "emsdk/upstream/emscripten/cache/ports/sdl2_mixer/SDL_mixer-release-2.8.0/include"
+const OUTPUT_FILE = "llvm_bindings_sdl_mixer.jl"
 
 # Type mapping from C to Julia
 const TYPE_MAPPING = Dict(
@@ -190,6 +190,12 @@ const TYPE_MAPPING = Dict(
     "SDL_ControllerTouchpadEvent" => "SDL_ControllerTouchpadEvent",
     "SDL_ControllerSensorEvent" => "SDL_ControllerSensorEvent",
     "SDL_AudioCVT" => "SDL_AudioCVT",
+    "Mix_Chunk *" => "Mix_Chunk",
+    "Mix_Chunk" => "Mix_Chunk",
+    "Mix_Music *" => "Mix_Music",
+    "Mix_Music" => "Mix_Music",
+    "Mix_Fading" => "UInt32",
+    "Mix_MusicType" => "UInt32",
     "SDL_AudioSpec" => "SDL_AudioSpec",
     "SDL_AudioStream" => "SDL_AudioStream",
     "SDL_AssertData" => "SDL_AssertData",
@@ -307,6 +313,8 @@ const LLVM_TYPE_MAPPING = Dict(
     "Ptr{SDL_Joystick}" => "i8*",
     "Ptr{SDL_GameController}" => "i8*",
     "Ptr{SDL_Haptic}" => "i8*",
+    "Ptr{Mix_Chunk}" => "i8*",
+    "Ptr{Mix_Music}" => "i8*",
     "Ptr{Cvoid}" => "i8*",
     "Ptr{Cvoid}}" => "i8**",
     "Ptr{Ptr{SDL_Window}}" => "i8**",
@@ -435,13 +443,15 @@ function parse_sdl_headers(headers_dir::String)
 
         # Match function declarations of the form:
         # extern DECLSPEC return_type SDLCALL SDL_FunctionName(params...);
-        func_pattern = r"extern\s+DECLSPEC\s+([^;]+?)\s+SDLCALL\s+SDL_([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)\s*;"
+        # or Mix_FunctionName for SDL_mixer
+        func_pattern = r"extern\s+DECLSPEC\s+([^;]+?)\s+SDLCALL\s+(SDL_|Mix_|IMG_)([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)\s*;"
         matches = eachmatch(func_pattern, content)
 
         for match in matches
             return_type = strip(match[1])
-            func_name = "SDL_" * match[2]
-            params_str = strip(match[3])
+            prefix = match[2]  # SDL_, Mix_, or IMG_
+            func_name = prefix * match[3]
+            params_str = strip(match[4])
 
             # Skip deprecated functions
             if func_name in DEPRECATED_FUNCTIONS

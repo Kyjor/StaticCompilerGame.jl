@@ -99,6 +99,7 @@ struct GameState
     player_jump_anim::Ptr{Animation}
     current_player_anim::Ptr{Animation}
     current_anim_state::Int32
+    jump_sound::Ptr{Mix_Chunk}
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -129,6 +130,7 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :player_jump_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_jump_anim))))
     f === :current_player_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:current_player_anim))))
     f === :current_anim_state && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:current_anim_state))))
+    f === :jump_sound && return unsafe_load(Ptr{Ptr{Mix_Chunk}}(x + offsetof(GameState, Val(:jump_sound))))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
@@ -159,6 +161,7 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :player_jump_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_jump_anim))), v)
     f === :current_player_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:current_player_anim))), v)
     f === :current_anim_state && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:current_anim_state))), v)
+    f === :jump_sound && return unsafe_store!(Ptr{Ptr{Mix_Chunk}}(x + offsetof(GameState, Val(:jump_sound))), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)

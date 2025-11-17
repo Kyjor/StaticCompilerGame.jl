@@ -8,7 +8,7 @@ window.onModuleReady = function() {
     // Initialize SDL drawing first
     let window = Module._j_init_window();
     let renderer = Module._j_init_renderer(window);
-
+    
     // Test if SDL is working
     if (!window || !renderer) {
         console.error("Failed to initialize SDL");
@@ -23,6 +23,13 @@ window.onModuleReady = function() {
     } else {
         console.error("Game state pointer is null");
     }
+
+    print("Adding event listener to killGame button");
+    print(document.getElementById('killGame'));
+    document.getElementById('killGame').addEventListener('click', function() {
+        print("KillGame button clicked");
+        Module._cleanup(game_state_ptr, renderer, window);
+    });
     
     let frameCount = 0;
     function runMainLoop() {

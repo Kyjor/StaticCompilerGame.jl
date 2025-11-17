@@ -86,7 +86,7 @@ if build_type == "web"
         println(" Linking files: $ll_files_str")
         
         # Link Julia LLVM IR with SDL2 C code
-        cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -O2 -s WASM=1 -s 
+        cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_game_loop',
         '_j_init_game_state',
@@ -97,8 +97,7 @@ if build_type == "web"
         ]" 
         -s EXPORTED_RUNTIME_METHODS="['cwrap']" 
         -o $output_dir/game.js
-        --preload-file ./assets/images
-        
+        --preload-file ./assets
         --use-preload-plugins
         `
         # -s ENVIRONMENT=web
@@ -160,11 +159,11 @@ else
         
         # Determine platform-specific flags
         if Sys.islinux()
-            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer`
             output_name = "game"
             rpath_flag = `-Wl,-rpath,$(raw"$ORIGIN")`
         elseif Sys.iswindows()
-            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer`
             output_name = "game.exe"
             rpath_flag = ``
         elseif Sys.isapple()
@@ -172,7 +171,7 @@ else
             output_name = "game"
             rpath_flag = `-Wl,-rpath,@loader_path`
         else
-            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer`
             output_name = "game"
             rpath_flag = ``
         end

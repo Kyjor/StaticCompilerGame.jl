@@ -9195,3 +9195,111 @@
         }
         """, "main"), Int32, Tuple{Ptr{SDL_Renderer}, Ptr{SDL_Texture}, Ptr{SDL_FRect}, Ptr{SDL_FRect}}, renderer, texture, srcrect, dstrect)
     end
+
+# ============================================================================
+# SDL_mixer Audio Functions
+# ============================================================================
+
+# Original C signature: int Mix_Init(int flags)
+function llvm_Mix_Init(flags::Int32)::Int32
+    Base.llvmcall(("""
+    declare i32 @Mix_Init(i32) nounwind
+
+    define i32 @main(i32 %flags) {
+    entry:
+        %result = call i32 @Mix_Init(i32 %flags)
+        ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32}, flags)
+end
+
+# Original C signature: void Mix_Quit()
+function llvm_Mix_Quit()::Cvoid
+    Base.llvmcall(("""
+    declare void @Mix_Quit() nounwind
+
+    define void @main() {
+    entry:
+        call void @Mix_Quit()
+        ret void
+    }
+    """, "main"), Cvoid, Tuple{})
+end
+
+# Original C signature: int Mix_OpenAudio(int frequency, Uint16 format, int channels, int chunksize)
+function llvm_Mix_OpenAudio(frequency::Int32, format::UInt16, channels::Int32, chunksize::Int32)::Int32
+    Base.llvmcall(("""
+    declare i32 @Mix_OpenAudio(i32, i16, i32, i32) nounwind
+
+    define i32 @main(i32 %frequency, i16 %format, i32 %channels, i32 %chunksize) {
+    entry:
+        %result = call i32 @Mix_OpenAudio(i32 %frequency, i16 %format, i32 %channels, i32 %chunksize)
+        ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32, UInt16, Int32, Int32}, frequency, format, channels, chunksize)
+end
+
+# Original C signature: void Mix_CloseAudio()
+function llvm_Mix_CloseAudio()::Cvoid
+    Base.llvmcall(("""
+    declare void @Mix_CloseAudio() nounwind
+
+    define void @main() {
+    entry:
+        call void @Mix_CloseAudio()
+        ret void
+    }
+    """, "main"), Cvoid, Tuple{})
+end
+
+# Original C signature: Mix_Chunk * Mix_LoadWAV(const char *file)
+function llvm_Mix_LoadWAV(file::Ptr{UInt8})::Ptr{Mix_Chunk}
+    Base.llvmcall(("""
+    declare i8* @Mix_LoadWAV(i8*) nounwind
+
+    define i8* @main(i8* %file) {
+    entry:
+        %result = call i8* @Mix_LoadWAV(i8* %file)
+        ret i8* %result
+    }
+    """, "main"), Ptr{Mix_Chunk}, Tuple{Ptr{UInt8}}, file)
+end
+
+# Original C signature: int Mix_PlayChannel(int channel, Mix_Chunk *chunk, int loops)
+function llvm_Mix_PlayChannel(channel::Int32, chunk::Ptr{Mix_Chunk}, loops::Int32)::Int32
+    Base.llvmcall(("""
+    declare i32 @Mix_PlayChannel(i32, i8*, i32) nounwind
+
+    define i32 @main(i32 %channel, i8* %chunk, i32 %loops) {
+    entry:
+        %result = call i32 @Mix_PlayChannel(i32 %channel, i8* %chunk, i32 %loops)
+        ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32, Ptr{Mix_Chunk}, Int32}, channel, chunk, loops)
+end
+
+# Original C signature: void Mix_FreeChunk(Mix_Chunk *chunk)
+function llvm_Mix_FreeChunk(chunk::Ptr{Mix_Chunk})::Cvoid
+    Base.llvmcall(("""
+    declare void @Mix_FreeChunk(i8*) nounwind
+
+    define void @main(i8* %chunk) {
+    entry:
+        call void @Mix_FreeChunk(i8* %chunk)
+        ret void
+    }
+    """, "main"), Cvoid, Tuple{Ptr{Mix_Chunk}}, chunk)
+end
+
+# Original C signature: int Mix_Volume(int channel, int volume)
+function llvm_Mix_Volume(channel::Int32, volume::Int32)::Int32
+    Base.llvmcall(("""
+    declare i32 @Mix_Volume(i32, i32) nounwind
+
+    define i32 @main(i32 %channel, i32 %volume) {
+    entry:
+        %result = call i32 @Mix_Volume(i32 %channel, i32 %volume)
+        ret i32 %result
+    }
+    """, "main"), Int32, Tuple{Int32, Int32}, channel, volume)
+end

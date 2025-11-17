@@ -3,12 +3,21 @@
 function init_sprite_system()::Int32
     printf(c"Initializing sprite system\n")
     # Initialize SDL2_image with PNG support
+    # IMG_Init returns the flags that were successfully initialized
     init_result::Int32 = llvm_IMG_Init(Int32(2))  # IMG_INIT_PNG = 2
-    if init_result == 0
-        printf(c"Failed to initialize SDL2_image\n")
+    printf(c"IMG_Init returned: %d (expected 2 for PNG support)\n", init_result)
+    
+    # Check if PNG flag (2) was successfully initialized
+    if (init_result & Int32(2)) == Int32(0)
+        printf(c"Failed to initialize SDL2_image - PNG support not available\n")
+        # get sdl error
+        msg_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(1024))
+        error_msg::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(msg_ptr, Int32(1024))
+        printf(c"SDL Error: %s\n", error_msg)
+        wasm_free(Ptr{Cvoid}(msg_ptr))
         return Int32(-1)
     end
-    printf(c"Sprite system initialized\n")
+    printf(c"Sprite system initialized successfully\n")
     return Int32(0)
 end
 
@@ -92,7 +101,7 @@ function render_sprite_animated(renderer::Ptr{SDL_Renderer}, sprite::Ptr{Sprite}
     # Get current animation frame
     frame_ptr::Ptr{AnimationFrame} = anim.frames + (anim.current_frame * sizeof(AnimationFrame))
     current_frame::AnimationFrame = unsafe_load(frame_ptr)
-    printf(c"Current frame: %d\n", current_frame.crop_x)
+ #   printf(c"Current frame: %d\n", current_frame.crop_x)
 
     # Create source rectangle from animation frame
     src_rect::SDL_Rect = SDL_Rect(current_frame.crop_x, current_frame.crop_y, current_frame.crop_w, current_frame.crop_h)
