@@ -31,27 +31,6 @@ function j_init_renderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
     return renderer
 end
 
-# Helper to allocate and initialize an Animation
-# function init_animation(frames::MallocArray{AnimationFrame})::Ptr{Animation}
-#     # frame_count::Int32 = Int32(4)
-#     # frames_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(wasm_malloc(UInt32(sizeof(AnimationFrame) * frame_count)))
-#     # str = m"Test"
-#     # test = MallocArray{Int64}(undef, 4)
-#     # test[1] = 1
-#     # test[2] = 2
-#     # test[3] = 3
-#     # test[4] = 4
-#     # for i in 1:frame_count
-#     #     printf(c"%d\n", i)
-#     #     printf(c"%d\n", test[i])
-#     #     #unsafe_store!(frames_ptr + (i-1), frames[i])
-#     # end
-#     # anim_ptr::Ptr{Animation} = Ptr{Animation}(wasm_malloc(UInt32(sizeof(Animation))))
-#     # unsafe_store!(anim_ptr, Animation(frames_ptr, frame_count, 0, 0.0))
-#     # return anim_ptr
-#     return Ptr{Animation}(C_NULL)
-# end
-
 # ============================================================================
 # ANIMATION SYSTEM
 # ============================================================================
@@ -118,16 +97,8 @@ function update_animation(anim::Ptr{Animation}, delta_time::Float64)::Cvoid
             anim.current_frame = next_frame
         end
     end
-end
 
-# Reset animation to first frame
-function reset_animation(anim::Ptr{Animation})::Cvoid
-    if anim == Ptr{Animation}(C_NULL)
-        return
-    end
-    anim.current_frame = Int32(0)
-    anim.timer = Float64(0)
-    anim.finished = false
+    return
 end
 
 # Get the current frame's crop data
@@ -163,27 +134,35 @@ function free_animation(anim::Ptr{Animation})::Cvoid
         wasm_free(Ptr{Cvoid}(anim.frames))
     end
     wasm_free(Ptr{Cvoid}(anim))
+
+    return
 end
 
 # Helper function to create frames array manually
 function create_frames_array(count::Int32)::Ptr{AnimationFrame}
-    size::UInt32 = UInt32(16) * UInt32(count)  # 16 = size of AnimationFrame
+    size::UInt32 = UInt32(sizeof(AnimationFrame)) * UInt32(count)  # 16 = size of AnimationFrame
     frames_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(wasm_malloc(size))
     return frames_ptr
 end
 
 # Helper to set a specific frame in a frames array
-function set_frame(frames::Ptr{AnimationFrame}, index::Int32, crop_x::Int32, crop_y::Int32, crop_w::Int32, crop_h::Int32)::Cvoid
-    offset::Int64 = Int64(index) * Int64(16)  # 16 = size of AnimationFrame
-    # Use direct pointer arithmetic - pointers can be added to integers
-    frame_ptr_bytes::Ptr{UInt8} = byte_ptr(frames)
-    frame_ptr::Ptr{AnimationFrame} = Ptr{AnimationFrame}(frame_ptr_bytes + offset)
-    # Manually store each field to avoid struct constructor runtime checks
-    frame_bytes::Ptr{UInt8} = byte_ptr(frame_ptr)
-    unsafe_store!(Ptr{Int32}(frame_bytes + Int64(0)), crop_x)    # crop_x at offset 0
-    unsafe_store!(Ptr{Int32}(frame_bytes + Int64(4)), crop_y)    # crop_y at offset 4
-    unsafe_store!(Ptr{Int32}(frame_bytes + Int64(8)), crop_w)    # crop_w at offset 8
-    unsafe_store!(Ptr{Int32}(frame_bytes + Int64(12)), crop_h)   # crop_h at offset 12
+function set_frame(frames::Ptr{AnimationFrame}, index::Int32, crop_x::Int32, crop_y::Int32, crop_w::Int32, crop_h::Int32)
+    unsafe_store!(Ptr{Int32}(frames + Int64(index * sizeof(AnimationFrame))), crop_x)
+    unsafe_store!(Ptr{Int32}(frames + Int64(index * sizeof(AnimationFrame) + 4)), crop_y)
+    unsafe_store!(Ptr{Int32}(frames + Int64(index * sizeof(AnimationFrame) + 8)), crop_w)
+    unsafe_store!(Ptr{Int32}(frames + Int64(index * sizeof(AnimationFrame) + 12)), crop_h)
+end
+
+function reset_animation(anim::Ptr{Animation})::Int32
+    if anim == Ptr{Animation}(C_NULL)
+        return Int32(-1)
+    end
+
+    # anim.current_frame = Int32(0)
+    # anim.timer = Float64(0)
+    # anim.finished = false
+
+    return Int32(0)
 end
  
 # In j_init_game_state, initialize animation state
@@ -218,7 +197,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     set_frame(idle_frames, Int32(0), Int32(120), Int32(360), Int32(8), Int32(8))
     idle_anim::Ptr{Animation} = create_animation(idle_frames, Int32(1), Float64(2.0), true)
     
-    # RUN Animation - 4 frames at y=368, looping at 8 FPS
+    # # RUN Animation - 4 frames at y=368, looping at 8 FPS
     run_frames::Ptr{AnimationFrame} = create_frames_array(Int32(4))
     set_frame(run_frames, Int32(0), Int32(16), Int32(368), Int32(8), Int32(8))
     set_frame(run_frames, Int32(1), Int32(24), Int32(368), Int32(8), Int32(8))
@@ -226,12 +205,12 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     set_frame(run_frames, Int32(3), Int32(40), Int32(368), Int32(8), Int32(8))
     run_anim::Ptr{Animation} = create_animation(run_frames, Int32(4), Float64(8.0), true)
     
-    # JUMP Animation - 1 frame at (8, 368), non-looping
+    # # JUMP Animation - 1 frame at (8, 368), non-looping
     jump_frames::Ptr{AnimationFrame} = create_frames_array(Int32(1))
     set_frame(jump_frames, Int32(0), Int32(8), Int32(368), Int32(8), Int32(8))
     jump_anim::Ptr{Animation} = create_animation(jump_frames, Int32(1), Float64(1.0), false)
     
-    printf(c"Animations created\n")
+    # printf(c"Animations created\n")
     
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
     # Initialize player at ground level (732.0) minus player height (64)
@@ -240,7 +219,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
 
-    # --- Load sprite if not loaded ---
+    # # --- Load sprite if not loaded ---
     if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
         printf(c"Loading player sprite\n")
         sprite_path::Ptr{UInt8} = str_ptr(w"assets/images/game.png")
@@ -394,6 +373,7 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     
     # Switch animation if state changed
     if new_anim_state != game_state.current_anim_state
+        printf(c"Animation state changed to %d\n", new_anim_state)
         game_state.current_anim_state = new_anim_state
         
         if new_anim_state == ANIM_IDLE
@@ -403,12 +383,11 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
         elseif new_anim_state == ANIM_JUMP
             game_state.current_player_anim = game_state.player_jump_anim
         end
-        
         reset_animation(game_state.current_player_anim)
     end
     
-    # Update current animation
-    update_animation(game_state.current_player_anim, delta_time)
+    # # Update current animation
+    # update_animation(game_state.current_player_anim, delta_time)
     
     # --- Camera: Query window size and compute camera offset ---
     win_w::Int32 = Int32(0)
@@ -664,9 +643,9 @@ function cleanup(game_state_ptr::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wi
     free_animation(game_state_ptr.player_jump_anim)
     
     # Free sprite resources
-    # if game_state_ptr.player_sprite != Ptr{Sprite}(C_NULL)
-    #     free_sprite(game_state_ptr.player_sprite)
-    # end
+    if game_state_ptr.player_sprite != Ptr{Sprite}(C_NULL)
+        free_sprite(game_state_ptr.player_sprite)
+    end
     
     wasm_free(Ptr{Cvoid}(game_state_ptr.keys_down))
     wasm_free(Ptr{Cvoid}(game_state_ptr.keys_up))
@@ -708,6 +687,8 @@ function free_animation(anim::Ptr{Animation})::Cvoid
         wasm_free(Ptr{Cvoid}(anim.frames))
     end
     wasm_free(Ptr{Cvoid}(anim))
+
+    return
 end
 
 

@@ -144,6 +144,42 @@ This project uses **StaticCompiler.jl** to compile Julia code to LLVM IR and the
    result = int_value  # implicit conversion
    ```
 
+3. **All conditional branches must have explicit returns**
+   ```julia
+   # ✅ Good: explicit returns in all branches
+   function process(x::Int32)::Float64
+       if x > 0
+           return Float64(x)
+       else
+           return 0.0
+       end
+   end
+   
+   # ✅ Good: even Cvoid needs explicit return
+   function update_state(ptr::Ptr{GameState})::Cvoid
+       if ptr.active
+           ptr.counter = ptr.counter + Int32(1)
+           return nothing
+       else
+           return nothing
+       end
+   end
+   
+   # ❌ Bad: missing return in else branch
+   function process(x::Int32)::Float64
+       if x > 0
+           return Float64(x)
+       end
+       # implicit return causes issues
+   end
+   
+   # ❌ Bad: no explicit return for Cvoid
+   function update_state(ptr::Ptr{GameState})::Cvoid
+       ptr.counter = ptr.counter + Int32(1)
+       # missing return nothing
+   end
+   ```
+
 ### Control Flow
 
 1. **Simple if/elseif/else is safe**

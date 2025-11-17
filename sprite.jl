@@ -123,4 +123,6 @@ function free_sprite(sprite::Ptr{Sprite})::Cvoid
     end
     
     wasm_free(Ptr{Cvoid}(sprite))
+    
+    return
 end
