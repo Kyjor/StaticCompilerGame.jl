@@ -193,54 +193,54 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     printf(c"Initializing audio system\n")
     # Mix_Init returns the flags that were successfully initialized
     # MIX_INIT_OGG = 16 (from structs.jl)
-    audio_init_result::Int32 = llvm_Mix_Init(Int32(16))  # MIX_INIT_OGG
-    printf(c"Mix_Init returned: %d (expected 16 for OGG support)\n", audio_init_result)
+    # audio_init_result::Int32 = llvm_Mix_Init(Int32(16))  # MIX_INIT_OGG
+    # printf(c"Mix_Init returned: %d (expected 16 for OGG support)\n", audio_init_result)
     
-    # Check if OGG flag was successfully initialized
-    if (audio_init_result & Int32(16)) == Int32(0)
-        printf(c"Failed to initialize SDL_mixer - OGG support not available\n")
-        error_msg_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(256))
-        error_msg::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(error_msg_ptr, Int32(256))
-        printf(c"SDL Error: %s\n", error_msg)
-        wasm_free(Ptr{Cvoid}(error_msg_ptr))
-    else
-        printf(c"SDL_mixer initialized successfully with OGG support\n")
-    end
+    # # Check if OGG flag was successfully initialized
+    # if (audio_init_result & Int32(16)) == Int32(0)
+    #     printf(c"Failed to initialize SDL_mixer - OGG support not available\n")
+    #     error_msg_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(256))
+    #     error_msg::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(error_msg_ptr, Int32(256))
+    #     printf(c"SDL Error: %s\n", error_msg)
+    #     wasm_free(Ptr{Cvoid}(error_msg_ptr))
+    # else
+    #     printf(c"SDL_mixer initialized successfully with OGG support\n")
+    # end
     
     # Open audio device
     # Mix_OpenAudio(frequency, format, channels, chunksize)
     # MIX_DEFAULT_FORMAT = AUDIO_S16LSB, MIX_DEFAULT_CHANNELS = 2, MIX_DEFAULT_FREQUENCY = 44100
     # AUDIO_S16LSB = 0x8010 (signed 16-bit samples, little-endian)
-    audio_ready::Bool = false
-    open_result::Int32 = llvm_Mix_OpenAudio(Int32(44100), UInt16(0x8010), Int32(2), Int32(2048))
-    if open_result != Int32(0)
-        printf(c"Failed to open audio device, error code: %d\n", open_result)
-        # Try to get SDL error message
-        error_msg_ptr1::Ptr{Cvoid} = wasm_malloc(UInt32(256))
-        error_msg1::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(error_msg_ptr1, Int32(256))
-        printf(c"SDL Error: %s\n", error_msg1)
-        wasm_free(Ptr{Cvoid}(error_msg_ptr1))
-        audio_ready = false
-    else
-        printf(c"Audio device opened successfully\n")
-        audio_ready = true
-    end
+    # audio_ready::Bool = false
+    # open_result::Int32 = llvm_Mix_OpenAudio(Int32(44100), UInt16(0x8010), Int32(2), Int32(2048))
+    # if open_result != Int32(0)
+    #     printf(c"Failed to open audio device, error code: %d\n", open_result)
+    #     # Try to get SDL error message
+    #     error_msg_ptr1::Ptr{Cvoid} = wasm_malloc(UInt32(256))
+    #     error_msg1::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(error_msg_ptr1, Int32(256))
+    #     printf(c"SDL Error: %s\n", error_msg1)
+    #     wasm_free(Ptr{Cvoid}(error_msg_ptr1))
+    #     audio_ready = false
+    # else
+    #     printf(c"Audio device opened successfully\n")
+    #     audio_ready = true
+    # end
 
     # Load jump sound only if audio device is ready
     # NOTE: Temporarily disabled due to crash in Mix_LoadWAV - investigating
-    jump_sound::Ptr{Mix_Chunk} = Ptr{Mix_Chunk}(C_NULL)
-    if audio_ready
-        printf(c"Skipping sound loading - Mix_LoadWAV crashes in browser\n")
-        # TODO: Fix Mix_LoadWAV crash - might be file path or memory allocation issue
-        # In Emscripten, preloaded files are mounted at root with --preload-file
-        # So /assets/Jump.wav should be the correct path
+    # jump_sound::Ptr{Mix_Chunk} = Ptr{Mix_Chunk}(C_NULL)
+    # if audio_ready
+    #     printf(c"Skipping sound loading - Mix_LoadWAV crashes in browser\n")
+    #     # TODO: Fix Mix_LoadWAV crash - might be file path or memory allocation issue
+    #     # In Emscripten, preloaded files are mounted at root with --preload-file
+    #     # So /assets/Jump.wav should be the correct path
 
-        jump_sound_path::Ptr{UInt8} = str_ptr(w"/assets/Jump.wav")
-        jump_sound = llvm_Mix_LoadWAV(jump_sound_path)
-        wasm_free(Ptr{Cvoid}(jump_sound_path))
-    else
-        printf(c"Skipping sound loading - audio device not ready\n")
-    end
+    #     jump_sound_path::Ptr{UInt8} = str_ptr(w"/assets/Jump.wav")
+    #     jump_sound = llvm_Mix_LoadWAV(jump_sound_path)
+    #     wasm_free(Ptr{Cvoid}(jump_sound_path))
+    # else
+    #     printf(c"Skipping sound loading - audio device not ready\n")
+    # end
 
     # Create player animations
     printf(c"Creating player animations\n")
@@ -267,7 +267,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
     # Initialize player at ground level (732.0) minus player height (64)
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(500), Float64(668), Float64(0), Float64(0), Int32(1), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false, idle_anim, run_anim, jump_anim, idle_anim, ANIM_IDLE, jump_sound))
+    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(500), Float64(668), Float64(0), Float64(0), Int32(1), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false, idle_anim, run_anim, jump_anim, idle_anim, ANIM_IDLE, Ptr{Mix_Chunk}(C_NULL)))
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
