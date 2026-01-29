@@ -109,6 +109,17 @@ This project uses **StaticCompiler.jl** to compile Julia code to LLVM IR and the
    wasm_free(name_ptr)
    ```
 
+2. **⚠️ WARNING: `str_ptr` has a buffer overflow bug**
+   - The `str_ptr()` function in `wallocstring.jl` has a known bug where it writes one byte past the allocated buffer
+   - This causes memory corruption when the total string length (chars + null terminator) is a **multiple of 16 bytes** (16, 32, 48, 64, etc.)
+   - **Examples of problematic lengths**:
+     - 15 chars + null = 16 bytes ❌
+     - 31 chars + null = 32 bytes ❌
+     - 47 chars + null = 48 bytes ❌
+   - **Workaround**: Ensure string length (including null) is NOT a multiple of 16
+   - **Better workaround**: Manually allocate and copy strings, or fix `str_ptr` to allocate `len + 1` bytes
+   - **Symptoms**: "memory access out of bounds" errors at runtime in WASM
+
 2. **Use printf for output**
    ```julia
    # ✅ Good
@@ -315,6 +326,15 @@ functions_to_compile = [
 ### Error: "ccall not supported"
 - **Cause**: Direct ccall in code to be compiled
 - **Solution**: Use llvmcall wrappers instead (see `llvm_wrappers.jl`)
+
+### Error: "memory access out of bounds" at runtime (WASM)
+- **Cause**: Buffer overflow in `str_ptr()` function - it allocates `len` bytes but writes `len + 1` bytes (including null terminator)
+- **Symptoms**: Crashes when string length (with null terminator) is a multiple of 16 bytes (16, 32, 48, etc.)
+- **Pattern**: 15 chars, 31 chars, 47 chars, etc. will crash
+- **Solution**: 
+  - Avoid strings where (length + 1) is a multiple of 16 when using `str_ptr()`
+  - Or manually allocate: `ptr = wasm_malloc(UInt32(len + 1))` and copy manually
+  - Or fix `wallocstring.jl` line 30 to allocate `len + 1` instead of `len`
 
 ## 📋 Pre-Commit Checklist
 

@@ -2,7 +2,7 @@
 using StaticTools
 using StaticCompiler
 
-include("game.jl")
+include("game2.jl")
 
 # Parse command line arguments
 build_type = "web"  # default to web build
@@ -47,8 +47,8 @@ functions_to_compile = [
     (j_init_game_state, (Ptr{SDL_Renderer}, Ptr{SDL_Window}), "j_init_game_state"),
     (j_init_window, (), "j_init_window"),
     (j_init_renderer, (Ptr{SDL_Window},), "j_init_renderer"),
-    (game_loop, (Ptr{GameState}, Ptr{SDL_Renderer}, Ptr{SDL_Window}), "game_loop"),
-    (cleanup, (Ptr{GameState}, Ptr{SDL_Renderer}, Ptr{SDL_Window}), "cleanup"),
+    (game_loop, (Ptr{SandSimState}, Ptr{SDL_Renderer}, Ptr{SDL_Window}), "game_loop"),
+    (cleanup, (Ptr{SandSimState}, Ptr{SDL_Renderer}, Ptr{SDL_Window}), "cleanup"),
     (pc_main, (), "pc_main"),
 ]
 

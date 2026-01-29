@@ -9303,3 +9303,16 @@ function llvm_Mix_Volume(channel::Int32, volume::Int32)::Int32
     }
     """, "main"), Int32, Tuple{Int32, Int32}, channel, volume)
 end
+
+# Original C signature: Uint32 SDL_GetMouseState(int *x, int *y)
+function llvm_SDL_GetMouseState(x::Ptr{Int32}, y::Ptr{Int32})::UInt32
+    Base.llvmcall(("""
+    declare i32 @SDL_GetMouseState(i32*, i32*) nounwind
+
+    define i32 @main(i32* %x, i32* %y) {
+    entry:
+        %result = call i32 @SDL_GetMouseState(i32* %x, i32* %y)
+        ret i32 %result
+    }
+    """, "main"), UInt32, Tuple{Ptr{Int32}, Ptr{Int32}}, x, y)
+end

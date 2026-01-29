@@ -24,10 +24,10 @@ window.onModuleReady = function() {
         console.error("Game state pointer is null");
     }
 
-    print("Adding event listener to killGame button");
-    print(document.getElementById('killGame'));
+    console.log("Adding event listener to killGame button");
+    console.log(document.getElementById('killGame'));
     document.getElementById('killGame').addEventListener('click', function() {
-        print("KillGame button clicked");
+        console.log("KillGame button clicked");
         Module._cleanup(game_state_ptr, renderer, window);
     });
     
