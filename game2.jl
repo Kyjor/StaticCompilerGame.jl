@@ -14,9 +14,10 @@ include("wallocstring.jl")
 # CONSTANTS
 # ============================================================================
 const CELL_SIZE::Int32 = Int32(4)
-const GRID_WIDTH::Int32 = Int32(160)   # 640 / 4
-const GRID_HEIGHT::Int32 = Int32(160)  # 640 / 4
+const GRID_WIDTH::Int32 = Int32(20)   # 640 / 4
+const GRID_HEIGHT::Int32 = Int32(11)  # 640 / 4
 const GRID_SIZE::Int32 = GRID_WIDTH * GRID_HEIGHT  # 25600 cells
+const GRID_ALLOCATED_SIZE::Int32 = GRID_SIZE + Int32(1024)  # Allocated size with padding
 
 const PHYSICS_FPS::Float64 = Float64(50.0)
 const PHYSICS_TIMESTEP::Float64 = Float64(1.0) / PHYSICS_FPS
@@ -39,11 +40,12 @@ struct SandSimState
     physics_accumulator::Float64  # offset 0, size 8
     last_frame_time::UInt64       # offset 8, size 8
     rng_state::UInt32             # offset 16, size 4
-    selected_type::UInt8          # offset 20, size 1
-    quit::Bool                    # offset 21, size 1
+    cell_count::UInt32            # offset 20, size 4 - DEBUG: track cell placements
+    selected_type::UInt8          # offset 24, size 1
+    quit::Bool                    # offset 25, size 1
     # 2 bytes padding
-    grid::Ptr{UInt8}              # offset 24, size 4 (WASM32) or 8 (64-bit)
-    scratch_arena::Ptr{UInt8}     # offset 28, size 4 (WASM32) or 8 (64-bit)
+    grid::Ptr{UInt8}              # offset 28, size 4 (WASM32) or 8 (64-bit)
+    scratch_arena::Ptr{UInt8}     # offset 32, size 4 (WASM32) or 8 (64-bit)
 end
 # Total size: 32 bytes on WASM32 (without scratch), 36 bytes with scratch on WASM32
 # 40 bytes on 64-bit
@@ -52,10 +54,11 @@ end
 const SANDSIM_OFF_PHYSICS_ACC::Int64 = Int64(0)
 const SANDSIM_OFF_LAST_FRAME::Int64 = Int64(8)
 const SANDSIM_OFF_RNG::Int64 = Int64(16)
-const SANDSIM_OFF_SELECTED::Int64 = Int64(20)
-const SANDSIM_OFF_QUIT::Int64 = Int64(21)
-const SANDSIM_OFF_GRID::Int64 = Int64(24)
-const SANDSIM_OFF_SCRATCH::Int64 = Int64(28)
+const SANDSIM_OFF_CELL_COUNT::Int64 = Int64(20)
+const SANDSIM_OFF_SELECTED::Int64 = Int64(24)
+const SANDSIM_OFF_QUIT::Int64 = Int64(25)
+const SANDSIM_OFF_GRID::Int64 = Int64(28)
+const SANDSIM_OFF_SCRATCH::Int64 = Int64(32)
 
 # Scratch arena layout (offsets from scratch_arena base)
 const SCRATCH_EVENT::Int64 = Int64(0)      # SDL_Event: 56 bytes
@@ -69,6 +72,7 @@ function Base.getproperty(x::Ptr{SandSimState}, f::Symbol)
     f === :physics_accumulator && return unsafe_load(Ptr{Float64}(x + SANDSIM_OFF_PHYSICS_ACC))
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + SANDSIM_OFF_LAST_FRAME))
     f === :rng_state && return unsafe_load(Ptr{UInt32}(x + SANDSIM_OFF_RNG))
+    f === :cell_count && return unsafe_load(Ptr{UInt32}(x + SANDSIM_OFF_CELL_COUNT))
     f === :selected_type && return unsafe_load(Ptr{UInt8}(x + SANDSIM_OFF_SELECTED))
     f === :quit && return unsafe_load(Ptr{Bool}(x + SANDSIM_OFF_QUIT))
     f === :grid && return unsafe_load(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_GRID))
@@ -80,6 +84,7 @@ function Base.setproperty!(x::Ptr{SandSimState}, f::Symbol, v)
     f === :physics_accumulator && return unsafe_store!(Ptr{Float64}(x + SANDSIM_OFF_PHYSICS_ACC), v)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + SANDSIM_OFF_LAST_FRAME), v)
     f === :rng_state && return unsafe_store!(Ptr{UInt32}(x + SANDSIM_OFF_RNG), v)
+    f === :cell_count && return unsafe_store!(Ptr{UInt32}(x + SANDSIM_OFF_CELL_COUNT), v)
     f === :selected_type && return unsafe_store!(Ptr{UInt8}(x + SANDSIM_OFF_SELECTED), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + SANDSIM_OFF_QUIT), v)
     f === :grid && return unsafe_store!(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_GRID), v)
@@ -112,15 +117,35 @@ end
     return x + y * GRID_WIDTH
 end
 
-# Get cell at position
-@inline function get_cell(grid::Ptr{UInt8}, x::Int32, y::Int32)::UInt8
-    return unsafe_load(grid, grid_index(x, y) + Int32(1))  # Julia is 1-indexed for unsafe_load
+# Get cell at position - WASM safe, no printf
+function get_cell(grid::Ptr{UInt8}, x::Int32, y::Int32)::UInt8
+    # Bounds check - return empty for out of bounds
+    if x < Int32(0) || x >= GRID_WIDTH || y < Int32(0) || y >= GRID_HEIGHT
+        return CELL_EMPTY
+    end
+    idx::Int32 = grid_index(x, y) + Int32(1)  # Julia is 1-indexed for unsafe_load
+    return unsafe_load(grid, idx)
 end
 
-# Set cell at position
-@inline function set_cell(grid::Ptr{UInt8}, x::Int32, y::Int32, value::UInt8)::Cvoid
-    printf(c"Setting cell %d, %d to %d\n", x, y, value)
-    #unsafe_store!(grid, value, grid_index(x, y) + Int32(1))
+# Set cell at position - WASM safe, no printf
+function set_cell(grid::Ptr{UInt8}, x::Int32, y::Int32, value::UInt8)::Cvoid
+    # Bounds check - ignore out of bounds
+    if x < Int32(0) || x >= GRID_WIDTH || y < Int32(0) || y >= GRID_HEIGHT
+        return nothing
+    end
+    idx::Int32 = grid_index(x, y) + Int32(1)
+    unsafe_store!(grid, value, idx)
+    return nothing
+end
+
+# Set cell with state tracking (for counting)
+function set_cell_counted(state::Ptr{SandSimState}, x::Int32, y::Int32, value::UInt8)::Cvoid
+    old_value::UInt8 = get_cell(state.grid, x, y)
+    set_cell(state.grid, x, y, value)
+    # Only count if we're placing a new cell (not replacing empty with empty)
+    if old_value == CELL_EMPTY && value != CELL_EMPTY
+        state.cell_count = state.cell_count + UInt32(1)
+    end
     return nothing
 end
 
@@ -176,13 +201,14 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     scratch_arena::Ptr{UInt8} = Ptr{UInt8}(wasm_malloc(SCRATCH_TOTAL_SIZE))
     printf(c"Scratch arena allocated: %d bytes\n", SCRATCH_TOTAL_SIZE)
     
-    # Allocate state - use fixed size for WASM32 compatibility (36 bytes with scratch_arena)
-    state_ptr::Ptr{SandSimState} = Ptr{SandSimState}(wasm_malloc(UInt32(40)))
+    # Allocate state - use fixed size for WASM32 compatibility (40 bytes with scratch_arena + cell_count)
+    state_ptr::Ptr{SandSimState} = Ptr{SandSimState}(wasm_malloc(UInt32(44)))
     
     # Initialize state (order doesn't matter, using accessors)
     state_ptr.physics_accumulator = Float64(0.0)
     state_ptr.last_frame_time = UInt64(0)
     state_ptr.rng_state = UInt32(12345)  # Seed
+    state_ptr.cell_count = UInt32(0)  # DEBUG: track cell placements
     state_ptr.selected_type = CELL_SAND
     state_ptr.quit = false
     state_ptr.grid = grid
@@ -217,6 +243,24 @@ function place_cells(grid::Ptr{UInt8}, cell_x::Int32, cell_y::Int32, size::Int32
     return nothing
 end
 
+function place_cells_counted(state::Ptr{SandSimState}, cell_x::Int32, cell_y::Int32, size::Int32, cell_type::UInt8)::Cvoid
+    half_size::Int32 = div(size, Int32(2))
+    dx::Int32 = -half_size
+    while dx < half_size
+        dy::Int32 = -half_size
+        while dy < half_size
+            x::Int32 = cell_x + dx
+            y::Int32 = cell_y + dy
+            if x >= Int32(0) && x < GRID_WIDTH && y >= Int32(0) && y < GRID_HEIGHT
+                set_cell_counted(state, x, y, cell_type)
+            end
+            dy += Int32(1)
+        end
+        dx += Int32(1)
+    end
+    return nothing
+end
+
 function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
     # Use pre-allocated scratch arena instead of malloc/free every frame
     scratch::Ptr{UInt8} = state.scratch_arena
@@ -236,18 +280,19 @@ function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
             key::Int32 = event_ptr.key.keysym.sym
             if key == SDLK_1
                 state.selected_type = CELL_SAND
-                printf(c"Selected: Sand\n")
             elseif key == SDLK_2
                 state.selected_type = CELL_WATER
-                printf(c"Selected: Water\n")
             elseif key == SDLK_3
                 state.selected_type = CELL_STONE
-                printf(c"Selected: Stone\n")
             elseif key == SDLK_0
                 state.selected_type = CELL_EMPTY
-                printf(c"Selected: Erase\n")
             elseif key == SDLK_ESCAPE
                 state.quit = true
+            elseif key == Int32(32)  # SDLK_SPACE
+                # DEBUG: Place single cell at center (no printf to avoid walloc fragmentation)
+                center_x::Int32 = div(GRID_WIDTH, Int32(2))
+                center_y::Int32 = div(GRID_HEIGHT, Int32(2))
+                set_cell_counted(state, center_x, center_y, state.selected_type)
             end
         elseif event_type == SDL_MOUSEBUTTONDOWN || event_type == SDL_MOUSEMOTION
             # Check if mouse button is held
@@ -260,7 +305,7 @@ function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
                 
                 cell_x = div(mx, CELL_SIZE)
                 cell_y = div(my, CELL_SIZE)
-                place_cells(state.grid, cell_x, cell_y, BRUSH_SIZE, state.selected_type)
+                place_cells_counted(state, cell_x, cell_y, BRUSH_SIZE, state.selected_type)
             end
         end
     end

@@ -86,7 +86,7 @@ if build_type == "web"
         println(" Linking files: $ll_files_str")
         
         # Link Julia LLVM IR with SDL2 C code
-        cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -O2 -s WASM=1 -s 
+        cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -O3 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_game_loop',
         '_j_init_game_state',
@@ -96,12 +96,15 @@ if build_type == "web"
         '_cleanup'
         ]" 
         -s EXPORTED_RUNTIME_METHODS="['cwrap']" 
+        -s ALLOW_MEMORY_GROWTH=1
+        -s INITIAL_MEMORY=33554432
+        -s ALLOW_TABLE_GROWTH=1
+        -s STACK_SIZE=1048576
         -o $output_dir/game.js
         --preload-file ./assets
         --use-preload-plugins
         `
         # -s ENVIRONMENT=web
-        # -s ALLOW_MEMORY_GROWTH=1
         
         run(cmd)
         println("✅ Combined WebAssembly module created!")
