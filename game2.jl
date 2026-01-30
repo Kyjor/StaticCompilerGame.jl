@@ -15,7 +15,7 @@ include("wallocstring.jl")
 # ============================================================================
 const CELL_SIZE::Int32 = Int32(4)
 const GRID_WIDTH::Int32 = Int32(20)   # 640 / 4
-const GRID_HEIGHT::Int32 = Int32(11)  # 640 / 4
+const GRID_HEIGHT::Int32 = Int32(12)  # 640 / 4
 const GRID_SIZE::Int32 = GRID_WIDTH * GRID_HEIGHT  # 25600 cells
 const GRID_ALLOCATED_SIZE::Int32 = GRID_SIZE + Int32(1024)  # Allocated size with padding
 
@@ -117,24 +117,28 @@ end
     return x + y * GRID_WIDTH
 end
 
-# Get cell at position - WASM safe, no printf
+# Get cell at position - using raw pointer arithmetic instead of index
 function get_cell(grid::Ptr{UInt8}, x::Int32, y::Int32)::UInt8
     # Bounds check - return empty for out of bounds
     if x < Int32(0) || x >= GRID_WIDTH || y < Int32(0) || y >= GRID_HEIGHT
         return CELL_EMPTY
     end
-    idx::Int32 = grid_index(x, y) + Int32(1)  # Julia is 1-indexed for unsafe_load
-    return unsafe_load(grid, idx)
+    # Use pointer arithmetic directly instead of indexed load
+    offset::Int32 = x + y * GRID_WIDTH
+    cell_ptr::Ptr{UInt8} = grid + offset
+    return unsafe_load(cell_ptr)
 end
 
-# Set cell at position - WASM safe, no printf
+# Set cell at position - using raw pointer arithmetic instead of index
 function set_cell(grid::Ptr{UInt8}, x::Int32, y::Int32, value::UInt8)::Cvoid
     # Bounds check - ignore out of bounds
     if x < Int32(0) || x >= GRID_WIDTH || y < Int32(0) || y >= GRID_HEIGHT
         return nothing
     end
-    idx::Int32 = grid_index(x, y) + Int32(1)
-    unsafe_store!(grid, value, idx)
+    # Use pointer arithmetic directly instead of indexed store
+    offset::Int32 = x + y * GRID_WIDTH
+    cell_ptr::Ptr{UInt8} = grid + offset
+    unsafe_store!(cell_ptr, value)
     return nothing
 end
 
