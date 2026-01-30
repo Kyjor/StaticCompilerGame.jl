@@ -43,8 +43,10 @@ struct SandSimState
     quit::Bool                    # offset 21, size 1
     # 2 bytes padding
     grid::Ptr{UInt8}              # offset 24, size 4 (WASM32) or 8 (64-bit)
+    scratch_arena::Ptr{UInt8}     # offset 28, size 4 (WASM32) or 8 (64-bit)
 end
-# Total size: 32 bytes on WASM32, 32 bytes on 64-bit (with padding)
+# Total size: 32 bytes on WASM32 (without scratch), 36 bytes with scratch on WASM32
+# 40 bytes on 64-bit
 
 # Manual offsets for WASM32 compatibility
 const SANDSIM_OFF_PHYSICS_ACC::Int64 = Int64(0)
@@ -53,6 +55,14 @@ const SANDSIM_OFF_RNG::Int64 = Int64(16)
 const SANDSIM_OFF_SELECTED::Int64 = Int64(20)
 const SANDSIM_OFF_QUIT::Int64 = Int64(21)
 const SANDSIM_OFF_GRID::Int64 = Int64(24)
+const SANDSIM_OFF_SCRATCH::Int64 = Int64(28)
+
+# Scratch arena layout (offsets from scratch_arena base)
+const SCRATCH_EVENT::Int64 = Int64(0)      # SDL_Event: 56 bytes
+const SCRATCH_MX::Int64 = Int64(56)        # Int32: 4 bytes (aligned)
+const SCRATCH_MY::Int64 = Int64(60)        # Int32: 4 bytes
+const SCRATCH_RECT::Int64 = Int64(64)      # SDL_Rect: 16 bytes (aligned)
+const SCRATCH_TOTAL_SIZE::UInt32 = UInt32(128)  # Total scratch space needed
 
 # Pointer accessors for SandSimState using manual offsets
 function Base.getproperty(x::Ptr{SandSimState}, f::Symbol)
@@ -62,6 +72,7 @@ function Base.getproperty(x::Ptr{SandSimState}, f::Symbol)
     f === :selected_type && return unsafe_load(Ptr{UInt8}(x + SANDSIM_OFF_SELECTED))
     f === :quit && return unsafe_load(Ptr{Bool}(x + SANDSIM_OFF_QUIT))
     f === :grid && return unsafe_load(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_GRID))
+    f === :scratch_arena && return unsafe_load(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_SCRATCH))
     return getfield(x, f)
 end
 
@@ -72,6 +83,7 @@ function Base.setproperty!(x::Ptr{SandSimState}, f::Symbol, v)
     f === :selected_type && return unsafe_store!(Ptr{UInt8}(x + SANDSIM_OFF_SELECTED), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + SANDSIM_OFF_QUIT), v)
     f === :grid && return unsafe_store!(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_GRID), v)
+    f === :scratch_arena && return unsafe_store!(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_SCRATCH), v)
     return nothing
 end
 
@@ -107,7 +119,8 @@ end
 
 # Set cell at position
 @inline function set_cell(grid::Ptr{UInt8}, x::Int32, y::Int32, value::UInt8)::Cvoid
-    unsafe_store!(grid, value, grid_index(x, y) + Int32(1))
+    printf(c"Setting cell %d, %d to %d\n", x, y, value)
+    #unsafe_store!(grid, value, grid_index(x, y) + Int32(1))
     return nothing
 end
 
@@ -144,20 +157,27 @@ end
 function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{SandSimState}
     printf(c"Initializing sand simulation\n")
     
-    # Allocate grid
-    grid_bytes::UInt32 = UInt32(GRID_SIZE)
+    # Allocate grid with generous padding for WASM safety
+    # GRID_SIZE = 25600, but allocate extra to avoid any boundary issues
+    # Adding 1024 bytes padding to ensure we never hit bounds issues
+    grid_bytes::UInt32 = UInt32(GRID_SIZE) + UInt32(1024)
     grid::Ptr{UInt8} = Ptr{UInt8}(wasm_malloc(grid_bytes))
+    printf(c"Grid allocated: %d bytes (cells: %d + padding)\n", grid_bytes, GRID_SIZE)
     
-    # Initialize grid to empty
-    i::Int32 = Int32(0)
-    while i < GRID_SIZE
-        unsafe_store!(grid, CELL_EMPTY, i + Int32(1))
-        i += Int32(1)
+    # Initialize all allocated bytes to empty (including padding)
+    i::UInt32 = UInt32(0)
+    while i < grid_bytes
+        unsafe_store!(grid, CELL_EMPTY, i + UInt32(1))
+        i += UInt32(1)
     end
     printf(c"Grid initialized: %d cells\n", GRID_SIZE)
     
-    # Allocate state - use fixed size for WASM32 compatibility (32 bytes)
-    state_ptr::Ptr{SandSimState} = Ptr{SandSimState}(wasm_malloc(UInt32(32)))
+    # Allocate scratch arena for per-frame allocations (prevents fragmentation)
+    scratch_arena::Ptr{UInt8} = Ptr{UInt8}(wasm_malloc(SCRATCH_TOTAL_SIZE))
+    printf(c"Scratch arena allocated: %d bytes\n", SCRATCH_TOTAL_SIZE)
+    
+    # Allocate state - use fixed size for WASM32 compatibility (36 bytes with scratch_arena)
+    state_ptr::Ptr{SandSimState} = Ptr{SandSimState}(wasm_malloc(UInt32(40)))
     
     # Initialize state (order doesn't matter, using accessors)
     state_ptr.physics_accumulator = Float64(0.0)
@@ -166,6 +186,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     state_ptr.selected_type = CELL_SAND
     state_ptr.quit = false
     state_ptr.grid = grid
+    state_ptr.scratch_arena = scratch_arena
     
     printf(c"Sand simulation ready\n")
     printf(c"Controls: 1=Sand, 2=Water, 3=Stone, 0=Erase\n")
@@ -197,7 +218,12 @@ function place_cells(grid::Ptr{UInt8}, cell_x::Int32, cell_y::Int32, size::Int32
 end
 
 function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
-    event_ptr::Ptr{SDL_Event} = Ptr{SDL_Event}(wasm_malloc(UInt32(56)))
+    # Use pre-allocated scratch arena instead of malloc/free every frame
+    scratch::Ptr{UInt8} = state.scratch_arena
+    event_ptr::Ptr{SDL_Event} = Ptr{SDL_Event}(scratch + SCRATCH_EVENT)
+    mx_ptr::Ptr{Int32} = Ptr{Int32}(scratch + SCRATCH_MX)
+    my_ptr::Ptr{Int32} = Ptr{Int32}(scratch + SCRATCH_MY)
+    
     cell_x::Int32 = Int32(0)
     cell_y::Int32 = Int32(0)
 
@@ -227,14 +253,10 @@ function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
             # Check if mouse button is held
             mouse_state::UInt32 = llvm_SDL_GetMouseState(Ptr{Int32}(C_NULL), Ptr{Int32}(C_NULL))
             if (mouse_state & UInt32(1)) != UInt32(0)  # Left button
-                # Get mouse position
-                mx_ptr::Ptr{Int32} = Ptr{Int32}(wasm_malloc(UInt32(4)))
-                my_ptr::Ptr{Int32} = Ptr{Int32}(wasm_malloc(UInt32(4)))
+                # Get mouse position using scratch arena pointers
                 llvm_SDL_GetMouseState(mx_ptr, my_ptr)
                 mx::Int32 = unsafe_load(mx_ptr)
                 my::Int32 = unsafe_load(my_ptr)
-                wasm_free(Ptr{Cvoid}(mx_ptr))
-                wasm_free(Ptr{Cvoid}(my_ptr))
                 
                 cell_x = div(mx, CELL_SIZE)
                 cell_y = div(my, CELL_SIZE)
@@ -243,7 +265,6 @@ function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
         end
     end
     
-    wasm_free(Ptr{Cvoid}(event_ptr))
     return nothing
 end
 
@@ -262,7 +283,7 @@ function update_physics(state::Ptr{SandSimState}, delta_time::Float64)::Cvoid
     
     grid::Ptr{UInt8} = state.grid
     
-    # Iterate from bottom to top
+    # Iterate from bottom to top, skip bottom row since it can't fall further
     y::Int32 = GRID_HEIGHT - Int32(2)  # Start one above bottom
     while y >= Int32(0)
         x::Int32 = Int32(0)
@@ -271,6 +292,7 @@ function update_physics(state::Ptr{SandSimState}, delta_time::Float64)::Cvoid
             dir::Int32 = Int32(0)
             # SAND PHYSICS
             if cell == CELL_SAND
+                # y+1 is always valid here since we start at GRID_HEIGHT-2
                 below::UInt8 = get_cell(grid, x, y + Int32(1))
                 
                 if below == CELL_EMPTY
@@ -360,8 +382,8 @@ function render_simulation(state::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}
     
     grid::Ptr{UInt8} = state.grid
     
-    # Allocate rect once for reuse
-    rect_ptr::Ptr{SDL_Rect} = Ptr{SDL_Rect}(wasm_malloc(UInt32(sizeof(SDL_Rect))))
+    # Use pre-allocated scratch arena instead of malloc
+    rect_ptr::Ptr{SDL_Rect} = Ptr{SDL_Rect}(state.scratch_arena + SCRATCH_RECT)
     
     y::Int32 = Int32(0)
     while y < GRID_HEIGHT
@@ -392,8 +414,6 @@ function render_simulation(state::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}
         end
         y += Int32(1)
     end
-    
-    wasm_free(Ptr{Cvoid}(rect_ptr))
     
     llvm_SDL_RenderPresent(renderer)
     return nothing
@@ -446,6 +466,11 @@ function cleanup(state_ptr::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}, wind
     # Free grid
     if state_ptr.grid != Ptr{UInt8}(C_NULL)
         wasm_free(Ptr{Cvoid}(state_ptr.grid))
+    end
+    
+    # Free scratch arena
+    if state_ptr.scratch_arena != Ptr{UInt8}(C_NULL)
+        wasm_free(Ptr{Cvoid}(state_ptr.scratch_arena))
     end
     
     # Free state
