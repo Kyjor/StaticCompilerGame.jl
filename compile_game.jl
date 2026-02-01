@@ -2,7 +2,7 @@
 using StaticTools
 using StaticCompiler
 
-include("game2.jl")
+include("sand.jl")
 
 # Parse command line arguments
 build_type = "web"  # default to web build
@@ -115,6 +115,46 @@ if build_type == "web"
         println("   - $output_dir/game.js")
         # copy game_wasm/game.data to ./
         cp(joinpath(output_dir, "game.data"), "./game.data"; force=true)
+        
+        # Package web build files into zip
+        println("\n📦 Packaging web build files...")
+        zip_name = "sc-game-web.zip"
+        if isfile(zip_name)
+            rm(zip_name)
+            println("🗑️  Removed existing $zip_name")
+        end
+        
+        # Verify required files exist
+        required_files = ["game.data", output_dir, "index.html", "index.js"]
+        missing_files = String[]
+        for file in required_files
+            if !(isfile(file) || isdir(file))
+                push!(missing_files, file)
+            end
+        end
+        
+        if !isempty(missing_files)
+            println("⚠️  Warning: Missing required files for zip:")
+            for file in missing_files
+                println("   - $file")
+            end
+        else
+            # Create zip with required files
+            # Files should be at root of zip: game.data, game_wasm/, index.html, index.js
+            try
+                run(`zip -r $zip_name game.data $output_dir index.html index.js`)
+                println("✅ Web build packaged: $zip_name")
+                println("📦 Contents:")
+                println("   - game.data")
+                println("   - $output_dir/")
+                println("   - index.html")
+                println("   - index.js")
+            catch zip_error
+                println("⚠️  Warning: Failed to create zip file: $zip_error")
+                println("💡 Make sure 'zip' command is available, or manually create:")
+                println("   zip -r $zip_name game.data $output_dir index.html index.js")
+            end
+        end
         
     catch e
         println("❌ Compilation failed: $e")

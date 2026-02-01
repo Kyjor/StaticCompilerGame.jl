@@ -1,4 +1,4 @@
-# game2.jl - Sand Simulation
+# sand.jl - Sand Simulation
 # adapted from https://github.com/autoselff/sandbox/blob/main/src/main.c
 using StaticTools
 using StaticCompiler
@@ -17,13 +17,11 @@ const CELL_SIZE::Int32 = Int32(4)
 const GRID_WIDTH::Int32 = Int32(160)   # 640 / 4
 const GRID_HEIGHT::Int32 = Int32(160)  # 640 / 4
 const GRID_SIZE::Int32 = GRID_WIDTH * GRID_HEIGHT  # 25600 cells
-const GRID_ALLOCATED_SIZE::Int32 = GRID_SIZE + Int32(1024)  # Allocated size with padding
 
 const PHYSICS_FPS::Float64 = Float64(50.0)
 const PHYSICS_TIMESTEP::Float64 = Float64(1.0) / PHYSICS_FPS
 
 const BRUSH_SIZE::Int32 = Int32(4)
-const WINDOW_SIZE::Int32 = Int32(640)  # Window dimensions
 
 # Cell types
 const CELL_EMPTY::UInt8 = UInt8(0)
@@ -41,48 +39,29 @@ struct SandSimState
     physics_accumulator::Float64  # offset 0, size 8
     last_frame_time::UInt64       # offset 8, size 8
     rng_state::UInt32             # offset 16, size 4
-    cell_count::UInt32            # offset 20, size 4 - DEBUG: track cell placements
-    selected_type::UInt8          # offset 24, size 1
-    quit::Bool                    # offset 25, size 1
+    selected_type::UInt8          # offset 20, size 1
+    quit::Bool                    # offset 21, size 1
     # 2 bytes padding
-    grid::Ptr{UInt8}              # offset 28, size 4 (WASM32)
-    scratch_arena::Ptr{UInt8}     # offset 32, size 4 (WASM32)
-    texture::Ptr{SDL_Texture}     # offset 36, size 4 (WASM32) - for efficient rendering
-    pixel_buffer::Ptr{UInt32}     # offset 40, size 4 (WASM32) - RGBA pixel buffer
+    grid::Ptr{UInt8}              # offset 24, size 4 (WASM32) or 8 (64-bit)
 end
-# Total size: 44 bytes on WASM32
+# Total size: 32 bytes on WASM32, 32 bytes on 64-bit (with padding)
 
 # Manual offsets for WASM32 compatibility
 const SANDSIM_OFF_PHYSICS_ACC::Int64 = Int64(0)
 const SANDSIM_OFF_LAST_FRAME::Int64 = Int64(8)
 const SANDSIM_OFF_RNG::Int64 = Int64(16)
-const SANDSIM_OFF_CELL_COUNT::Int64 = Int64(20)
-const SANDSIM_OFF_SELECTED::Int64 = Int64(24)
-const SANDSIM_OFF_QUIT::Int64 = Int64(25)
-const SANDSIM_OFF_GRID::Int64 = Int64(28)
-const SANDSIM_OFF_SCRATCH::Int64 = Int64(32)
-const SANDSIM_OFF_TEXTURE::Int64 = Int64(36)
-const SANDSIM_OFF_PIXBUF::Int64 = Int64(40)
-
-# Scratch arena layout (offsets from scratch_arena base)
-const SCRATCH_EVENT::Int64 = Int64(0)      # SDL_Event: 128 bytes (increased for safety)
-const SCRATCH_MX::Int64 = Int64(128)       # Int32: 4 bytes (aligned)
-const SCRATCH_MY::Int64 = Int64(132)       # Int32: 4 bytes
-const SCRATCH_RECT::Int64 = Int64(136)     # SDL_Rect: 16 bytes (aligned)
-const SCRATCH_TOTAL_SIZE::UInt32 = UInt32(512)  # Total scratch space needed (increased for safety)
+const SANDSIM_OFF_SELECTED::Int64 = Int64(20)
+const SANDSIM_OFF_QUIT::Int64 = Int64(21)
+const SANDSIM_OFF_GRID::Int64 = Int64(24)
 
 # Pointer accessors for SandSimState using manual offsets
 function Base.getproperty(x::Ptr{SandSimState}, f::Symbol)
     f === :physics_accumulator && return unsafe_load(Ptr{Float64}(x + SANDSIM_OFF_PHYSICS_ACC))
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + SANDSIM_OFF_LAST_FRAME))
     f === :rng_state && return unsafe_load(Ptr{UInt32}(x + SANDSIM_OFF_RNG))
-    f === :cell_count && return unsafe_load(Ptr{UInt32}(x + SANDSIM_OFF_CELL_COUNT))
     f === :selected_type && return unsafe_load(Ptr{UInt8}(x + SANDSIM_OFF_SELECTED))
     f === :quit && return unsafe_load(Ptr{Bool}(x + SANDSIM_OFF_QUIT))
     f === :grid && return unsafe_load(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_GRID))
-    f === :scratch_arena && return unsafe_load(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_SCRATCH))
-    f === :texture && return unsafe_load(Ptr{Ptr{SDL_Texture}}(x + SANDSIM_OFF_TEXTURE))
-    f === :pixel_buffer && return unsafe_load(Ptr{Ptr{UInt32}}(x + SANDSIM_OFF_PIXBUF))
     return getfield(x, f)
 end
 
@@ -90,13 +69,9 @@ function Base.setproperty!(x::Ptr{SandSimState}, f::Symbol, v)
     f === :physics_accumulator && return unsafe_store!(Ptr{Float64}(x + SANDSIM_OFF_PHYSICS_ACC), v)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + SANDSIM_OFF_LAST_FRAME), v)
     f === :rng_state && return unsafe_store!(Ptr{UInt32}(x + SANDSIM_OFF_RNG), v)
-    f === :cell_count && return unsafe_store!(Ptr{UInt32}(x + SANDSIM_OFF_CELL_COUNT), v)
     f === :selected_type && return unsafe_store!(Ptr{UInt8}(x + SANDSIM_OFF_SELECTED), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + SANDSIM_OFF_QUIT), v)
     f === :grid && return unsafe_store!(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_GRID), v)
-    f === :scratch_arena && return unsafe_store!(Ptr{Ptr{UInt8}}(x + SANDSIM_OFF_SCRATCH), v)
-    f === :texture && return unsafe_store!(Ptr{Ptr{SDL_Texture}}(x + SANDSIM_OFF_TEXTURE), v)
-    f === :pixel_buffer && return unsafe_store!(Ptr{Ptr{UInt32}}(x + SANDSIM_OFF_PIXBUF), v)
     return nothing
 end
 
@@ -126,40 +101,13 @@ end
 end
 
 # Get cell at position
-function get_cell(grid::Ptr{UInt8}, x::Int32, y::Int32)::UInt8
-    # Bounds check - return empty for out of bounds
-    if x < Int32(0) || x >= GRID_WIDTH || y < Int32(0) || y >= GRID_HEIGHT
-        return CELL_EMPTY
-    end
-    # Calculate offset and use pointer arithmetic
-    # Convert to Int for pointer arithmetic (works for both 32-bit and 64-bit)
-    offset::Int = Int(x) + Int(y) * Int(GRID_WIDTH)
-    cell_ptr::Ptr{UInt8} = grid + offset
-    return unsafe_load(cell_ptr)
+@inline function get_cell(grid::Ptr{UInt8}, x::Int32, y::Int32)::UInt8
+    return unsafe_load(grid, grid_index(x, y) + Int32(1))  # Julia is 1-indexed for unsafe_load
 end
 
 # Set cell at position
-function set_cell(grid::Ptr{UInt8}, x::Int32, y::Int32, value::UInt8)::Cvoid
-    # Bounds check - ignore out of bounds
-    if x < Int32(0) || x >= GRID_WIDTH || y < Int32(0) || y >= GRID_HEIGHT
-        return nothing
-    end
-    # Calculate offset and use pointer arithmetic
-    # Convert to Int for pointer arithmetic (works for both 32-bit and 64-bit)
-    offset::Int = Int(x) + Int(y) * Int(GRID_WIDTH)
-    cell_ptr::Ptr{UInt8} = grid + offset
-    unsafe_store!(cell_ptr, value)
-    return nothing
-end
-
-# Set cell with state tracking (for counting)
-function set_cell_counted(state::Ptr{SandSimState}, x::Int32, y::Int32, value::UInt8)::Cvoid
-    old_value::UInt8 = get_cell(state.grid, x, y)
-    set_cell(state.grid, x, y, value)
-    # Only count if we're placing a new cell (not replacing empty with empty)
-    if old_value == CELL_EMPTY && value != CELL_EMPTY
-        state.cell_count = state.cell_count + UInt32(1)
-    end
+@inline function set_cell(grid::Ptr{UInt8}, x::Int32, y::Int32, value::UInt8)::Cvoid
+    unsafe_store!(grid, value, grid_index(x, y) + Int32(1))
     return nothing
 end
 
@@ -182,8 +130,6 @@ function j_init_window()::Ptr{SDL_Window}
 end
 
 function j_init_renderer(window::Ptr{SDL_Window})::Ptr{SDL_Renderer}
-    # Use accelerated renderer (WebGL in Emscripten)
-    # SDL_RENDERER_ACCELERATED = 2
     renderer::Ptr{SDL_Renderer} = llvm_SDL_CreateRenderer(window, Int32(-1), UInt32(2))
     if renderer == Ptr{SDL_Renderer}(C_NULL)
         printf(c"Failed to create renderer\n")
@@ -198,80 +144,28 @@ end
 function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{SandSimState}
     printf(c"Initializing sand simulation\n")
     
-    # Allocate grid with generous padding for WASM safety
-    # GRID_SIZE = 25600, but allocate extra to avoid any boundary issues
-    # Adding 1024 bytes padding to ensure we never hit bounds issues
-    grid_bytes::UInt32 = UInt32(GRID_SIZE) + UInt32(1024)
+    # Allocate grid
+    grid_bytes::UInt32 = UInt32(GRID_SIZE)
     grid::Ptr{UInt8} = Ptr{UInt8}(wasm_malloc(grid_bytes))
-    printf(c"Grid allocated: %d bytes (cells: %d + padding)\n", grid_bytes, GRID_SIZE)
     
-    # Initialize all allocated bytes to empty (including padding)
-    # Use pointer arithmetic to avoid indexing confusion
-    i::UInt32 = UInt32(0)
-    while i < grid_bytes
-        cell_ptr::Ptr{UInt8} = grid + Int(i)
-        unsafe_store!(cell_ptr, CELL_EMPTY)
-        i += UInt32(1)
+    # Initialize grid to empty
+    i::Int32 = Int32(0)
+    while i < GRID_SIZE
+        unsafe_store!(grid, CELL_EMPTY, i + Int32(1))
+        i += Int32(1)
     end
     printf(c"Grid initialized: %d cells\n", GRID_SIZE)
     
-    # Allocate scratch arena for per-frame allocations (prevents fragmentation)
-    scratch_arena::Ptr{UInt8} = Ptr{UInt8}(wasm_malloc(SCRATCH_TOTAL_SIZE))
-    printf(c"Scratch arena allocated: %d bytes\n", SCRATCH_TOTAL_SIZE)
-    
-    # Initialize scratch arena to zero to prevent uninitialized memory issues
-    i = UInt32(0)
-    while i < SCRATCH_TOTAL_SIZE
-        cell_ptr::Ptr{UInt8} = scratch_arena + Int(i)
-        unsafe_store!(cell_ptr, UInt8(0))
-        i += UInt32(1)
-    end
-    
-    # Create streaming texture at GRID size (160x160) - SDL will scale to window
-    # SDL_PIXELFORMAT_ABGR8888 = 376840196 (works better with WebGL byte order)
-    # SDL_TEXTUREACCESS_STREAMING = 1
-    texture::Ptr{SDL_Texture} = llvm_SDL_CreateTexture(
-        renderer, 
-        UInt32(376840196),  # SDL_PIXELFORMAT_ABGR8888
-        Int32(1),           # SDL_TEXTUREACCESS_STREAMING
-        Int32(160),         # GRID_WIDTH
-        Int32(160)          # GRID_HEIGHT
-    )
-    if texture == Ptr{SDL_Texture}(C_NULL)
-        printf(c"Failed to create texture\n")
-    else
-        printf(c"Texture created: 160x160 (will scale to window)\n")
-    end
-    
-    # Allocate pixel buffer at grid size (160x160, RGBA = 4 bytes per pixel)
-    # 160 * 160 * 4 = 102400 bytes
-    pixel_buf_size::UInt32 = UInt32(102400)
-    pixel_buffer::Ptr{UInt32} = Ptr{UInt32}(wasm_malloc(pixel_buf_size))
-    printf(c"Pixel buffer allocated: %d bytes\n", pixel_buf_size)
-    
-    # Initialize pixel buffer to background color (dark blue-gray)
-    bg_color::UInt32 = UInt32(0xFF403232)  # ABGR: alpha=FF, blue=40, green=32, red=32
-    i = UInt32(0)
-    pixel_count::UInt32 = UInt32(25600)  # 160 * 160
-    while i < pixel_count
-        unsafe_store!(pixel_buffer + Int(i), bg_color)
-        i += UInt32(1)
-    end
-    
-    # Allocate state - use fixed size for WASM32 compatibility (48 bytes with texture + pixel_buffer)
-    state_ptr::Ptr{SandSimState} = Ptr{SandSimState}(wasm_malloc(UInt32(48)))
+    # Allocate state - use fixed size for WASM32 compatibility (32 bytes)
+    state_ptr::Ptr{SandSimState} = Ptr{SandSimState}(wasm_malloc(UInt32(32)))
     
     # Initialize state (order doesn't matter, using accessors)
     state_ptr.physics_accumulator = Float64(0.0)
     state_ptr.last_frame_time = UInt64(0)
     state_ptr.rng_state = UInt32(12345)  # Seed
-    state_ptr.cell_count = UInt32(0)  # DEBUG: track cell placements
     state_ptr.selected_type = CELL_SAND
     state_ptr.quit = false
     state_ptr.grid = grid
-    state_ptr.scratch_arena = scratch_arena
-    state_ptr.texture = texture
-    state_ptr.pixel_buffer = pixel_buffer
     
     printf(c"Sand simulation ready\n")
     printf(c"Controls: 1=Sand, 2=Water, 3=Stone, 0=Erase\n")
@@ -302,42 +196,8 @@ function place_cells(grid::Ptr{UInt8}, cell_x::Int32, cell_y::Int32, size::Int32
     return nothing
 end
 
-function place_cells_counted(state::Ptr{SandSimState}, cell_x::Int32, cell_y::Int32, size::Int32, cell_type::UInt8)::Cvoid
-    half_size::Int32 = div(size, Int32(2))
-    dx::Int32 = -half_size
-    while dx < half_size
-        dy::Int32 = -half_size
-        while dy < half_size
-            x::Int32 = cell_x + dx
-            y::Int32 = cell_y + dy
-            if x >= Int32(0) && x < GRID_WIDTH && y >= Int32(0) && y < GRID_HEIGHT
-                set_cell_counted(state, x, y, cell_type)
-            end
-            dy += Int32(1)
-        end
-        dx += Int32(1)
-    end
-    return nothing
-end
-
 function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
-    # Pump events before polling to ensure SDL's internal queue is updated
-    llvm_SDL_PumpEvents()
-    
-    # Use pre-allocated scratch arena instead of malloc/free every frame
-    scratch::Ptr{UInt8} = state.scratch_arena
-    event_ptr::Ptr{SDL_Event} = Ptr{SDL_Event}(scratch + SCRATCH_EVENT)
-    mx_ptr::Ptr{Int32} = Ptr{Int32}(scratch + SCRATCH_MX)
-    my_ptr::Ptr{Int32} = Ptr{Int32}(scratch + SCRATCH_MY)
-    
-    # Zero out event buffer before polling to prevent uninitialized data
-    i::UInt32 = UInt32(0)
-    while i < UInt32(128)  # Zero out the 128-byte event buffer
-        cell_ptr::Ptr{UInt8} = Ptr{UInt8}(event_ptr) + Int(i)
-        unsafe_store!(cell_ptr, UInt8(0))
-        i += UInt32(1)
-    end
-    
+    event_ptr::Ptr{SDL_Event} = Ptr{SDL_Event}(wasm_malloc(UInt32(56)))
     cell_x::Int32 = Int32(0)
     cell_y::Int32 = Int32(0)
 
@@ -350,36 +210,40 @@ function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
             key::Int32 = event_ptr.key.keysym.sym
             if key == SDLK_1
                 state.selected_type = CELL_SAND
+                printf(c"Selected: Sand\n")
             elseif key == SDLK_2
                 state.selected_type = CELL_WATER
+                printf(c"Selected: Water\n")
             elseif key == SDLK_3
                 state.selected_type = CELL_STONE
+                printf(c"Selected: Stone\n")
             elseif key == SDLK_0
                 state.selected_type = CELL_EMPTY
+                printf(c"Selected: Erase\n")
             elseif key == SDLK_ESCAPE
                 state.quit = true
-            elseif key == Int32(32)  # SDLK_SPACE
-                # DEBUG: Place single cell at center (no printf to avoid walloc fragmentation)
-                center_x::Int32 = div(GRID_WIDTH, Int32(2))
-                center_y::Int32 = div(GRID_HEIGHT, Int32(2))
-                set_cell_counted(state, center_x, center_y, state.selected_type)
             end
         elseif event_type == SDL_MOUSEBUTTONDOWN || event_type == SDL_MOUSEMOTION
             # Check if mouse button is held
             mouse_state::UInt32 = llvm_SDL_GetMouseState(Ptr{Int32}(C_NULL), Ptr{Int32}(C_NULL))
             if (mouse_state & UInt32(1)) != UInt32(0)  # Left button
-                # Get mouse position using scratch arena pointers
+                # Get mouse position
+                mx_ptr::Ptr{Int32} = Ptr{Int32}(wasm_malloc(UInt32(4)))
+                my_ptr::Ptr{Int32} = Ptr{Int32}(wasm_malloc(UInt32(4)))
                 llvm_SDL_GetMouseState(mx_ptr, my_ptr)
                 mx::Int32 = unsafe_load(mx_ptr)
                 my::Int32 = unsafe_load(my_ptr)
+                wasm_free(Ptr{Cvoid}(mx_ptr))
+                wasm_free(Ptr{Cvoid}(my_ptr))
                 
                 cell_x = div(mx, CELL_SIZE)
                 cell_y = div(my, CELL_SIZE)
-                place_cells_counted(state, cell_x, cell_y, BRUSH_SIZE, state.selected_type)
+                place_cells(state.grid, cell_x, cell_y, BRUSH_SIZE, state.selected_type)
             end
         end
     end
-
+    
+    wasm_free(Ptr{Cvoid}(event_ptr))
     return nothing
 end
 
@@ -398,7 +262,7 @@ function update_physics(state::Ptr{SandSimState}, delta_time::Float64)::Cvoid
     
     grid::Ptr{UInt8} = state.grid
     
-    # Iterate from bottom to top, skip bottom row since it can't fall further
+    # Iterate from bottom to top
     y::Int32 = GRID_HEIGHT - Int32(2)  # Start one above bottom
     while y >= Int32(0)
         x::Int32 = Int32(0)
@@ -407,7 +271,6 @@ function update_physics(state::Ptr{SandSimState}, delta_time::Float64)::Cvoid
             dir::Int32 = Int32(0)
             # SAND PHYSICS
             if cell == CELL_SAND
-                # y+1 is always valid here since we start at GRID_HEIGHT-2
                 below::UInt8 = get_cell(grid, x, y + Int32(1))
                 
                 if below == CELL_EMPTY
@@ -433,10 +296,10 @@ function update_physics(state::Ptr{SandSimState}, delta_time::Float64)::Cvoid
                     elseif can_right
                         set_cell(grid, x + Int32(1), y + Int32(1), CELL_SAND)
                         set_cell(grid, x, y, CELL_EMPTY)
+                    end
+                end
             end
-        end
-    end
-    
+            
             # WATER PHYSICS
             if cell == CELL_WATER
                 # Try fall down first
@@ -491,53 +354,46 @@ end
 # ============================================================================
 
 function render_simulation(state::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer})::Cvoid
+    # Clear to dark background
+    llvm_SDL_SetRenderDrawColor(renderer, UInt8(50), UInt8(50), UInt8(64), UInt8(255))
+    llvm_SDL_RenderClear(renderer)
+    
     grid::Ptr{UInt8} = state.grid
-    pixel_buffer::Ptr{UInt32} = state.pixel_buffer
-    texture::Ptr{SDL_Texture} = state.texture
     
-    # Colors in ABGR format (for SDL_PIXELFORMAT_ABGR8888)
-    # Format: 0xAABBGGRR
-    bg_color::UInt32 = UInt32(0xFF403232)      # Dark background (R=50, G=50, B=64)
-    sand_color::UInt32 = UInt32(0xFF00A5FF)    # Orange sand (R=255, G=165, B=0)
-    water_color::UInt32 = UInt32(0xFFF17900)   # Blue water (R=0, G=121, B=241)
-    stone_color::UInt32 = UInt32(0xFF828282)   # Gray stone (R=130, G=130, B=130)
+    # Allocate rect once for reuse
+    rect_ptr::Ptr{SDL_Rect} = Ptr{SDL_Rect}(wasm_malloc(UInt32(sizeof(SDL_Rect))))
     
-    # Build pixel buffer at 1:1 with grid (160x160)
-    # SDL_RenderCopy will scale the texture to fill the 640x640 window
     y::Int32 = Int32(0)
-    while y < Int32(160)  # GRID_HEIGHT
+    while y < GRID_HEIGHT
         x::Int32 = Int32(0)
-        while x < Int32(160)  # GRID_WIDTH
+        while x < GRID_WIDTH
             cell::UInt8 = get_cell(grid, x, y)
             
-            color::UInt32 = bg_color
-            if cell == CELL_SAND
-                color = sand_color
-            elseif cell == CELL_WATER
-                color = water_color
-            elseif cell == CELL_STONE
-                color = stone_color
+            if cell != CELL_EMPTY
+                # Set color based on cell type
+                if cell == CELL_SAND
+                    llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(165), UInt8(0), UInt8(255))  # Orange
+                elseif cell == CELL_WATER
+                    llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(121), UInt8(241), UInt8(255))  # Blue
+                elseif cell == CELL_STONE
+                    llvm_SDL_SetRenderDrawColor(renderer, UInt8(130), UInt8(130), UInt8(130), UInt8(255))  # Gray
+                end
+                
+                # Set rect position and size
+                unsafe_store!(Ptr{Int32}(rect_ptr), x * CELL_SIZE)                    # x
+                unsafe_store!(Ptr{Int32}(rect_ptr + Int64(4)), y * CELL_SIZE)         # y
+                unsafe_store!(Ptr{Int32}(rect_ptr + Int64(8)), CELL_SIZE)             # w
+                unsafe_store!(Ptr{Int32}(rect_ptr + Int64(12)), CELL_SIZE)            # h
+                
+                llvm_SDL_RenderFillRect(renderer, rect_ptr)
             end
             
-            # Direct 1:1 mapping: grid cell -> pixel
-            pixel_idx::Int32 = y * Int32(160) + x
-            unsafe_store!(pixel_buffer + Int(pixel_idx), color)
             x += Int32(1)
         end
         y += Int32(1)
     end
     
-    # Update texture with pixel data
-    # pitch = bytes per row = 160 * 4 = 640 (RGBA)
-    pitch::Int32 = Int32(640)
-    llvm_SDL_UpdateTexture(texture, Ptr{SDL_Rect}(C_NULL), Ptr{Cvoid}(pixel_buffer), pitch)
-    
-    # Clear and render texture scaled to window
-    llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
-    llvm_SDL_RenderClear(renderer)
-
-    # Render texture to fill entire window (NULL src and dst = full texture to full window)
-    llvm_SDL_RenderCopy(renderer, texture, Ptr{SDL_Rect}(C_NULL), Ptr{SDL_Rect}(C_NULL))
+    wasm_free(Ptr{Cvoid}(rect_ptr))
     
     llvm_SDL_RenderPresent(renderer)
     return nothing
@@ -573,7 +429,7 @@ end
 
 function pc_main()::Int32
     llvm_SDL_Init(UInt32(32))  # SDL_INIT_VIDEO
-
+    
     window::Ptr{SDL_Window} = j_init_window()
     renderer::Ptr{SDL_Renderer} = j_init_renderer(window)
     state_ptr::Ptr{SandSimState} = j_init_game_state(renderer, window)
@@ -587,24 +443,9 @@ function pc_main()::Int32
 end
 
 function cleanup(state_ptr::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Cvoid
-    # Free texture
-    if state_ptr.texture != Ptr{SDL_Texture}(C_NULL)
-        llvm_SDL_DestroyTexture(state_ptr.texture)
-    end
-    
-    # Free pixel buffer
-    if state_ptr.pixel_buffer != Ptr{UInt32}(C_NULL)
-        wasm_free(Ptr{Cvoid}(state_ptr.pixel_buffer))
-    end
-    
     # Free grid
     if state_ptr.grid != Ptr{UInt8}(C_NULL)
         wasm_free(Ptr{Cvoid}(state_ptr.grid))
-    end
-    
-    # Free scratch arena
-    if state_ptr.scratch_arena != Ptr{UInt8}(C_NULL)
-        wasm_free(Ptr{Cvoid}(state_ptr.scratch_arena))
     end
     
     # Free state

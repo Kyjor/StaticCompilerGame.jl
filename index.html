@@ -114,12 +114,6 @@ canvas.emscripten {
     <div class="emscripten" id="status">Downloading...</div>
 
     <span id='controls'>
-      <span><input type="checkbox" id="resize">Resize canvas</span>
-      <span><input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer &nbsp;&nbsp;&nbsp;</span>
-      <span><input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, 
-                                                                                document.getElementById('resize').checked)">
-      </span>
-      <span><input type="button" id="killGame" value="Kill Game" style="background-color: #ff4444; color: white; font-weight: bold;">
       </span>
     </span>
 
@@ -151,6 +145,33 @@ canvas.emscripten {
       // Set canvas dimensions explicitly
       canvasElement.width = 640;
       canvasElement.height = 640;
+      
+      // Fullscreen toggle function
+      function toggleFullscreen() {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+          // Enter fullscreen
+          if (canvasElement.requestFullscreen) {
+            canvasElement.requestFullscreen();
+          } else if (canvasElement.webkitRequestFullscreen) {
+            canvasElement.webkitRequestFullscreen();
+          } else if (canvasElement.mozRequestFullScreen) {
+            canvasElement.mozRequestFullScreen();
+          } else if (canvasElement.msRequestFullscreen) {
+            canvasElement.msRequestFullscreen();
+          }
+        } else {
+          // Exit fullscreen
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
+        }
+      }
       
       // Set up Module before WASM loads
       var Module = {
