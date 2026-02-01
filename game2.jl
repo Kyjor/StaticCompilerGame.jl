@@ -23,6 +23,7 @@ const PHYSICS_FPS::Float64 = Float64(50.0)
 const PHYSICS_TIMESTEP::Float64 = Float64(1.0) / PHYSICS_FPS
 
 const BRUSH_SIZE::Int32 = Int32(4)
+const WINDOW_SIZE::Int32 = Int32(640)  # Window dimensions
 
 # Cell types
 const CELL_EMPTY::UInt8 = UInt8(0)
@@ -226,31 +227,32 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
         i += UInt32(1)
     end
     
-    # Create streaming texture for efficient rendering (1 draw call instead of thousands)
+    # Create streaming texture at GRID size (160x160) - SDL will scale to window
     # SDL_PIXELFORMAT_ABGR8888 = 376840196 (works better with WebGL byte order)
     # SDL_TEXTUREACCESS_STREAMING = 1
     texture::Ptr{SDL_Texture} = llvm_SDL_CreateTexture(
         renderer, 
         UInt32(376840196),  # SDL_PIXELFORMAT_ABGR8888
         Int32(1),           # SDL_TEXTUREACCESS_STREAMING
-        GRID_WIDTH, 
-        GRID_HEIGHT
+        Int32(160),         # GRID_WIDTH
+        Int32(160)          # GRID_HEIGHT
     )
     if texture == Ptr{SDL_Texture}(C_NULL)
         printf(c"Failed to create texture\n")
     else
-        printf(c"Texture created: %dx%d\n", GRID_WIDTH, GRID_HEIGHT)
+        printf(c"Texture created: 160x160 (will scale to window)\n")
     end
     
-    # Allocate pixel buffer (RGBA = 4 bytes per pixel)
-    pixel_buf_size::UInt32 = UInt32(GRID_WIDTH) * UInt32(GRID_HEIGHT) * UInt32(4)
+    # Allocate pixel buffer at grid size (160x160, RGBA = 4 bytes per pixel)
+    # 160 * 160 * 4 = 102400 bytes
+    pixel_buf_size::UInt32 = UInt32(102400)
     pixel_buffer::Ptr{UInt32} = Ptr{UInt32}(wasm_malloc(pixel_buf_size))
     printf(c"Pixel buffer allocated: %d bytes\n", pixel_buf_size)
     
     # Initialize pixel buffer to background color (dark blue-gray)
     bg_color::UInt32 = UInt32(0xFF403232)  # ABGR: alpha=FF, blue=40, green=32, red=32
     i = UInt32(0)
-    pixel_count::UInt32 = UInt32(GRID_WIDTH) * UInt32(GRID_HEIGHT)
+    pixel_count::UInt32 = UInt32(25600)  # 160 * 160
     while i < pixel_count
         unsafe_store!(pixel_buffer + Int(i), bg_color)
         i += UInt32(1)
@@ -377,7 +379,7 @@ function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
             end
         end
     end
-    
+
     return nothing
 end
 
@@ -431,10 +433,10 @@ function update_physics(state::Ptr{SandSimState}, delta_time::Float64)::Cvoid
                     elseif can_right
                         set_cell(grid, x + Int32(1), y + Int32(1), CELL_SAND)
                         set_cell(grid, x, y, CELL_EMPTY)
-                    end
-                end
             end
-            
+        end
+    end
+    
             # WATER PHYSICS
             if cell == CELL_WATER
                 # Try fall down first
@@ -500,13 +502,13 @@ function render_simulation(state::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}
     water_color::UInt32 = UInt32(0xFFF17900)   # Blue water (R=0, G=121, B=241)
     stone_color::UInt32 = UInt32(0xFF828282)   # Gray stone (R=130, G=130, B=130)
     
-    # Build pixel buffer from grid
+    # Build pixel buffer at 1:1 with grid (160x160)
+    # SDL_RenderCopy will scale the texture to fill the 640x640 window
     y::Int32 = Int32(0)
-    while y < GRID_HEIGHT
+    while y < Int32(160)  # GRID_HEIGHT
         x::Int32 = Int32(0)
-        while x < GRID_WIDTH
+        while x < Int32(160)  # GRID_WIDTH
             cell::UInt8 = get_cell(grid, x, y)
-            pixel_idx::Int32 = y * GRID_WIDTH + x
             
             color::UInt32 = bg_color
             if cell == CELL_SAND
@@ -517,6 +519,8 @@ function render_simulation(state::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}
                 color = stone_color
             end
             
+            # Direct 1:1 mapping: grid cell -> pixel
+            pixel_idx::Int32 = y * Int32(160) + x
             unsafe_store!(pixel_buffer + Int(pixel_idx), color)
             x += Int32(1)
         end
@@ -524,14 +528,14 @@ function render_simulation(state::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}
     end
     
     # Update texture with pixel data
-    # pitch = bytes per row = GRID_WIDTH * 4 (RGBA)
-    pitch::Int32 = GRID_WIDTH * Int32(4)
+    # pitch = bytes per row = 160 * 4 = 640 (RGBA)
+    pitch::Int32 = Int32(640)
     llvm_SDL_UpdateTexture(texture, Ptr{SDL_Rect}(C_NULL), Ptr{Cvoid}(pixel_buffer), pitch)
     
     # Clear and render texture scaled to window
     llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
     llvm_SDL_RenderClear(renderer)
-    
+
     # Render texture to fill entire window (NULL src and dst = full texture to full window)
     llvm_SDL_RenderCopy(renderer, texture, Ptr{SDL_Rect}(C_NULL), Ptr{SDL_Rect}(C_NULL))
     
@@ -569,7 +573,7 @@ end
 
 function pc_main()::Int32
     llvm_SDL_Init(UInt32(32))  # SDL_INIT_VIDEO
-    
+
     window::Ptr{SDL_Window} = j_init_window()
     renderer::Ptr{SDL_Renderer} = j_init_renderer(window)
     state_ptr::Ptr{SandSimState} = j_init_game_state(renderer, window)
