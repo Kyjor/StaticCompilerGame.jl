@@ -1,4 +1,4 @@
-#include "SDL2-2.30.11/include/SDL.h"
+#include "../emsdk/upstream/emscripten/cache/ports/sdl2/SDL-release-2.32.0/include/SDL.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>

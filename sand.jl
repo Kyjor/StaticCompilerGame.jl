@@ -116,7 +116,7 @@ end
 # ============================================================================
 
 function j_init_window()::Ptr{SDL_Window}
-    window_name = str_ptr(w"Sand simulations")
+    window_name = str_ptr(w"Sand simulation")
     window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(640), UInt32(0))
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
