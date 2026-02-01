@@ -165,15 +165,8 @@ canvas.emscripten {
         canvas: canvasElement,
         onRuntimeInitialized() {
           console.log("WASM runtime initialized");
-          // Create WebGL context for SDL2
-          var gl = canvasElement.getContext('webgl') || canvasElement.getContext('experimental-webgl');
-          if (gl) {
-            console.log("WebGL context created successfully");
-            Module.ctx = gl;
-          } else {
-            console.error("Failed to create WebGL context");
-          }
-          // The WASM module is now ready
+          // Don't pre-create canvas context - let SDL create the appropriate one
+          // (WebGL for accelerated, 2D for software renderer)
           if (window.onModuleReady) {
             window.onModuleReady();
           }

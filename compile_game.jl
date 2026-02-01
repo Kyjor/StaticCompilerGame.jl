@@ -86,7 +86,8 @@ if build_type == "web"
         println(" Linking files: $ll_files_str")
         
         # Link Julia LLVM IR with SDL2 C code
-        cmd = `emcc $ll_files SDLCalls/sdl_module.c walloc.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -O3 -s WASM=1 -s 
+        # Note: Using Emscripten's built-in malloc instead of walloc.c for better large allocation support
+        cmd = `emcc $ll_files SDLCalls/sdl_module.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_game_loop',
         '_j_init_game_state',
@@ -103,6 +104,7 @@ if build_type == "web"
         -o $output_dir/game.js
         --preload-file ./assets
         --use-preload-plugins
+        --profiling
         `
         # -s ENVIRONMENT=web
         
