@@ -63,9 +63,10 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     printf(c"Initializing curling puzzle game\n")
     
     # Create puzzle level (start with puzzle 1)
-    level::Ptr{PuzzleLevel} = create_puzzle_1()
+   level::Ptr{PuzzleLevel} = create_puzzle_1()
     
     # Get player stone from level
+    player_stone_ptr1::Ptr{Stone} = Ptr{Stone}(C_NULL)
     player_stone::Stone = Stone(Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), true, false)
     if level.stone_count > Int32(0)
         player_stone_ptr::Ptr{Stone} = level.stones
@@ -81,11 +82,12 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
         end
     else
         # Fallback to level start position
-        player_stone.x = level.start_x
-        player_stone.y = level.start_y
+        player_stone_ptr1.x = level.start_x
+        player_stone_ptr1.y = level.start_y
+        player_stone = unsafe_load(player_stone_ptr1)
     end
     
-    # Create game state
+    # # Create game state
     state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
     unsafe_store!(
         Ptr{GameState}(state_ptr),

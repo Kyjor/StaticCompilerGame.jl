@@ -748,7 +748,8 @@ function create_puzzle_1()::Ptr{PuzzleLevel}
     grid_data::Ptr{UInt8} = str_ptr(w"                T\n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \nS               \n")
     level::Ptr{PuzzleLevel} = create_puzzle_level(grid_data)
     wasm_free(Ptr{Cvoid}(grid_data))
-    return level
+    
+   return level
 end
 
 # Create Puzzle 2: "Split Ice"
