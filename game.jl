@@ -104,7 +104,7 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
 end
 
 function j_init_window()::Ptr{SDL_Window}
-    window_name = str_ptr(w"Game test")
+    window_name = str_ptr(w"Platformer")
     window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(640), UInt32(0))
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
@@ -301,11 +301,6 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     end
     
     # Open audio device
-    #Mix_OpenAudio(frequency, format, channels, chunksize)
-    # MIX_DEFAULT_FORMAT = AUDIO_S16LSB 
-    # MIX_DEFAULT_CHANNELS = 2
-    # MIX_DEFAULT_FREQUENCY = 44100
-    # AUDIO_S16LSB = 0x8010 #(signed 16-bit samples, little-endian)
     audio_ready::Bool = false
     open_result::Int32 = llvm_Mix_OpenAudio(Int32(44100), UInt16(0x8010), Int32(2), Int32(2048))
     if open_result != Int32(0)
@@ -322,7 +317,6 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     end
 
     # Load jump sound only if audio device is ready
-    # NOTE: Temporarily disabled due to crash in Mix_LoadWAV - investigating
     jump_sound::Ptr{Mix_Chunk} = Ptr{Mix_Chunk}(C_NULL)
     if audio_ready
         # TODO: Fix Mix_LoadWAV crash - might be file path or memory allocation issue
@@ -331,7 +325,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
 
         jump_sound_path::Ptr{UInt8} = str_ptr(w"/assets/Jump.wav")
         jump_sound = llvm_Mix_LoadWAV(jump_sound_path)
-        game_state_ptr.jump_sound = jump_sound
+        
         printf(c"Jump sound loaded\n")
         wasm_free(Ptr{Cvoid}(jump_sound_path))
     else
@@ -363,7 +357,40 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
     # Initialize player at ground level (732.0) minus player height (64)
-    unsafe_store!(Ptr{GameState}(game_state_ptr), GameState(Float64(500), Float64(668), Float64(0), Float64(0), Int32(1), Float64(0), Float64(0), Int32(0), keys_down, keys_up, keys_pressed, UInt64(0), false, Ptr{Sprite}(C_NULL), Ptr{Sprite}(C_NULL), Ptr{Player}(C_NULL), true, Float64(300), Float64(220), false, false, false, idle_anim, run_anim, jump_anim, idle_anim, ANIM_IDLE, Ptr{Mix_Chunk}(C_NULL)))
+    unsafe_store!(
+        Ptr{GameState}(game_state_ptr), 
+        GameState(
+            Float64(500), 
+            Float64(668), 
+            Float64(0), 
+            Float64(0), 
+            Int32(1), 
+            Float64(0), 
+            Float64(0), 
+            Int32(0), 
+            keys_down, 
+            keys_up, 
+            keys_pressed, 
+            UInt64(0), 
+            false, 
+            Ptr{Sprite}(C_NULL), 
+            Ptr{Sprite}(C_NULL), 
+            Ptr{Player}(C_NULL), 
+            true, 
+            Float64(300), 
+            Float64(220), 
+            false, 
+            false, 
+            false, 
+            idle_anim, 
+            run_anim, 
+            jump_anim, 
+            idle_anim, 
+            ANIM_IDLE, 
+            jump_sound
+        )
+    )
+
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
