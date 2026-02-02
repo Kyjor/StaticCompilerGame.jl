@@ -240,6 +240,26 @@ This project uses **StaticCompiler.jl** to compile Julia code to LLVM IR and the
    result = a * b + c  # implicit type inference
    ```
 
+3. **Use `unsafe_trunc` for Float to Int conversions (avoids GC)**
+   ```julia
+   # ✅ Good: unsafe_trunc doesn't trigger GC
+   x::Float64 = Float64(3.7)
+   y::Int32 = unsafe_trunc(Int32, x)  # Result: 3
+   
+   # ❌ Bad: Int32() constructor may trigger allocations
+   y::Int32 = Int32(x)  # Can cause GC issues in static compilation
+   ```
+   
+   **When to use `unsafe_trunc`:**
+   - Converting `Float64`/`Float32` to `Int32`/`Int64`/`UInt32`/`UInt64`
+   - Converting after rounding operations: `unsafe_trunc(Int32, llvm_SDL_round(value))`
+   - Any numeric truncation in hot paths or tight loops
+   
+   **When `Int32()` is acceptable:**
+   - Converting integer literals: `Int32(42)` is fine
+   - Converting between integer types: `Int32(uint_value)` is usually fine
+   - Compile-time constant expressions
+
 ## 🏗️ Project Structure Patterns
 
 ### Adding New Structs

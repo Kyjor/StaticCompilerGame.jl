@@ -2,7 +2,7 @@
 using StaticTools
 using StaticCompiler
 
-include("game.jl")
+include("curling.jl")
 
 # Parse command line arguments
 build_type = "web"  # default to web build
