@@ -155,7 +155,31 @@ This project uses **StaticCompiler.jl** to compile Julia code to LLVM IR and the
    result = int_value  # implicit conversion
    ```
 
-3. **All conditional branches must have explicit returns**
+3. **NO redeclaring variable types in the same function**
+   ```julia
+   # ❌ Bad: multiple type declarations for same variable
+   function test(x::Int32)::Int32
+       if x > 0
+           f::Int32 = Int32(0)
+       else
+           f::Int32 = Int32(0)  # ERROR: "multiple type declarations for f"
+       end
+       return f
+   end
+   
+   # ✅ Good: declare type once at the top
+   function test(x::Int32)::Int32
+       f::Int32 = Int32(-1)  # Declare once with initial value
+       if x > 0
+           f = Int32(0)  # Assign without redeclaring type
+       else
+           f = Int32(0)  # Assign without redeclaring type
+       end
+       return f
+   end
+   ```
+
+4. **All conditional branches must have explicit returns**
    ```julia
    # ✅ Good: explicit returns in all branches
    function process(x::Int32)::Float64
@@ -347,6 +371,10 @@ functions_to_compile = [
 - **Cause**: Direct ccall in code to be compiled
 - **Solution**: Use llvmcall wrappers instead (see `llvm_wrappers.jl`)
 
+### Error: "syntax: multiple type declarations for 'variable'"
+- **Cause**: Declaring the same variable with a type annotation multiple times in the same function (e.g., in different if/else branches)
+- **Solution**: Declare the variable with its type once at the top of the function, then assign to it without redeclaring the type in conditional branches
+
 ### Error: "memory access out of bounds" at runtime (WASM)
 - **Cause**: Buffer overflow in `str_ptr()` function - it allocates `len` bytes but writes `len + 1` bytes (including null terminator)
 - **Symptoms**: Crashes when string length (with null terminator) is a multiple of 16 bytes (16, 32, 48, etc.)
@@ -362,6 +390,7 @@ functions_to_compile = [
 - [ ] No println/print (use `printf` with `c"..."`)
 - [ ] All functions have explicit return types `::Type`
 - [ ] All variables have explicit type annotations `::Type`
+- [ ] No variable type redeclarations in the same function (declare once at top, assign in branches)
 - [ ] All allocations use `wasm_malloc` and are freed with `wasm_free`
 - [ ] All struct pointer access uses custom getproperty/setproperty!
 - [ ] No dynamic arrays (use `MallocArray` or manual pointers)
