@@ -35,7 +35,7 @@ const CELL_STONE::UInt8 = UInt8(3)
 # Field order matters! Put fixed-size fields first to avoid pointer size mismatch
 # between 64-bit compilation host and 32-bit WASM target.
 # Using manual offsets to ensure WASM32 compatibility.
-struct SandSimState
+struct GameState
     physics_accumulator::Float64  # offset 0, size 8
     last_frame_time::UInt64       # offset 8, size 8
     rng_state::UInt32             # offset 16, size 4
@@ -54,8 +54,8 @@ const SANDSIM_OFF_SELECTED::Int64 = Int64(20)
 const SANDSIM_OFF_QUIT::Int64 = Int64(21)
 const SANDSIM_OFF_GRID::Int64 = Int64(24)
 
-# Pointer accessors for SandSimState using manual offsets
-function Base.getproperty(x::Ptr{SandSimState}, f::Symbol)
+# Pointer accessors for GameState using manual offsets
+function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :physics_accumulator && return unsafe_load(Ptr{Float64}(x + SANDSIM_OFF_PHYSICS_ACC))
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + SANDSIM_OFF_LAST_FRAME))
     f === :rng_state && return unsafe_load(Ptr{UInt32}(x + SANDSIM_OFF_RNG))
@@ -65,7 +65,7 @@ function Base.getproperty(x::Ptr{SandSimState}, f::Symbol)
     return getfield(x, f)
 end
 
-function Base.setproperty!(x::Ptr{SandSimState}, f::Symbol, v)
+function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v)
     f === :physics_accumulator && return unsafe_store!(Ptr{Float64}(x + SANDSIM_OFF_PHYSICS_ACC), v)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + SANDSIM_OFF_LAST_FRAME), v)
     f === :rng_state && return unsafe_store!(Ptr{UInt32}(x + SANDSIM_OFF_RNG), v)
@@ -80,7 +80,7 @@ end
 # ============================================================================
 
 # Simple LCG random number generator
-function rand_next(state::Ptr{SandSimState})::UInt32
+function rand_next(state::Ptr{GameState})::UInt32
     # LCG parameters (same as glibc)
     a::UInt32 = UInt32(1103515245)
     c::UInt32 = UInt32(12345)
@@ -90,7 +90,7 @@ function rand_next(state::Ptr{SandSimState})::UInt32
 end
 
 # Get random 0 or 1
-function rand_bool(state::Ptr{SandSimState})::Int32
+function rand_bool(state::Ptr{GameState})::Int32
     r::UInt32 = rand_next(state)
     return unsafe_trunc(Int32, r & UInt32(1))
 end
@@ -141,7 +141,7 @@ end
 # SIMULATION INIT
 # ============================================================================
 
-function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{SandSimState}
+function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
     printf(c"Initializing sand simulation\n")
     
     # Allocate grid
@@ -157,7 +157,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     printf(c"Grid initialized: %d cells\n", GRID_SIZE)
     
     # Allocate state - use fixed size for WASM32 compatibility (32 bytes)
-    state_ptr::Ptr{SandSimState} = Ptr{SandSimState}(wasm_malloc(UInt32(32)))
+    state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(32)))
     
     # Initialize state (order doesn't matter, using accessors)
     state_ptr.physics_accumulator = Float64(0.0)
@@ -196,7 +196,7 @@ function place_cells(grid::Ptr{UInt8}, cell_x::Int32, cell_y::Int32, size::Int32
     return nothing
 end
 
-function handle_input(state::Ptr{SandSimState}, window::Ptr{SDL_Window})::Cvoid
+function handle_input(state::Ptr{GameState}, window::Ptr{SDL_Window})::Cvoid
     event_ptr::Ptr{SDL_Event} = Ptr{SDL_Event}(wasm_malloc(UInt32(56)))
     cell_x::Int32 = Int32(0)
     cell_y::Int32 = Int32(0)
@@ -251,7 +251,7 @@ end
 # PHYSICS UPDATE
 # ============================================================================
 
-function update_physics(state::Ptr{SandSimState}, delta_time::Float64)::Cvoid
+function update_physics(state::Ptr{GameState}, delta_time::Float64)::Cvoid
     state.physics_accumulator = state.physics_accumulator + delta_time
     
     if state.physics_accumulator < PHYSICS_TIMESTEP
@@ -353,7 +353,7 @@ end
 # RENDERING
 # ============================================================================
 
-function render_simulation(state::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer})::Cvoid
+function render_simulation(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
     # Clear to dark background
     llvm_SDL_SetRenderDrawColor(renderer, UInt8(50), UInt8(50), UInt8(64), UInt8(255))
     llvm_SDL_RenderClear(renderer)
@@ -403,7 +403,7 @@ end
 # MAIN GAME LOOP
 # ============================================================================
 
-function game_loop(state::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{SandSimState}
+function game_loop(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
     # Calculate delta time
     current_time::UInt64 = llvm_SDL_GetPerformanceCounter()
     delta_time::Float64 = Float64(current_time - state.last_frame_time) / Float64(llvm_SDL_GetPerformanceFrequency())
@@ -432,7 +432,7 @@ function pc_main()::Int32
     
     window::Ptr{SDL_Window} = j_init_window()
     renderer::Ptr{SDL_Renderer} = j_init_renderer(window)
-    state_ptr::Ptr{SandSimState} = j_init_game_state(renderer, window)
+    state_ptr::Ptr{GameState} = j_init_game_state(renderer, window)
     
     while !state_ptr.quit
         game_loop(state_ptr, renderer, window)
@@ -442,7 +442,7 @@ function pc_main()::Int32
     return Int32(0)
 end
 
-function cleanup(state_ptr::Ptr{SandSimState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Cvoid
+function cleanup(state_ptr::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Cvoid
     # Free grid
     if state_ptr.grid != Ptr{UInt8}(C_NULL)
         wasm_free(Ptr{Cvoid}(state_ptr.grid))

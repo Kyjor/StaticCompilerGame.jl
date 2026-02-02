@@ -9,6 +9,100 @@ include("llvm_wrappers.jl")
 include("llvm_bindings.jl")
 include("wallocstring.jl")
 
+
+struct GameState
+    player_x::Float64
+    player_y::Float64
+    player_vel_x::Float64
+    player_vel_y::Float64
+    on_ground::Int32
+    coyote_time::Float64
+    jump_buffer::Float64
+    is_jumping::Int32
+    keys_up::Ptr{KeyState_up}   
+    keys_down::Ptr{KeyState_down}
+    keys_pressed::Ptr{KeyState_pressed}
+    last_frame_time::UInt64
+    quit::Bool
+    player_sprite::Ptr{Sprite}
+    background_sprite::Ptr{Sprite}
+    player::Ptr{Player}
+    fullscreen::Bool
+    camera_x::Float64
+    camera_y::Float64
+    left_btn_pressed::Bool
+    right_btn_pressed::Bool
+    jump_btn_pressed::Bool
+    player_idle_anim::Ptr{Animation}
+    player_run_anim::Ptr{Animation}
+    player_jump_anim::Ptr{Animation}
+    current_player_anim::Ptr{Animation}
+    current_anim_state::Int32
+    jump_sound::Ptr{Mix_Chunk}
+end
+
+function Base.getproperty(x::Ptr{GameState}, f::Symbol)
+    f === :player_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:player_x))))
+    f === :player_y && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:player_y))))
+    f === :player_vel_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:player_vel_x))))
+    f === :player_vel_y && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:player_vel_y))))
+    f === :on_ground && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:on_ground))))
+    f === :coyote_time && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:coyote_time))))
+    f === :jump_buffer && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:jump_buffer))))
+    f === :is_jumping && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:is_jumping))))
+    f === :keys_up && return unsafe_load(Ptr{Ptr{KeyState_up}}(x + offsetof(GameState, Val(:keys_up))))
+    f === :keys_down && return unsafe_load(Ptr{Ptr{KeyState_down}}(x + offsetof(GameState, Val(:keys_down))))
+    f === :keys_pressed && return unsafe_load(Ptr{Ptr{KeyState_pressed}}(x + offsetof(GameState, Val(:keys_pressed))))
+    f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))))
+    f === :quit && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:quit))))
+    f === :player_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))))
+    f === :background_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:background_sprite))))
+    f === :player && return unsafe_load(Ptr{Ptr{Player}}(x + offsetof(GameState, Val(:player))))
+    f === :fullscreen && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:fullscreen))))
+    f === :camera_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_x))))
+    f === :camera_y && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_y))))
+    f === :left_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:left_btn_pressed))))
+    f === :right_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:right_btn_pressed))))
+    f === :jump_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:jump_btn_pressed))))
+    f === :player_idle_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_idle_anim))))
+    f === :player_run_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_run_anim))))
+    f === :player_jump_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_jump_anim))))
+    f === :current_player_anim && return unsafe_load(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:current_player_anim))))
+    f === :current_anim_state && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:current_anim_state))))
+    f === :jump_sound && return unsafe_load(Ptr{Ptr{Mix_Chunk}}(x + offsetof(GameState, Val(:jump_sound))))
+end
+
+function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
+    f === :player_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:player_x))), v)
+    f === :player_y && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:player_y))), v)
+    f === :player_vel_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:player_vel_x))), v)
+    f === :player_vel_y && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:player_vel_y))), v)
+    f === :on_ground && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:on_ground))), v)
+    f === :coyote_time && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:coyote_time))), v)
+    f === :jump_buffer && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:jump_buffer))), v)
+    f === :is_jumping && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:is_jumping))), v)
+    f === :keys_up && return unsafe_store!(Ptr{Ptr{KeyState_up}}(x + offsetof(GameState, Val(:keys_up))), v)
+    f === :keys_down && return unsafe_store!(Ptr{Ptr{KeyState_down}}(x + offsetof(GameState, Val(:keys_down))), v)
+    f === :keys_pressed && return unsafe_store!(Ptr{Ptr{KeyState_pressed}}(x + offsetof(GameState, Val(:keys_pressed))), v)
+    f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))), v)
+    f === :quit && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:quit))), v)
+    f === :player_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))), v)
+    f === :background_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:background_sprite))), v)
+    f === :player && return unsafe_store!(Ptr{Ptr{Player}}(x + offsetof(GameState, Val(:player))), v)
+    f === :fullscreen && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:fullscreen))), v)
+    f === :camera_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_x))), v)
+    f === :camera_y && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_y))), v)
+    f === :left_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:left_btn_pressed))), v)
+    f === :right_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:right_btn_pressed))), v)
+    f === :jump_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:jump_btn_pressed))), v)
+    f === :player_idle_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_idle_anim))), v)
+    f === :player_run_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_run_anim))), v)
+    f === :player_jump_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:player_jump_anim))), v)
+    f === :current_player_anim && return unsafe_store!(Ptr{Ptr{Animation}}(x + offsetof(GameState, Val(:current_player_anim))), v)
+    f === :current_anim_state && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:current_anim_state))), v)
+    f === :jump_sound && return unsafe_store!(Ptr{Ptr{Mix_Chunk}}(x + offsetof(GameState, Val(:jump_sound))), v)
+end
+
 function j_init_window()::Ptr{SDL_Window}
     window_name = str_ptr(w"Game test")
     window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(640), UInt32(0))
@@ -193,54 +287,56 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     printf(c"Initializing audio system\n")
     # Mix_Init returns the flags that were successfully initialized
     # MIX_INIT_OGG = 16 (from structs.jl)
-    # audio_init_result::Int32 = llvm_Mix_Init(Int32(16))  # MIX_INIT_OGG
-    # printf(c"Mix_Init returned: %d (expected 16 for OGG support)\n", audio_init_result)
+    audio_init_result::Int32 = llvm_Mix_Init(Int32(16))  # MIX_INIT_OGG
     
     # # Check if OGG flag was successfully initialized
-    # if (audio_init_result & Int32(16)) == Int32(0)
-    #     printf(c"Failed to initialize SDL_mixer - OGG support not available\n")
-    #     error_msg_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(256))
-    #     error_msg::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(error_msg_ptr, Int32(256))
-    #     printf(c"SDL Error: %s\n", error_msg)
-    #     wasm_free(Ptr{Cvoid}(error_msg_ptr))
-    # else
-    #     printf(c"SDL_mixer initialized successfully with OGG support\n")
-    # end
+    if (audio_init_result & Int32(16)) == Int32(0)
+        printf(c"Failed to initialize SDL_mixer - OGG support not available\n")
+        error_msg_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(256))
+        error_msg::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(error_msg_ptr, Int32(256))
+        printf(c"SDL Error: %s\n", error_msg)
+        wasm_free(Ptr{Cvoid}(error_msg_ptr))
+    else
+        printf(c"SDL_mixer initialized successfully with OGG support\n")
+    end
     
     # Open audio device
-    # Mix_OpenAudio(frequency, format, channels, chunksize)
-    # MIX_DEFAULT_FORMAT = AUDIO_S16LSB, MIX_DEFAULT_CHANNELS = 2, MIX_DEFAULT_FREQUENCY = 44100
-    # AUDIO_S16LSB = 0x8010 (signed 16-bit samples, little-endian)
-    # audio_ready::Bool = false
-    # open_result::Int32 = llvm_Mix_OpenAudio(Int32(44100), UInt16(0x8010), Int32(2), Int32(2048))
-    # if open_result != Int32(0)
-    #     printf(c"Failed to open audio device, error code: %d\n", open_result)
-    #     # Try to get SDL error message
-    #     error_msg_ptr1::Ptr{Cvoid} = wasm_malloc(UInt32(256))
-    #     error_msg1::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(error_msg_ptr1, Int32(256))
-    #     printf(c"SDL Error: %s\n", error_msg1)
-    #     wasm_free(Ptr{Cvoid}(error_msg_ptr1))
-    #     audio_ready = false
-    # else
-    #     printf(c"Audio device opened successfully\n")
-    #     audio_ready = true
-    # end
+    #Mix_OpenAudio(frequency, format, channels, chunksize)
+    # MIX_DEFAULT_FORMAT = AUDIO_S16LSB 
+    # MIX_DEFAULT_CHANNELS = 2
+    # MIX_DEFAULT_FREQUENCY = 44100
+    # AUDIO_S16LSB = 0x8010 #(signed 16-bit samples, little-endian)
+    audio_ready::Bool = false
+    open_result::Int32 = llvm_Mix_OpenAudio(Int32(44100), UInt16(0x8010), Int32(2), Int32(2048))
+    if open_result != Int32(0)
+        printf(c"Failed to open audio device, error code: %d\n", open_result)
+        # Try to get SDL error message
+        error_msg_ptr1::Ptr{Cvoid} = wasm_malloc(UInt32(256))
+        error_msg1::Ptr{Cvoid} = llvm_SDL_GetErrorMsg(error_msg_ptr1, Int32(256))
+        printf(c"SDL Error: %s\n", error_msg1)
+        wasm_free(Ptr{Cvoid}(error_msg_ptr1))
+        audio_ready = false
+    else
+        printf(c"Audio device opened successfully\n")
+        audio_ready = true
+    end
 
     # Load jump sound only if audio device is ready
     # NOTE: Temporarily disabled due to crash in Mix_LoadWAV - investigating
-    # jump_sound::Ptr{Mix_Chunk} = Ptr{Mix_Chunk}(C_NULL)
-    # if audio_ready
-    #     printf(c"Skipping sound loading - Mix_LoadWAV crashes in browser\n")
-    #     # TODO: Fix Mix_LoadWAV crash - might be file path or memory allocation issue
-    #     # In Emscripten, preloaded files are mounted at root with --preload-file
-    #     # So /assets/Jump.wav should be the correct path
+    jump_sound::Ptr{Mix_Chunk} = Ptr{Mix_Chunk}(C_NULL)
+    if audio_ready
+        # TODO: Fix Mix_LoadWAV crash - might be file path or memory allocation issue
+        # In Emscripten, preloaded files are mounted at root with --preload-file
+        # So /assets/Jump.wav should be the correct path
 
-    #     jump_sound_path::Ptr{UInt8} = str_ptr(w"/assets/Jump.wav")
-    #     jump_sound = llvm_Mix_LoadWAV(jump_sound_path)
-    #     wasm_free(Ptr{Cvoid}(jump_sound_path))
-    # else
-    #     printf(c"Skipping sound loading - audio device not ready\n")
-    # end
+        jump_sound_path::Ptr{UInt8} = str_ptr(w"/assets/Jump.wav")
+        jump_sound = llvm_Mix_LoadWAV(jump_sound_path)
+        game_state_ptr.jump_sound = jump_sound
+        printf(c"Jump sound loaded\n")
+        wasm_free(Ptr{Cvoid}(jump_sound_path))
+    else
+        printf(c"Skipping sound loading - audio device not ready\n")
+    end
 
     # Create player animations
     printf(c"Creating player animations\n")
