@@ -225,9 +225,14 @@ function handle_input(state::Ptr{GameState}, window::Ptr{SDL_Window})::Cvoid
                 end
                 if player_stone_ptr != Ptr{Stone}(C_NULL)
                     if abs(player_stone_ptr.vel_x) < MIN_VELOCITY && abs(player_stone_ptr.vel_y) < MIN_VELOCITY
+                        # Set drag origin to the CENTER OF THE STONE (in screen coords)
+                        stone_screen_pos = world_to_screen(state, player_stone_ptr.x, player_stone_ptr.y)
+                        stone_screen_x = stone_screen_pos[1]
+                        stone_screen_y = stone_screen_pos[2]
+                        
                         state.is_charging = true
-                        state.drag_start_x = Float64(mx)
-                        state.drag_start_y = Float64(my)
+                        state.drag_start_x = Float64(stone_screen_x)
+                        state.drag_start_y = Float64(stone_screen_y)
                         state.drag_current_x = Float64(mx)
                         state.drag_current_y = Float64(my)
                         state.charge_power = Float64(0.0)
@@ -539,13 +544,13 @@ function render_game(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
         end
         
         if player_stone_ptr != Ptr{Stone}(C_NULL)
-            # Transform coordinates for charge indicator
+            # Transform stone position to screen; drag positions are ALREADY in screen space
             stone_screen_x = (player_stone_ptr.x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
             stone_screen_y = (player_stone_ptr.y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
-            drag_start_screen_x = (state.drag_start_x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
-            drag_start_screen_y = (state.drag_start_y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
-            drag_current_screen_x = (state.drag_current_x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
-            drag_current_screen_y = (state.drag_current_y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
+            drag_start_screen_x = state.drag_start_x
+            drag_start_screen_y = state.drag_start_y
+            drag_current_screen_x = state.drag_current_x
+            drag_current_screen_y = state.drag_current_y
             
             # Draw line from stone to drag start
             llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(200), UInt8(0), UInt8(150))
