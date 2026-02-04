@@ -52,8 +52,9 @@ struct Stone
     vel_y::Float64
     angle::Float64
     spin::Float64
-    is_player::Bool      # true for player stone, false for blocker
+    is_player::Bool      # true for player stone
     is_active::Bool      # false when stone has stopped
+    is_movable::Bool     # true for movable stones (player + movable obstacles), false for immovable blockers
 end
 
 # Target struct - goal area
@@ -127,6 +128,7 @@ function Base.getproperty(x::Ptr{Stone}, f::Symbol)
     f === :spin && return unsafe_load(Ptr{Float64}(x + offsetof(Stone, Val(:spin))))
     f === :is_player && return unsafe_load(Ptr{Bool}(x + offsetof(Stone, Val(:is_player))))
     f === :is_active && return unsafe_load(Ptr{Bool}(x + offsetof(Stone, Val(:is_active))))
+    f === :is_movable && return unsafe_load(Ptr{Bool}(x + offsetof(Stone, Val(:is_movable))))
 end
 
 function Base.setproperty!(x::Ptr{Stone}, f::Symbol, v::Any)
@@ -138,6 +140,7 @@ function Base.setproperty!(x::Ptr{Stone}, f::Symbol, v::Any)
     f === :spin && return unsafe_store!(Ptr{Float64}(x + offsetof(Stone, Val(:spin))), v)
     f === :is_player && return unsafe_store!(Ptr{Bool}(x + offsetof(Stone, Val(:is_player))), v)
     f === :is_active && return unsafe_store!(Ptr{Bool}(x + offsetof(Stone, Val(:is_active))), v)
+    f === :is_movable && return unsafe_store!(Ptr{Bool}(x + offsetof(Stone, Val(:is_movable))), v)
 end
 
 function Base.getproperty(x::Ptr{Target}, f::Symbol)
@@ -275,12 +278,13 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
             current_width = Int32(0)
             grid_height += Int32(1)
         elseif c != UInt8(13)  # Not '\r'
-            if c == UInt8(83)  # 'S'
+            if c == UInt8(83)  # 'S' - player start
                 stone_count += Int32(1)
-            elseif c == UInt8(66)  # 'B'
+            elseif c == UInt8(66)  # 'B' - immovable blocker stone
                 stone_count += Int32(1)
-            elseif c == UInt8(84)  # 'T'
+            elseif c == UInt8(84)  # 'T' - target (also has a movable obstacle stone on it)
                 target_count += Int32(1)
+                stone_count += Int32(1)   # movable obstacle stone sitting on the target
             elseif c == UInt8(35)  # '#'
                 obstacle_count += Int32(1)
             end
@@ -343,7 +347,7 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
                 obstacle_ptr.width = GRID_CELL_SIZE
                 obstacle_ptr.height = GRID_CELL_SIZE
                 obstacle_idx += Int32(1)
-            elseif c == UInt8(83)  # 'S' - start
+            elseif c == UInt8(83)  # 'S' - player start
                 start_x = cell_x
                 start_y = cell_y
                 # Create BRIGHT RED player stone
@@ -356,9 +360,10 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
                 stone_ptr.spin = Float64(0.0)
                 stone_ptr.is_player = true
                 stone_ptr.is_active = false
+                stone_ptr.is_movable = true
                 printf(c"Created BRIGHT RED player stone at world pos: (%.1f, %.1f), row=%d, col=%d\n", cell_x, cell_y, row, col)
                 stone_idx += Int32(1)
-            elseif c == UInt8(66)  # 'B' - blocker stone
+            elseif c == UInt8(66)  # 'B' - immovable blocker stone
                 stone_ptr = stones_ptr + Int64(stone_idx * sizeof(Stone))
                 stone_ptr.x = cell_x
                 stone_ptr.y = cell_y
@@ -368,9 +373,10 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
                 stone_ptr.spin = Float64(0.0)
                 stone_ptr.is_player = false
                 stone_ptr.is_active = false
+                stone_ptr.is_movable = false   # immovable
                 printf(c"Created BRIGHT YELLOW blocker stone at world pos: (%.1f, %.1f), row=%d, col=%d\n", cell_x, cell_y, row, col)
                 stone_idx += Int32(1)
-            elseif c == UInt8(84)  # 'T' - target
+            elseif c == UInt8(84)  # 'T' - target (with movable obstacle stone)
                 target_ptr::Ptr{Target} = targets_ptr + Int64(target_idx * sizeof(Target))
                 target_ptr.x = cell_x
                 target_ptr.y = cell_y
@@ -378,6 +384,20 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
                 target_ptr.is_hit = false
                 printf(c"Created target at world pos: (%.1f, %.1f), row=%d, col=%d\n", cell_x, cell_y, row, col)
                 target_idx += Int32(1)
+                
+                # Also create a movable obstacle stone sitting on the target
+                stone_ptr = stones_ptr + Int64(stone_idx * sizeof(Stone))
+                stone_ptr.x = cell_x
+                stone_ptr.y = cell_y
+                stone_ptr.vel_x = Float64(0.0)
+                stone_ptr.vel_y = Float64(0.0)
+                stone_ptr.angle = Float64(0.0)
+                stone_ptr.spin = Float64(0.0)
+                stone_ptr.is_player = false
+                stone_ptr.is_active = false
+                stone_ptr.is_movable = true   # movable obstacle
+                printf(c"Created MOVABLE obstacle stone on target at world pos: (%.1f, %.1f), row=%d, col=%d\n", cell_x, cell_y, row, col)
+                stone_idx += Int32(1)
             end
             
             ice_cell_ptr.ice_type = ice_type
@@ -525,11 +545,17 @@ end
 
 # Resolve collision between two stones
 function resolve_stone_collision(stone1::Ptr{Stone}, stone2::Ptr{Stone})::Cvoid
+    printf(c"resolve_collision: stone1(player=%d,movable=%d,active=%d) stone2(player=%d,movable=%d,active=%d)\n",
+           stone1.is_player ? Int32(1) : Int32(0), stone1.is_movable ? Int32(1) : Int32(0), stone1.is_active ? Int32(1) : Int32(0),
+           stone2.is_player ? Int32(1) : Int32(0), stone2.is_movable ? Int32(1) : Int32(0), stone2.is_active ? Int32(1) : Int32(0))
+    printf(c"  stone1 vel=(%.1f,%.1f) stone2 vel=(%.1f,%.1f)\n", stone1.vel_x, stone1.vel_y, stone2.vel_x, stone2.vel_y)
+    
     dx::Float64 = stone2.x - stone1.x
     dy::Float64 = stone2.y - stone1.y
     dist::Float64 = sqrt(dx * dx + dy * dy)
     
     if dist < Float64(0.001)
+        printf(c"  ABORT: dist too small\n")
         return nothing  # Avoid division by zero
     end
     
@@ -546,8 +572,9 @@ function resolve_stone_collision(stone1::Ptr{Stone}, stone2::Ptr{Stone})::Cvoid
         stone2.y += ny * overlap * Float64(0.5)
     end
     
-    # If stone2 is a blocker (not player), it's IMMOVABLE
-    if !stone2.is_player
+    # If stone2 is immovable (blocker), stone1 bounces off and stone2 stays put
+    if !stone2.is_movable
+        printf(c"  PATH: stone2 is IMMOVABLE blocker\n")
         # Stone1 bounces off immovable stone2
         # Project stone1's velocity onto collision normal and reverse it
         vel_along_normal::Float64 = stone1.vel_x * nx + stone1.vel_y * ny
@@ -557,28 +584,60 @@ function resolve_stone_collision(stone1::Ptr{Stone}, stone2::Ptr{Stone})::Cvoid
         return nothing
     end
     
-    # If stone1 is a blocker, stone2 bounces
-    if !stone1.is_player
+    # If stone1 is immovable, stone2 bounces
+    if !stone1.is_movable
+        printf(c"  PATH: stone1 is IMMOVABLE blocker\n")
         vel_along_normal = stone2.vel_x * (-nx) + stone2.vel_y * (-ny)
         stone2.vel_x -= (-nx) * vel_along_normal * Float64(1.8)
         stone2.vel_y -= (-ny) * vel_along_normal * Float64(1.8)
         return nothing
     end
     
-    # Both are player stones - elastic collision
-    dvx::Float64 = stone2.vel_x - stone1.vel_x
-    dvy::Float64 = stone2.vel_y - stone1.vel_y
-    dot_product::Float64 = dvx * nx + dvy * ny
+    printf(c"  PATH: BOTH stones are MOVABLE\n")
     
-    if dot_product > Float64(0.0)
-        return nothing  # Moving apart
+    # Both stones are movable - realistic curling collision
+    # Calculate velocity components along collision normal
+    v1n::Float64 = stone1.vel_x * nx + stone1.vel_y * ny  # stone1 velocity along normal
+    v2n::Float64 = stone2.vel_x * nx + stone2.vel_y * ny  # stone2 velocity along normal
+    
+    printf(c"  v1n=%.2f v2n=%.2f (v1n-v2n=%.2f)\n", v1n, v2n, v1n - v2n)
+    
+    # Only resolve if stones are approaching
+    if v1n - v2n <= Float64(0.0)
+        printf(c"  ABORT: stones not approaching\n")
+        return nothing  # Moving apart or parallel
     end
     
-    impulse::Float64 = dot_product * Float64(2.0)
-    stone1.vel_x += nx * impulse
-    stone1.vel_y += ny * impulse
-    stone2.vel_x -= nx * impulse
-    stone2.vel_y -= ny * impulse
+    # Calculate velocity components perpendicular to normal (these are preserved)
+    v1t_x::Float64 = stone1.vel_x - nx * v1n
+    v1t_y::Float64 = stone1.vel_y - ny * v1n
+    v2t_x::Float64 = stone2.vel_x - nx * v2n
+    v2t_y::Float64 = stone2.vel_y - ny * v2n
+    
+    # For equal mass elastic collision, normal velocities are exchanged
+    # Add some energy loss (0.9 = 90% energy retained)
+    restitution::Float64 = Float64(0.85)
+    
+    # New normal velocities (swapped with restitution)
+    new_v1n::Float64 = v2n * restitution
+    new_v2n::Float64 = v1n * restitution
+    
+    # Reconstruct full velocities
+    stone1.vel_x = v1t_x + nx * new_v1n
+    stone1.vel_y = v1t_y + ny * new_v1n
+    stone2.vel_x = v2t_x + nx * new_v2n
+    stone2.vel_y = v2t_y + ny * new_v2n
+    
+    printf(c"Collision resolved: stone1 vel=(%.1f,%.1f) stone2 vel=(%.1f,%.1f)\n",
+           stone1.vel_x, stone1.vel_y, stone2.vel_x, stone2.vel_y)
+    
+    # Ensure movable stones become active when hit
+    if stone1.is_movable
+        stone1.is_active = true
+    end
+    if stone2.is_movable
+        stone2.is_active = true
+    end
     
     # Separate stones to prevent overlap
     overlap = STONE_RADIUS * Float64(2.0) - dist

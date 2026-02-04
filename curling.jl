@@ -65,7 +65,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     level::Ptr{PuzzleLevel} = create_puzzle_1()
     
     # Find player stone from level (it's already created in the level)
-    player_stone::Stone = Stone(Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), true, false)
+    player_stone::Stone = Stone(Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), true, false, true)
     if level.stone_count > Int32(0)
         # Find player stone
         i::Int32 = Int32(0)
