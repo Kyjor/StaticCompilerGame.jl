@@ -420,18 +420,18 @@ function update_physics(state::Ptr{GameState}, delta_time::Float64)::Cvoid
     while i < level.stone_count
         stone1_ptr::Ptr{Stone} = level.stones + Int64(i * sizeof(Stone))
         if stone1_ptr.is_active  # Only active stones can collide
-            printf(c"Checking collisions for active stone %d at (%.1f, %.1f)\n", i, stone1_ptr.x, stone1_ptr.y)
+            #printf(c"Checking collisions for active stone %d at (%.1f, %.1f)\n", i, stone1_ptr.x, stone1_ptr.y)
             j::Int32 = Int32(0)  # Check against ALL stones, not just i+1
             while j < level.stone_count
                 if i != j  # Don't check stone against itself
                     stone2_ptr::Ptr{Stone} = level.stones + Int64(j * sizeof(Stone))
-                    printf(c"  vs stone %d (player:%d active:%d) at (%.1f, %.1f)\n", 
-                           j, stone2_ptr.is_player ? Int32(1) : Int32(0), 
-                           stone2_ptr.is_active ? Int32(1) : Int32(0),
-                           stone2_ptr.x, stone2_ptr.y)
+                    #printf(c"  vs stone %d (player:%d active:%d) at (%.1f, %.1f)\n", 
+                        #    j, stone2_ptr.is_player ? Int32(1) : Int32(0), 
+                        #    stone2_ptr.is_active ? Int32(1) : Int32(0),
+                        #    stone2_ptr.x, stone2_ptr.y)
                     # Check collision with ALL stones (active or not - blockers are inactive but solid!)
                     if check_stone_collision(stone1_ptr, stone2_ptr)
-                        printf(c">>> Collision detected between stone %d and stone %d\n", i, j)
+                        #printf(c">>> Collision detected between stone %d and stone %d\n", i, j)
                         resolve_stone_collision(stone1_ptr, stone2_ptr)
                     end
                 end

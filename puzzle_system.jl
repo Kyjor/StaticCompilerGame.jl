@@ -478,38 +478,25 @@ function update_stone_physics(stone::Ptr{Stone}, level::Ptr{PuzzleLevel}, is_swe
         stone.angle += vel_mag * delta_time * Float64(0.1)
     end
     
-    # Check wall collisions - stone STOPS (no bounce)
-    hit_wall::Bool = false
-    
+    # Check wall collisions - stone BOUNCES with energy loss
     if stone.x - STONE_RADIUS < Float64(0.0)
         stone.x = STONE_RADIUS
-        stone.vel_x = Float64(0.0)
-        hit_wall = true
+        stone.vel_x = -stone.vel_x * Float64(0.5)
     elseif stone.x + STONE_RADIUS > Float64(640.0)
         stone.x = Float64(640.0) - STONE_RADIUS
-        stone.vel_x = Float64(0.0)
-        hit_wall = true
+        stone.vel_x = -stone.vel_x * Float64(0.5)
     end
     
     if stone.y - STONE_RADIUS < Float64(0.0)
         stone.y = STONE_RADIUS
-        stone.vel_y = Float64(0.0)
-        hit_wall = true
+        stone.vel_y = -stone.vel_y * Float64(0.5)
     elseif stone.y + STONE_RADIUS > Float64(640.0)
         stone.y = Float64(640.0) - STONE_RADIUS
-        stone.vel_y = Float64(0.0)
-        hit_wall = true
+        stone.vel_y = -stone.vel_y * Float64(0.5)
     end
     
-    # Check grid wall tiles
+    # Check grid wall tiles - stop completely
     if ice_type == ICE_WALL
-        stone.vel_x = Float64(0.0)
-        stone.vel_y = Float64(0.0)
-        stone.is_active = false
-        hit_wall = true
-    end
-    
-    if hit_wall
         stone.vel_x = Float64(0.0)
         stone.vel_y = Float64(0.0)
         stone.is_active = false
