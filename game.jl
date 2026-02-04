@@ -1,6 +1,5 @@
 # combined_game_working.jl
 using StaticTools
-using StaticCompiler
 
 include("structs.jl")
 include("game_structs.jl")

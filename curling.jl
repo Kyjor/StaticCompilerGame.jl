@@ -1,6 +1,5 @@
 # curling.jl - Curling-Inspired Flick Game with Puzzle System
 using StaticTools
-using StaticCompiler
 
 include("structs.jl")
 include("game_structs.jl")
@@ -63,29 +62,25 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     printf(c"Initializing curling puzzle game\n")
     
     # Create puzzle level (start with puzzle 1)
-   level::Ptr{PuzzleLevel} = create_puzzle_1()
+    level::Ptr{PuzzleLevel} = create_puzzle_1()
     
-    # Get player stone from level
-    player_stone_ptr1::Ptr{Stone} = Ptr{Stone}(C_NULL)
+    # Find player stone from level (it's already created in the level)
     player_stone::Stone = Stone(Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), Float64(0.0), true, false)
     if level.stone_count > Int32(0)
-        player_stone_ptr::Ptr{Stone} = level.stones
         # Find player stone
         i::Int32 = Int32(0)
         while i < level.stone_count
             stone_ptr::Ptr{Stone} = level.stones + Int64(i * sizeof(Stone))
             if stone_ptr.is_player
                 player_stone = unsafe_load(stone_ptr)
+                #printf(c"Found player stone at (%.1f, %.1f)\n", player_stone.x, player_stone.y)
                 break
             end
             i += Int32(1)
         end
-    else
-        # Fallback to level start position
-        player_stone_ptr1.x = level.start_x
-        player_stone_ptr1.y = level.start_y
-        player_stone = unsafe_load(player_stone_ptr1)
     end
+    
+    #printf(c"Level has %d stones, %d targets\n", level.stone_count, level.target_count)
     
     # # Create game state
     state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
@@ -102,6 +97,9 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
             Float64(0.0),        # drag_current_y
             false,               # is_sweeping
             Float64(0.0),        # sweep_timer
+            Float64(0.5),        # camera_zoom (0.5 = zoomed out 2x, shows 1280x1280 world in 640x640 screen)
+            Float64(320.0),      # camera_offset_x (center of 640x640 level)
+            Float64(320.0),      # camera_offset_y (center of 640x640 level)
             UInt64(0),           # last_frame_time
             false,               # quit
             false                # level_complete
@@ -123,34 +121,44 @@ end
 function handle_input(state::Ptr{GameState}, window::Ptr{SDL_Window})::Cvoid
     event_ptr::Ptr{SDL_Event} = Ptr{SDL_Event}(wasm_malloc(UInt32(56)))
     
+    # Declare all variables once at the top
+    event_type::UInt32 = UInt32(0)
+    mx::Int32 = Int32(0)
+    my::Int32 = Int32(0)
+    mx_ptr::Ptr{Int32} = Ptr{Int32}(C_NULL)
+    my_ptr::Ptr{Int32} = Ptr{Int32}(C_NULL)
+    dx::Float64 = Float64(0.0)
+    dy::Float64 = Float64(0.0)
+    tx::Float64 = Float64(0.0)
+    ty::Float64 = Float64(0.0)
+    drag_dist::Float64 = Float64(0.0)
+    dx_norm::Float64 = Float64(0.0)
+    dy_norm::Float64 = Float64(0.0)
+    angle::Float64 = Float64(0.0)
+    launch_speed::Float64 = Float64(0.0)
+    key::Int32 = Int32(0)
+    level::Ptr{PuzzleLevel} = Ptr{PuzzleLevel}(C_NULL)
+    player_stone_ptr::Ptr{Stone} = Ptr{Stone}(C_NULL)
+    stone_ptr::Ptr{Stone} = Ptr{Stone}(C_NULL)
+    target_ptr::Ptr{Target} = Ptr{Target}(C_NULL)
+    i::Int32 = Int32(0)
+    dist::Float64 = Float64(0.0)
+    
     while llvm_SDL_PollEvent(event_ptr) != Int32(0)
-        event_type::UInt32 = event_ptr.type
-        mx::Int32 = Int32(0)
-        my::Int32 = Int32(0)
-        mx_ptr::Ptr{Int32} = Ptr{Int32}(C_NULL)
-        my_ptr::Ptr{Int32} = Ptr{Int32}(C_NULL)
-        dx::Float64 = Float64(0.0)
-        dy::Float64 = Float64(0.0)
-        tx::Float64 = Float64(0.0)
-        ty::Float64 = Float64(0.0)
-        drag_dist::Float64 = Float64(0.0)
-        dx_norm::Float64 = Float64(0.0)
-        dy_norm::Float64 = Float64(0.0)
-        angle::Float64 = Float64(0.0)
-        launch_speed::Float64 = Float64(0.0)
+        event_type = event_ptr.type
         if event_type == SDL_QUIT
             state.quit = true
         elseif event_type == SDL_KEYDOWN
-            key::Int32 = event_ptr.key.keysym.sym
+            key = event_ptr.key.keysym.sym
             if key == SDLK_ESCAPE
                 state.quit = true
             elseif key == SDLK_r
                 # Reset stone position
-                level::Ptr{PuzzleLevel} = state.level
-                player_stone_ptr::Ptr{Stone} = Ptr{Stone}(C_NULL)
-                i::Int32 = Int32(0)
+                level = state.level
+                player_stone_ptr = Ptr{Stone}(C_NULL)
+                i = Int32(0)
                 while i < level.stone_count
-                    stone_ptr::Ptr{Stone} = level.stones + Int64(i * sizeof(Stone))
+                    stone_ptr = level.stones + Int64(i * sizeof(Stone))
                     if stone_ptr.is_player
                         player_stone_ptr = stone_ptr
                         break
@@ -174,11 +182,11 @@ function handle_input(state::Ptr{GameState}, window::Ptr{SDL_Window})::Cvoid
                 # Reset targets
                 i = Int32(0)
                 while i < level.target_count
-                    target_ptr::Ptr{Target} = level.targets + Int64(i * sizeof(Target))
+                    target_ptr = level.targets + Int64(i * sizeof(Target))
                     target_ptr.is_hit = false
                     i += Int32(1)
                 end
-                printf(c"Stone reset\n")
+                #printf(c"Stone reset\n")
             elseif key == SDLK_SPACE
                 # Start sweeping
                 state.is_sweeping = true
@@ -192,8 +200,8 @@ function handle_input(state::Ptr{GameState}, window::Ptr{SDL_Window})::Cvoid
             end
         elseif event_type == SDL_MOUSEBUTTONDOWN
             # Start charging
-             mx_ptr = Ptr{Int32}(C_NULL)
-             my_ptr = Ptr{Int32}(C_NULL)
+            mx_ptr = Ptr{Int32}(C_NULL)
+            my_ptr = Ptr{Int32}(C_NULL)
             if event_ptr.button.button == UInt8(1)  # Left mouse button
                 mx_ptr = Ptr{Int32}(wasm_malloc(UInt32(4)))
                 my_ptr = Ptr{Int32}(wasm_malloc(UInt32(4)))
@@ -407,15 +415,25 @@ function update_physics(state::Ptr{GameState}, delta_time::Float64)::Cvoid
     end
     
     # Check stone-to-stone collisions
+    # Note: Check ALL stones, including inactive blockers!
     i = Int32(0)
     while i < level.stone_count
         stone1_ptr::Ptr{Stone} = level.stones + Int64(i * sizeof(Stone))
-        if stone1_ptr.is_active
-            j::Int32 = i + Int32(1)
+        if stone1_ptr.is_active  # Only active stones can collide
+            printf(c"Checking collisions for active stone %d at (%.1f, %.1f)\n", i, stone1_ptr.x, stone1_ptr.y)
+            j::Int32 = Int32(0)  # Check against ALL stones, not just i+1
             while j < level.stone_count
-                stone2_ptr::Ptr{Stone} = level.stones + Int64(j * sizeof(Stone))
-                if stone2_ptr.is_active && check_stone_collision(stone1_ptr, stone2_ptr)
-                    resolve_stone_collision(stone1_ptr, stone2_ptr)
+                if i != j  # Don't check stone against itself
+                    stone2_ptr::Ptr{Stone} = level.stones + Int64(j * sizeof(Stone))
+                    printf(c"  vs stone %d (player:%d active:%d) at (%.1f, %.1f)\n", 
+                           j, stone2_ptr.is_player ? Int32(1) : Int32(0), 
+                           stone2_ptr.is_active ? Int32(1) : Int32(0),
+                           stone2_ptr.x, stone2_ptr.y)
+                    # Check collision with ALL stones (active or not - blockers are inactive but solid!)
+                    if check_stone_collision(stone1_ptr, stone2_ptr)
+                        printf(c">>> Collision detected between stone %d and stone %d\n", i, j)
+                        resolve_stone_collision(stone1_ptr, stone2_ptr)
+                    end
                 end
                 j += Int32(1)
             end
@@ -455,12 +473,27 @@ end
 # RENDERING
 # ============================================================================
 
+# Camera transform: convert world coordinates to screen coordinates
+function world_to_screen(state::Ptr{GameState}, world_x::Float64, world_y::Float64)::Tuple{Int32, Int32}
+    screen_x::Float64 = (world_x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)  # Center of 640px window
+    screen_y::Float64 = (world_y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
+    return (unsafe_trunc(Int32, llvm_SDL_round(screen_x)), unsafe_trunc(Int32, llvm_SDL_round(screen_y)))
+end
+
+# Transform world radius to screen radius
+function world_radius_to_screen(state::Ptr{GameState}, world_radius::Float64)::Int32
+    return unsafe_trunc(Int32, llvm_SDL_round(world_radius * state.camera_zoom))
+end
+
 function render_game(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
     level::Ptr{PuzzleLevel} = state.level
     
     # Clear to ice blue background
     llvm_SDL_SetRenderDrawColor(renderer, UInt8(200), UInt8(220), UInt8(255), UInt8(255))
     llvm_SDL_RenderClear(renderer)
+    
+    # printf(c"Camera: zoom=%.2f, offset=(%.1f, %.1f)\n", state.camera_zoom, state.camera_offset_x, state.camera_offset_y)
+    # printf(c"Level: %d stones, %d targets\n", level.stone_count, level.target_count)
     
     # Draw ice cells (optional - can be commented out for performance)
     # i::Int32 = Int32(0)
@@ -470,20 +503,25 @@ function render_game(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
     #     i += Int32(1)
     # end
     
-    # Draw targets
+    # Draw targets (with camera transform)
     i::Int32 = Int32(0)
     while i < level.target_count
         target_ptr::Ptr{Target} = level.targets + Int64(i * sizeof(Target))
-        draw_target(renderer, target_ptr)
+        draw_target_camera(renderer, target_ptr, state)
         i += Int32(1)
     end
     
-    # Draw all stones
+    # Draw all stones (with camera transform)
     i = Int32(0)
     while i < level.stone_count
         stone_ptr::Ptr{Stone} = level.stones + Int64(i * sizeof(Stone))
-        draw_stone(renderer, stone_ptr)
+        #printf(c"About to draw stone %d at world (%.1f, %.1f)\n", i, stone_ptr.x, stone_ptr.y)
+        draw_stone_camera(renderer, stone_ptr, state)
         i += Int32(1)
+    end
+    
+    if level.stone_count == Int32(0)
+        #printf(c"WARNING: No stones to render!\n")
     end
     
     # Draw charge indicator when charging
@@ -501,13 +539,21 @@ function render_game(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
         end
         
         if player_stone_ptr != Ptr{Stone}(C_NULL)
+            # Transform coordinates for charge indicator
+            stone_screen_x = (player_stone_ptr.x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
+            stone_screen_y = (player_stone_ptr.y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
+            drag_start_screen_x = (state.drag_start_x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
+            drag_start_screen_y = (state.drag_start_y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
+            drag_current_screen_x = (state.drag_current_x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
+            drag_current_screen_y = (state.drag_current_y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
+            
             # Draw line from stone to drag start
             llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(200), UInt8(0), UInt8(150))
-            draw_line(renderer, unsafe_trunc(Int32, llvm_SDL_round(player_stone_ptr.x)), unsafe_trunc(Int32, llvm_SDL_round(player_stone_ptr.y)), unsafe_trunc(Int32, llvm_SDL_round(state.drag_start_x)), unsafe_trunc(Int32, llvm_SDL_round(state.drag_start_y)))
+            draw_line(renderer, unsafe_trunc(Int32, llvm_SDL_round(stone_screen_x)), unsafe_trunc(Int32, llvm_SDL_round(stone_screen_y)), unsafe_trunc(Int32, llvm_SDL_round(drag_start_screen_x)), unsafe_trunc(Int32, llvm_SDL_round(drag_start_screen_y)))
             
             # Draw line from drag start to current position
             llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(100), UInt8(0), UInt8(200))
-            draw_line(renderer, unsafe_trunc(Int32, llvm_SDL_round(state.drag_start_x)), unsafe_trunc(Int32, llvm_SDL_round(state.drag_start_y)), unsafe_trunc(Int32, llvm_SDL_round(state.drag_current_x)), unsafe_trunc(Int32, llvm_SDL_round(state.drag_current_y)))
+            draw_line(renderer, unsafe_trunc(Int32, llvm_SDL_round(drag_start_screen_x)), unsafe_trunc(Int32, llvm_SDL_round(drag_start_screen_y)), unsafe_trunc(Int32, llvm_SDL_round(drag_current_screen_x)), unsafe_trunc(Int32, llvm_SDL_round(drag_current_screen_y)))
             
             # Draw power meter
             meter_x::Int32 = Int32(20)
@@ -551,10 +597,14 @@ function render_game(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
         end
         
         if player_stone_ptr != Ptr{Stone}(C_NULL)
+            # Transform coordinates for sweep indicator
+            stone_screen_x = (player_stone_ptr.x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
+            stone_screen_y = (player_stone_ptr.y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
+            sweep_radius::Int32 = unsafe_trunc(Int32, llvm_SDL_round(STONE_RADIUS * Float64(1.5) * state.camera_zoom))
+            
             # Draw sweep effect (circle around stone)
             llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(255), UInt8(100), UInt8(150))
-            sweep_radius::Int32 = unsafe_trunc(Int32, STONE_RADIUS * Float64(1.5))
-            draw_circle_outline(renderer, unsafe_trunc(Int32, llvm_SDL_round(player_stone_ptr.x)), unsafe_trunc(Int32, llvm_SDL_round(player_stone_ptr.y)), sweep_radius)
+            draw_circle_outline(renderer, unsafe_trunc(Int32, llvm_SDL_round(stone_screen_x)), unsafe_trunc(Int32, llvm_SDL_round(stone_screen_y)), sweep_radius)
         end
     end
     

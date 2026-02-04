@@ -10,7 +10,6 @@
 # '\n' = new row
 
 using StaticTools
-using StaticCompiler
 
 include("structs.jl")
 include("game_structs.jl")
@@ -107,6 +106,9 @@ struct GameState
     drag_current_y::Float64
     is_sweeping::Bool             # Is player currently sweeping?
     sweep_timer::Float64          # How long has player been sweeping?
+    camera_zoom::Float64          # Camera zoom (1.0 = normal, <1.0 = zoomed out)
+    camera_offset_x::Float64      # Camera offset X
+    camera_offset_y::Float64      # Camera offset Y
     last_frame_time::UInt64
     quit::Bool
     level_complete::Bool
@@ -217,6 +219,9 @@ function Base.getproperty(x::Ptr{GameState}, f::Symbol)
     f === :drag_current_y && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:drag_current_y))))
     f === :is_sweeping && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:is_sweeping))))
     f === :sweep_timer && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:sweep_timer))))
+    f === :camera_zoom && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_zoom))))
+    f === :camera_offset_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_offset_x))))
+    f === :camera_offset_y && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_offset_y))))
     f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))))
     f === :quit && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:quit))))
     f === :level_complete && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:level_complete))))
@@ -233,6 +238,9 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
     f === :drag_current_y && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:drag_current_y))), v)
     f === :is_sweeping && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:is_sweeping))), v)
     f === :sweep_timer && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:sweep_timer))), v)
+    f === :camera_zoom && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_zoom))), v)
+    f === :camera_offset_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_offset_x))), v)
+    f === :camera_offset_y && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_offset_y))), v)
     f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))), v)
     f === :quit && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:quit))), v)
     f === :level_complete && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:level_complete))), v)
@@ -338,7 +346,7 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
             elseif c == UInt8(83)  # 'S' - start
                 start_x = cell_x
                 start_y = cell_y
-                # Create player stone
+                # Create BRIGHT RED player stone
                 stone_ptr::Ptr{Stone} = stones_ptr + Int64(stone_idx * sizeof(Stone))
                 stone_ptr.x = cell_x
                 stone_ptr.y = cell_y
@@ -348,6 +356,7 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
                 stone_ptr.spin = Float64(0.0)
                 stone_ptr.is_player = true
                 stone_ptr.is_active = false
+                printf(c"Created BRIGHT RED player stone at world pos: (%.1f, %.1f), row=%d, col=%d\n", cell_x, cell_y, row, col)
                 stone_idx += Int32(1)
             elseif c == UInt8(66)  # 'B' - blocker stone
                 stone_ptr = stones_ptr + Int64(stone_idx * sizeof(Stone))
@@ -359,6 +368,7 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
                 stone_ptr.spin = Float64(0.0)
                 stone_ptr.is_player = false
                 stone_ptr.is_active = false
+                printf(c"Created BRIGHT YELLOW blocker stone at world pos: (%.1f, %.1f), row=%d, col=%d\n", cell_x, cell_y, row, col)
                 stone_idx += Int32(1)
             elseif c == UInt8(84)  # 'T' - target
                 target_ptr::Ptr{Target} = targets_ptr + Int64(target_idx * sizeof(Target))
@@ -366,6 +376,7 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
                 target_ptr.y = cell_y
                 target_ptr.radius = GRID_CELL_SIZE * Float64(1.2)
                 target_ptr.is_hit = false
+                printf(c"Created target at world pos: (%.1f, %.1f), row=%d, col=%d\n", cell_x, cell_y, row, col)
                 target_idx += Int32(1)
             end
             
@@ -390,6 +401,14 @@ function parse_level_grid(grid_str::Ptr{UInt8}, grid_str_len::Int32)::Ptr{Puzzle
     level_ptr.obstacle_count = obstacle_count
     level_ptr.start_x = start_x
     level_ptr.start_y = start_y
+    
+    printf(c"Level parsed: %dx%d grid, %d stones, %d targets\n", grid_width, grid_height, stone_count, target_count)
+    
+    # Debug: print first stone if it exists
+    if stone_count > Int32(0)
+        first_stone::Ptr{Stone} = stones_ptr
+        printf(c"First stone at: (%.1f, %.1f), is_player=%d\n", first_stone.x, first_stone.y, first_stone.is_player ? Int32(1) : Int32(0))
+    end
     
     return level_ptr
 end
@@ -459,25 +478,41 @@ function update_stone_physics(stone::Ptr{Stone}, level::Ptr{PuzzleLevel}, is_swe
         stone.angle += vel_mag * delta_time * Float64(0.1)
     end
     
-    # Check wall collisions
-    if ice_type == ICE_WALL || stone.x - STONE_RADIUS < Float64(0.0) || stone.x + STONE_RADIUS > Float64(640.0) || 
-       stone.y - STONE_RADIUS < Float64(0.0) || stone.y + STONE_RADIUS > Float64(640.0)
-        # Bounce off wall
-        if stone.x - STONE_RADIUS < Float64(0.0)
-            stone.x = STONE_RADIUS
-            stone.vel_x = -stone.vel_x * Float64(0.5)
-        elseif stone.x + STONE_RADIUS > Float64(640.0)
-            stone.x = Float64(640.0) - STONE_RADIUS
-            stone.vel_x = -stone.vel_x * Float64(0.5)
-        end
-        
-        if stone.y - STONE_RADIUS < Float64(0.0)
-            stone.y = STONE_RADIUS
-            stone.vel_y = -stone.vel_y * Float64(0.5)
-        elseif stone.y + STONE_RADIUS > Float64(640.0)
-            stone.y = Float64(640.0) - STONE_RADIUS
-            stone.vel_y = -stone.vel_y * Float64(0.5)
-        end
+    # Check wall collisions - stone STOPS (no bounce)
+    hit_wall::Bool = false
+    
+    if stone.x - STONE_RADIUS < Float64(0.0)
+        stone.x = STONE_RADIUS
+        stone.vel_x = Float64(0.0)
+        hit_wall = true
+    elseif stone.x + STONE_RADIUS > Float64(640.0)
+        stone.x = Float64(640.0) - STONE_RADIUS
+        stone.vel_x = Float64(0.0)
+        hit_wall = true
+    end
+    
+    if stone.y - STONE_RADIUS < Float64(0.0)
+        stone.y = STONE_RADIUS
+        stone.vel_y = Float64(0.0)
+        hit_wall = true
+    elseif stone.y + STONE_RADIUS > Float64(640.0)
+        stone.y = Float64(640.0) - STONE_RADIUS
+        stone.vel_y = Float64(0.0)
+        hit_wall = true
+    end
+    
+    # Check grid wall tiles
+    if ice_type == ICE_WALL
+        stone.vel_x = Float64(0.0)
+        stone.vel_y = Float64(0.0)
+        stone.is_active = false
+        hit_wall = true
+    end
+    
+    if hit_wall
+        stone.vel_x = Float64(0.0)
+        stone.vel_y = Float64(0.0)
+        stone.is_active = false
     end
     
     return nothing
@@ -489,10 +524,19 @@ function check_stone_collision(stone1::Ptr{Stone}, stone2::Ptr{Stone})::Bool
     dy::Float64 = stone1.y - stone2.y
     dist_sq::Float64 = dx * dx + dy * dy
     min_dist::Float64 = STONE_RADIUS * Float64(2.0)
-    return dist_sq < min_dist * min_dist
+    min_dist_sq::Float64 = min_dist * min_dist
+    
+    colliding::Bool = dist_sq < min_dist_sq
+    if colliding
+        dist::Float64 = sqrt(dist_sq)
+        printf(c"COLLISION! stone1:(%.1f,%.1f) stone2:(%.1f,%.1f) dist:%.1f min_dist:%.1f\n", 
+               stone1.x, stone1.y, stone2.x, stone2.y, dist, min_dist)
+    end
+    
+    return colliding
 end
 
-# Resolve collision between two stones (elastic collision)
+# Resolve collision between two stones
 function resolve_stone_collision(stone1::Ptr{Stone}, stone2::Ptr{Stone})::Cvoid
     dx::Float64 = stone2.x - stone1.x
     dy::Float64 = stone2.y - stone1.y
@@ -506,29 +550,51 @@ function resolve_stone_collision(stone1::Ptr{Stone}, stone2::Ptr{Stone})::Cvoid
     nx::Float64 = dx / dist
     ny::Float64 = dy / dist
     
-    # Relative velocity
-    dvx::Float64 = stone2.vel_x - stone1.vel_x
-    dvy::Float64 = stone2.vel_y - stone1.vel_y
+    # Separate stones to prevent overlap
+    overlap::Float64 = (STONE_RADIUS * Float64(2.0)) - dist
+    if overlap > Float64(0.0)
+        stone1.x -= nx * overlap * Float64(0.5)
+        stone1.y -= ny * overlap * Float64(0.5)
+        stone2.x += nx * overlap * Float64(0.5)
+        stone2.y += ny * overlap * Float64(0.5)
+    end
     
-    # Relative velocity along collision normal
-    dot_product::Float64 = dvx * nx + dvy * ny
-    
-    # Don't resolve if moving apart
-    if dot_product > Float64(0.0)
+    # If stone2 is a blocker (not player), it's IMMOVABLE
+    if !stone2.is_player
+        # Stone1 bounces off immovable stone2
+        # Project stone1's velocity onto collision normal and reverse it
+        vel_along_normal::Float64 = stone1.vel_x * nx + stone1.vel_y * ny
+        stone1.vel_x -= nx * vel_along_normal * Float64(1.8)  # Bounce with energy loss
+        stone1.vel_y -= ny * vel_along_normal * Float64(1.8)
+        # stone2 doesn't move at all
         return nothing
     end
     
-    # Elastic collision (simple momentum transfer)
-    # For equal mass stones, just swap velocities along collision normal
-    impulse::Float64 = dot_product * Float64(2.0)
+    # If stone1 is a blocker, stone2 bounces
+    if !stone1.is_player
+        vel_along_normal = stone2.vel_x * (-nx) + stone2.vel_y * (-ny)
+        stone2.vel_x -= (-nx) * vel_along_normal * Float64(1.8)
+        stone2.vel_y -= (-ny) * vel_along_normal * Float64(1.8)
+        return nothing
+    end
     
+    # Both are player stones - elastic collision
+    dvx::Float64 = stone2.vel_x - stone1.vel_x
+    dvy::Float64 = stone2.vel_y - stone1.vel_y
+    dot_product::Float64 = dvx * nx + dvy * ny
+    
+    if dot_product > Float64(0.0)
+        return nothing  # Moving apart
+    end
+    
+    impulse::Float64 = dot_product * Float64(2.0)
     stone1.vel_x += nx * impulse
     stone1.vel_y += ny * impulse
     stone2.vel_x -= nx * impulse
     stone2.vel_y -= ny * impulse
     
     # Separate stones to prevent overlap
-    overlap::Float64 = STONE_RADIUS * Float64(2.0) - dist
+    overlap = STONE_RADIUS * Float64(2.0) - dist
     if overlap > Float64(0.0)
         separation::Float64 = overlap / Float64(2.0)
         stone1.x -= nx * separation
@@ -600,20 +666,13 @@ end
 
 # Draw stone
 function draw_stone(renderer::Ptr{SDL_Renderer}, stone::Ptr{Stone})::Cvoid
-    if !stone.is_active && abs(stone.vel_x) < Float64(0.1) && abs(stone.vel_y) < Float64(0.1)
-        # Draw stopped stone
-        if stone.is_player
-            llvm_SDL_SetRenderDrawColor(renderer, UInt8(100), UInt8(100), UInt8(120), UInt8(255))
-        else
-            llvm_SDL_SetRenderDrawColor(renderer, UInt8(80), UInt8(80), UInt8(100), UInt8(255))
-        end
+    # Always draw stones - make them more visible
+    if stone.is_player
+        # Player stone - darker gray/blue
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(60), UInt8(60), UInt8(80), UInt8(255))
     else
-        # Draw moving stone
-        if stone.is_player
-            llvm_SDL_SetRenderDrawColor(renderer, UInt8(120), UInt8(120), UInt8(140), UInt8(255))
-        else
-            llvm_SDL_SetRenderDrawColor(renderer, UInt8(100), UInt8(100), UInt8(120), UInt8(255))
-        end
+        # Blocker stone - lighter gray
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(100), UInt8(100), UInt8(120), UInt8(255))
     end
     
     # Draw as filled circle (using square approximation)
@@ -645,19 +704,69 @@ function draw_stone(renderer::Ptr{SDL_Renderer}, stone::Ptr{Stone})::Cvoid
     return nothing
 end
 
+# Draw stone with camera transform
+function draw_stone_camera(renderer::Ptr{SDL_Renderer}, stone::Ptr{Stone}, state::Ptr{GameState})::Cvoid
+    # Always draw stones - BRIGHT COLORS for visibility
+    if stone.is_player
+        # Player stone - BRIGHT RED
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(0), UInt8(0), UInt8(255))
+    else
+        # Blocker stone - BRIGHT YELLOW
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(255), UInt8(0), UInt8(255))
+    end
+    
+    # Transform world coordinates to screen coordinates
+    screen_x::Float64 = (stone.x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
+    screen_y::Float64 = (stone.y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
+    screen_radius::Float64 = STONE_RADIUS * state.camera_zoom
+    
+    center_x::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_x))
+    center_y::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_y))
+    radius::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_radius))
+    
+    # Skip drawing if off-screen
+    if center_x + radius < Int32(0) || center_x - radius > Int32(640) || 
+       center_y + radius < Int32(0) || center_y - radius > Int32(640)
+        return nothing
+    end
+    
+    rect_ptr::Ptr{SDL_Rect} = wasm_malloc(UInt32(sizeof(SDL_Rect)))
+    unsafe_store!(Ptr{Int32}(rect_ptr), center_x - radius)
+    unsafe_store!(Ptr{Int32}(rect_ptr + Int64(4)), center_y - radius)
+    unsafe_store!(Ptr{Int32}(rect_ptr + Int64(8)), radius * Int32(2))
+    unsafe_store!(Ptr{Int32}(rect_ptr + Int64(12)), radius * Int32(2))
+    llvm_SDL_RenderFillRect(renderer, rect_ptr)
+    wasm_free(Ptr{Cvoid}(rect_ptr))
+    
+    # Draw direction indicator if moving
+    if abs(stone.vel_x) > Float64(0.1) || abs(stone.vel_y) > Float64(0.1)
+        vel_mag::Float64 = sqrt(stone.vel_x * stone.vel_x + stone.vel_y * stone.vel_y)
+        dir_x::Float64 = stone.vel_x / vel_mag
+        dir_y::Float64 = stone.vel_y / vel_mag
+        indicator_len::Float64 = screen_radius * Float64(0.7)
+        end_x::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_x + dir_x * indicator_len))
+        end_y::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_y + dir_y * indicator_len))
+        
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(255), UInt8(255), UInt8(200))
+        llvm_SDL_RenderDrawLine(renderer, center_x, center_y, end_x, end_y)
+    end
+    
+    return nothing
+end
+
 # Draw target
 function draw_target(renderer::Ptr{SDL_Renderer}, target::Ptr{Target})::Cvoid
     if target.is_hit
         # Hit target - green
         llvm_SDL_SetRenderDrawColor(renderer, UInt8(100), UInt8(255), UInt8(100), UInt8(200))
     else
-        # Unhit target - white rings
-        llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(255), UInt8(255), UInt8(150))
+        # Unhit target - bright white rings for visibility
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(255), UInt8(255), UInt8(255))
     end
     
     # Draw outer ring
-    center_x::Int32 = unsafe_trunc(Int32, target.x)
-    center_y::Int32 = unsafe_trunc(Int32, target.y)
+    center_x::Int32 = unsafe_trunc(Int32, llvm_SDL_round(target.x))
+    center_y::Int32 = unsafe_trunc(Int32, llvm_SDL_round(target.y))
     radius::Int32 = unsafe_trunc(Int32, target.radius)
     
     # Draw circle outline (approximate with lines)
@@ -679,6 +788,68 @@ function draw_target(renderer::Ptr{SDL_Renderer}, target::Ptr{Target})::Cvoid
     
     # Draw inner ring
     inner_radius::Int32 = unsafe_trunc(Int32, target.radius * Float64(0.6))
+    i = Int32(0)
+    prev_x = center_x + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_cos(Float64(0)) * Float64(inner_radius)))
+    prev_y = center_y + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_sin(Float64(0)) * Float64(inner_radius)))
+    
+    while i < num_points
+        angle = Float64(i + Int32(1)) * Float64(2.0 * 3.14159265359) / Float64(num_points)
+        x = center_x + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_cos(angle) * Float64(inner_radius)))
+        y = center_y + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_sin(angle) * Float64(inner_radius)))
+        
+        llvm_SDL_RenderDrawLine(renderer, prev_x, prev_y, x, y)
+        prev_x = x
+        prev_y = y
+        i += Int32(1)
+    end
+    
+    return nothing
+end
+
+# Draw target with camera transform
+function draw_target_camera(renderer::Ptr{SDL_Renderer}, target::Ptr{Target}, state::Ptr{GameState})::Cvoid
+    if target.is_hit
+        # Hit target - green
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(100), UInt8(255), UInt8(100), UInt8(200))
+    else
+        # Unhit target - bright white rings for visibility
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(255), UInt8(255), UInt8(255))
+    end
+    
+    # Transform world coordinates to screen coordinates
+    screen_x::Float64 = (target.x - state.camera_offset_x) * state.camera_zoom + Float64(320.0)
+    screen_y::Float64 = (target.y - state.camera_offset_y) * state.camera_zoom + Float64(320.0)
+    screen_radius::Float64 = target.radius * state.camera_zoom
+    
+    center_x::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_x))
+    center_y::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_y))
+    radius::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_radius))
+    
+    # Skip drawing if off-screen
+    if center_x + radius < Int32(0) || center_x - radius > Int32(640) || 
+       center_y + radius < Int32(0) || center_y - radius > Int32(640)
+        return nothing
+    end
+    
+    # Draw outer ring
+    num_points::Int32 = Int32(32)
+    i::Int32 = Int32(0)
+    prev_x::Int32 = center_x + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_cos(Float64(0)) * Float64(radius)))
+    prev_y::Int32 = center_y + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_sin(Float64(0)) * Float64(radius)))
+    
+    while i < num_points
+        angle::Float64 = Float64(i + Int32(1)) * Float64(2.0 * 3.14159265359) / Float64(num_points)
+        x::Int32 = center_x + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_cos(angle) * Float64(radius)))
+        y::Int32 = center_y + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_sin(angle) * Float64(radius)))
+        
+        llvm_SDL_RenderDrawLine(renderer, prev_x, prev_y, x, y)
+        prev_x = x
+        prev_y = y
+        i += Int32(1)
+    end
+    
+    # Draw inner ring
+    inner_radius::Int32 = unsafe_trunc(Int32, llvm_SDL_round(screen_radius * Float64(0.6)))
     i = Int32(0)
     prev_x = center_x + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_cos(Float64(0)) * Float64(inner_radius)))
     prev_y = center_y + unsafe_trunc(Int32, llvm_SDL_round(llvm_SDL_sin(Float64(0)) * Float64(inner_radius)))
@@ -744,12 +915,13 @@ end
 # Simple straight shot - target just out of normal reach, requires sweeping
 function create_puzzle_1()::Ptr{PuzzleLevel}
     # Grid: 16x16, target at top center, start at bottom center
-    # Format: each line is a row, ' ' = normal ice, 'S' = start, 'T' = target
-    grid_data::Ptr{UInt8} = str_ptr(w"                T\n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \n                \nS               \n")
+    # Added a blocker stone 'B' in the middle to test collisions
+    # Format: ' ' = normal ice, 'S' = start, 'T' = target, 'B' = blocker
+    grid_data::Ptr{UInt8} = str_ptr(w"        T       \n                \n                \n                \n                \n                \n                \n        B       \n                \n                \n                \n                \n                \n                \n        S       \n")
     level::Ptr{PuzzleLevel} = create_puzzle_level(grid_data)
     wasm_free(Ptr{Cvoid}(grid_data))
     
-   return level
+    return level
 end
 
 # Create Puzzle 2: "Split Ice"
