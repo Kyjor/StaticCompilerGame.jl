@@ -1,9 +1,8 @@
 # compile_combined_fixed.jl
 using StaticTools
 using StaticCompiler
-
-include("curling.jl")
-
+compile_file = get(ENV, "FILE", "game.jl")
+include(compile_file)
 # Parse command line arguments
 build_type = "web"  # default to web build
 if length(ARGS) > 0
