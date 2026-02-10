@@ -44,3 +44,36 @@ function wasm_free(ptr::Ptr{UInt8})
         }
     """, "my_free"), Nothing, Tuple{Ptr{UInt8}}, ptr)
 end
+
+
+# ============================================================================
+# Custom Global Variable Access Functions (C extern pattern)
+# ============================================================================
+# These functions access static variables in sdl_module.c
+# This allows shared mutable globals across separately-compiled Julia functions
+
+# Get the hi global variable
+function llvm_get_hi()::Int32
+    Base.llvmcall(("""
+    declare i32 @get_hi() nounwind
+
+    define i32 @main() {
+    entry:
+        %result = call i32 @get_hi()
+        ret i32 %result
+    }
+    """, "main"), Int32, Tuple{},)
+end
+
+# Set the hi global variable
+function llvm_set_hi(value::Int32)::Cvoid
+    Base.llvmcall(("""
+    declare void @set_hi(i32) nounwind
+
+    define void @main(i32 %value) {
+    entry:
+        call void @set_hi(i32 %value)
+        ret void
+    }
+    """, "main"), Cvoid, Tuple{Int32}, value)
+end

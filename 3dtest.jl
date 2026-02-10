@@ -43,6 +43,79 @@ struct Point3D
     z::Float32
 end
 
+struct Line3D
+    color::UInt32
+    v1::Int32  # index to vertex 1
+    v2::Int32  # index to vertex 2
+end
+
+struct Vec3D
+    x::Float32
+    y::Float32
+    z::Float32
+end
+
+struct Tie
+    state::Int32      # 0=dead, 1=alive
+    x::Float32
+    y::Float32
+    z::Float32
+    xv::Float32       # velocity
+    yv::Float32
+    zv::Float32
+end
+
+struct Expl
+    state::Int32
+    counter::Int32
+    color::UInt32
+    p1::Ptr{Point3D}  # pointer to array of start points
+    p2::Ptr{Point3D}  # pointer to array of end points
+    vel::Ptr{Vec3D}   # pointer to array of velocities
+end
+
+function Base.getproperty(x::Ptr{Expl}, f::Symbol)
+    return unsafe_load(Ptr{fieldtype(Expl, f)}(x + offsetof(Expl, Val(f))))
+end
+
+function Base.setproperty!(x::Ptr{Expl}, f::Symbol, v::Any)
+    return unsafe_store!(Ptr{fieldtype(Expl, f)}(x + offsetof(Expl, Val(f))), v)
+end
+
+# Pointer accessors for 3D structs
+function Base.getproperty(x::Ptr{Line3D}, f::Symbol)
+    return unsafe_load(Ptr{fieldtype(Line3D, f)}(x + offsetof(Line3D, Val(f))))
+end
+
+function Base.setproperty!(x::Ptr{Line3D}, f::Symbol, v::Any)
+    return unsafe_store!(Ptr{fieldtype(Line3D, f)}(x + offsetof(Line3D, Val(f))), v)
+end
+
+function Base.getproperty(x::Ptr{Vec3D}, f::Symbol)
+    return unsafe_load(Ptr{fieldtype(Vec3D, f)}(x + offsetof(Vec3D, Val(f))))
+end
+
+function Base.setproperty!(x::Ptr{Vec3D}, f::Symbol, v::Any)
+    return unsafe_store!(Ptr{fieldtype(Vec3D, f)}(x + offsetof(Vec3D, Val(f))), v)
+end
+
+function Base.getproperty(x::Ptr{Tie}, f::Symbol)
+    return unsafe_load(Ptr{fieldtype(Tie, f)}(x + offsetof(Tie, Val(f))))
+end
+
+function Base.setproperty!(x::Ptr{Tie}, f::Symbol, v::Any)
+    return unsafe_store!(Ptr{fieldtype(Tie, f)}(x + offsetof(Tie, Val(f))), v)
+end
+
+function Base.getproperty(x::Ptr{Point3D}, f::Symbol)
+    return unsafe_load(Ptr{fieldtype(Point3D, f)}(x + offsetof(Point3D, Val(f))))
+end
+
+function Base.setproperty!(x::Ptr{Point3D}, f::Symbol, v::Any)
+    return unsafe_store!(Ptr{fieldtype(Point3D, f)}(x + offsetof(Point3D, Val(f))), v)
+end
+
+
 struct GameState
     player_x::Float64
     player_y::Float64
@@ -67,62 +140,48 @@ struct GameState
     right_btn_pressed::Bool
     jump_btn_pressed::Bool
     jump_sound::Ptr{Mix_Chunk}
+    # 3D game globals
+    tie_vlist::Ptr{Point3D}      # vertex list for tie fighter model
+    tie_shape::Ptr{Line3D}       # edge list for tie fighter model
+    ties::Ptr{Tie}               # tie fighters array
+    stars::Ptr{Point3D}          # starfield array
+    explosions::Ptr{Expl}        # explosions array
+    rgb_green::UInt16
+    rgb_white::UInt16
+    rgb_red::UInt16
+    rgb_blue::UInt16
+    cross_x::Float32             # crosshair coordinates
+    cross_y::Float32
+    cross_x_screen::Int32        # screen crosshair coordinates
+    cross_y_screen::Int32
+    target_x_screen::Int32       # targeter screen coordinates
+    target_y_screen::Int32
+    player_z_vel::Int32          # virtual speed of viewpoint/ship
+    cannon_state::Int32          # state of laser cannon
+    cannon_count::Int32           # laser cannon counter
+    misses::Int32                # tracks number of missed ships
+    hits::Int32                  # tracks number of hits
+    score::Int32                 # player score
+    main_track_id::Int32         # main music track id
+    laser_id::Int32              # sound of laser pulse
+    explosion_id::Int32          # sound of explosion
+    flyby_id::Int32              # sound of tie fighter flying by
+    game_state_var::Int32        # state of game (GAME_RUNNING/GAME_OVER)
+    rng_state::UInt32            # random number generator state
+    frame_count::UInt32           # frame counter for FPS calculation
+    fps_last_time::UInt64        # last time FPS was printed
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
-    f === :player_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:player_x))))
-    f === :player_y && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:player_y))))
-    f === :player_vel_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:player_vel_x))))
-    f === :player_vel_y && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:player_vel_y))))
-    f === :on_ground && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:on_ground))))
-    f === :coyote_time && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:coyote_time))))
-    f === :jump_buffer && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:jump_buffer))))
-    f === :is_jumping && return unsafe_load(Ptr{Int32}(x + offsetof(GameState, Val(:is_jumping))))
-    f === :keys_up && return unsafe_load(Ptr{Ptr{KeyState_up}}(x + offsetof(GameState, Val(:keys_up))))
-    f === :keys_down && return unsafe_load(Ptr{Ptr{KeyState_down}}(x + offsetof(GameState, Val(:keys_down))))
-    f === :keys_pressed && return unsafe_load(Ptr{Ptr{KeyState_pressed}}(x + offsetof(GameState, Val(:keys_pressed))))
-    f === :last_frame_time && return unsafe_load(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))))
-    f === :quit && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:quit))))
-    f === :player_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))))
-    f === :background_sprite && return unsafe_load(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:background_sprite))))
-    f === :player && return unsafe_load(Ptr{Ptr{Player}}(x + offsetof(GameState, Val(:player))))
-    f === :fullscreen && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:fullscreen))))
-    f === :camera_x && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_x))))
-    f === :camera_y && return unsafe_load(Ptr{Float64}(x + offsetof(GameState, Val(:camera_y))))
-    f === :left_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:left_btn_pressed))))
-    f === :right_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:right_btn_pressed))))
-    f === :jump_btn_pressed && return unsafe_load(Ptr{Bool}(x + offsetof(GameState, Val(:jump_btn_pressed))))
-    f === :jump_sound && return unsafe_load(Ptr{Ptr{Mix_Chunk}}(x + offsetof(GameState, Val(:jump_sound))))
+    return unsafe_load(Ptr{fieldtype(GameState, f)}(x + offsetof(GameState, Val(f))))
 end
 
 function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
-    f === :player_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:player_x))), v)
-    f === :player_y && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:player_y))), v)
-    f === :player_vel_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:player_vel_x))), v)
-    f === :player_vel_y && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:player_vel_y))), v)
-    f === :on_ground && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:on_ground))), v)
-    f === :coyote_time && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:coyote_time))), v)
-    f === :jump_buffer && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:jump_buffer))), v)
-    f === :is_jumping && return unsafe_store!(Ptr{Int32}(x + offsetof(GameState, Val(:is_jumping))), v)
-    f === :keys_up && return unsafe_store!(Ptr{Ptr{KeyState_up}}(x + offsetof(GameState, Val(:keys_up))), v)
-    f === :keys_down && return unsafe_store!(Ptr{Ptr{KeyState_down}}(x + offsetof(GameState, Val(:keys_down))), v)
-    f === :keys_pressed && return unsafe_store!(Ptr{Ptr{KeyState_pressed}}(x + offsetof(GameState, Val(:keys_pressed))), v)
-    f === :last_frame_time && return unsafe_store!(Ptr{UInt64}(x + offsetof(GameState, Val(:last_frame_time))), v)
-    f === :quit && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:quit))), v)
-    f === :player_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:player_sprite))), v)
-    f === :background_sprite && return unsafe_store!(Ptr{Ptr{Sprite}}(x + offsetof(GameState, Val(:background_sprite))), v)
-    f === :player && return unsafe_store!(Ptr{Ptr{Player}}(x + offsetof(GameState, Val(:player))), v)
-    f === :fullscreen && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:fullscreen))), v)
-    f === :camera_x && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_x))), v)
-    f === :camera_y && return unsafe_store!(Ptr{Float64}(x + offsetof(GameState, Val(:camera_y))), v)
-    f === :left_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:left_btn_pressed))), v)
-    f === :right_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:right_btn_pressed))), v)
-    f === :jump_btn_pressed && return unsafe_store!(Ptr{Bool}(x + offsetof(GameState, Val(:jump_btn_pressed))), v)
-    f === :jump_sound && return unsafe_store!(Ptr{Ptr{Mix_Chunk}}(x + offsetof(GameState, Val(:jump_sound))), v)
+    return unsafe_store!(Ptr{fieldtype(GameState, f)}(x + offsetof(GameState, Val(f))), v)
 end
 
 function j_init_window()::Ptr{SDL_Window}
-    window_name = str_ptr(w"Platformer")
+    window_name = str_ptr(w"3d test")
     window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(480), UInt32(0))
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
@@ -152,6 +211,417 @@ end
     return Ptr{R}(byte_ptr(ptr) + offset)
 end
 
+# ============================================================================
+# RANDOM NUMBER GENERATION (LCG - Linear Congruential Generator)
+# ============================================================================
+# Simple LCG random number generator (same as glibc)
+function rand_next(state::Ptr{GameState})::UInt32
+    a::UInt32 = UInt32(1103515245)
+    c::UInt32 = UInt32(12345)
+    new_state::UInt32 = a * state.rng_state + c
+    state.rng_state = new_state
+    return new_state
+end
+
+# Get random integer in range [0, max)
+function rand_int(state::Ptr{GameState}, max::Int32)::Int32
+    r::UInt32 = rand_next(state)
+    if max <= Int32(0)
+        return Int32(0)
+    end
+    return unsafe_trunc(Int32, r % UInt32(max))
+end
+
+# Get random integer in range [min, max)
+function rand_range(state::Ptr{GameState}, min::Int32, max::Int32)::Int32
+    if max <= min
+        return min
+    end
+    range::Int32 = max - min
+    return min + rand_int(state, range)
+end
+
+# ============================================================================
+# 3D GAME FUNCTIONS
+# ============================================================================
+
+# Initialize a tie fighter at a random position
+function init_tie(state::Ptr{GameState}, tie_index::Int32)::Cvoid
+    if tie_index < Int32(0) || tie_index >= NUM_TIES
+        return nothing
+    end
+    
+    tie_ptr::Ptr{Tie} = state.ties + (tie_index * sizeof(Tie))
+    tie_ptr.state = Int32(1)
+    tie_ptr.x = Float32(rand_range(state, -Int32(640), Int32(640)))
+    tie_ptr.y = Float32(rand_range(state, -Int32(480), Int32(480)))
+    tie_ptr.z = Float32(Int32(4) * FAR_Z)
+    tie_ptr.xv = Float32(rand_range(state, -Int32(4), Int32(4)))
+    tie_ptr.yv = Float32(rand_range(state, -Int32(4), Int32(4)))
+    tie_ptr.zv = Float32(-Int32(4) - rand_int(state, Int32(64)))
+    
+    return nothing
+end
+
+# Reset a tie fighter to a new random position
+function reset_tie(state::Ptr{GameState}, tie_index::Int32)::Cvoid
+    if tie_index < Int32(0) || tie_index >= NUM_TIES
+        return nothing
+    end
+    
+    tie_ptr::Ptr{Tie} = state.ties + (tie_index * sizeof(Tie))
+    tie_ptr.state = Int32(1)
+    tie_ptr.x = Float32(rand_range(state, -Int32(640), Int32(640)))
+    tie_ptr.y = Float32(rand_range(state, -Int32(480), Int32(480)))
+    tie_ptr.z = Float32(Int32(4) * FAR_Z)
+    tie_ptr.xv = Float32(rand_range(state, -Int32(4), Int32(4)))
+    tie_ptr.yv = Float32(rand_range(state, -Int32(4), Int32(4)))
+    tie_ptr.zv = Float32(-Int32(4) - rand_int(state, Int32(64)))
+    
+    return nothing
+end
+
+# Process all tie fighters - update positions
+function process_ties(state::Ptr{GameState})::Cvoid
+    i::Int32 = Int32(0)
+    while i < NUM_TIES
+        tie_ptr::Ptr{Tie} = state.ties + (i * sizeof(Tie))
+        
+        if tie_ptr.state == Int32(0)
+            i += Int32(1)
+            continue
+        end
+        
+        tie_ptr.z += tie_ptr.zv
+        tie_ptr.x += tie_ptr.xv
+        tie_ptr.y += tie_ptr.yv
+        
+        if tie_ptr.z <= Float32(NEAR_Z)
+            init_tie(state, i)
+            state.misses += Int32(1)
+        end
+        
+        i += Int32(1)
+    end
+    
+    return nothing
+end
+
+# Move starfield - update star positions
+function move_starfield(state::Ptr{GameState})::Cvoid
+    i::Int32 = Int32(0)
+    while i < NUM_STARS
+        star_ptr::Ptr{Point3D} = state.stars + (i * sizeof(Point3D))
+        star_ptr.z -= Float32(state.player_z_vel)
+        
+        if star_ptr.z <= Float32(NEAR_Z)
+            star_ptr.z = Float32(FAR_Z)
+        end
+        
+        i += Int32(1)
+    end
+    
+    return nothing
+end
+
+# Draw starfield with perspective projection
+function draw_starfield(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
+    i::Int32 = Int32(0)
+    while i < NUM_STARS
+        star_ptr::Ptr{Point3D} = state.stars + (i * sizeof(Point3D))
+        
+        # Step 1: perspective transform
+        x_per::Float32 = Float32(VIEW_DISTANCE) * star_ptr.x / star_ptr.z
+        y_per::Float32 = Float32(VIEW_DISTANCE) * star_ptr.y / star_ptr.z
+        
+        # Step 2: compute screen coords
+        x_screen::Float32 = Float32(320) + x_per  # WINDOW_WIDTH/2 = 320
+        y_screen::Float32 = Float32(240) - y_per  # WINDOW_HEIGHT/2 = 240
+        
+        # Clip to screen coords
+        if x_screen >= Float32(0) && x_screen < Float32(640) && y_screen >= Float32(0) && y_screen < Float32(480)
+            # Extract color from star
+            color_val::UInt32 = star_ptr.color
+            r::UInt8 = UInt8((color_val >> 16) & UInt32(0xFF))
+            g::UInt8 = UInt8((color_val >> 8) & UInt32(0xFF))
+            b::UInt8 = UInt8(color_val & UInt32(0xFF))
+            llvm_SDL_SetRenderDrawColor(renderer, r, g, b, UInt8(255))
+            
+            x_int::Int32 = unsafe_trunc(Int32, x_screen)
+            y_int::Int32 = unsafe_trunc(Int32, y_screen)
+            llvm_SDL_RenderDrawPoint(renderer, x_int, y_int)
+        end
+        
+        i += Int32(1)
+    end
+    
+    return nothing
+end
+
+# Draw tie fighters with perspective projection and collision detection
+function draw_ties(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
+    i::Int32 = Int32(0)
+    while i < NUM_TIES
+        tie_ptr::Ptr{Tie} = state.ties + (i * sizeof(Tie))
+        
+        if tie_ptr.state == Int32(0)
+            i += Int32(1)
+            continue
+        end
+        
+        # Reset bounding box to impossible values
+        bmin_x::Int32 = Int32(100000)
+        bmax_x::Int32 = Int32(-100000)
+        bmin_y::Int32 = Int32(100000)
+        bmax_y::Int32 = Int32(-100000)
+        
+        # Based on z-distance shade tie fighter
+        # Normalize the distance from 0 to max_z then scale it to 31, so the closer the brighter
+        # Formula: RGB16Bit(0,(31-31*(ties[index].z/(4*FAR_Z))),0)
+        # For SDL, we'll use 0-255 range instead of 0-31
+        z_normalized::Float32 = tie_ptr.z / Float32(Int32(4) * FAR_Z)
+        green_intensity::Float32 = Float32(255) * (Float32(1.0) - z_normalized)
+        if green_intensity < Float32(0.0)
+            green_intensity = Float32(0.0)
+        elseif green_intensity > Float32(255.0)
+            green_intensity = Float32(255.0)
+        end
+        tie_green::UInt8 = unsafe_trunc(UInt8, green_intensity)
+        llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), tie_green, UInt8(0), UInt8(255))
+        
+        # Draw each edge of the tie fighter
+        edge_idx::Int32 = Int32(0)
+        while edge_idx < NUM_TIE_EDGES
+            edge_ptr::Ptr{Line3D} = state.tie_shape + (edge_idx * sizeof(Line3D))
+            
+            # Get vertices
+            v1_idx::Int32 = edge_ptr.v1
+            v2_idx::Int32 = edge_ptr.v2
+            v1_ptr::Ptr{Point3D} = state.tie_vlist + (v1_idx * sizeof(Point3D))
+            v2_ptr::Ptr{Point3D} = state.tie_vlist + (v2_idx * sizeof(Point3D))
+            
+            # Step 1: perspective transform each end point
+            # Note: translation of each point to the position of the tie fighter
+            p1_per_x::Float32 = Float32(VIEW_DISTANCE) * (tie_ptr.x + v1_ptr.x) / (v1_ptr.z + tie_ptr.z)
+            p1_per_y::Float32 = Float32(VIEW_DISTANCE) * (tie_ptr.y + v1_ptr.y) / (v1_ptr.z + tie_ptr.z)
+            p2_per_x::Float32 = Float32(VIEW_DISTANCE) * (tie_ptr.x + v2_ptr.x) / (v2_ptr.z + tie_ptr.z)
+            p2_per_y::Float32 = Float32(VIEW_DISTANCE) * (tie_ptr.y + v2_ptr.y) / (v2_ptr.z + tie_ptr.z)
+            
+            # Step 2: compute screen coords
+            p1_screen_x::Int32 = Int32(320) + unsafe_trunc(Int32, p1_per_x)  # WINDOW_WIDTH/2
+            p1_screen_y::Int32 = Int32(240) - unsafe_trunc(Int32, p1_per_y)  # WINDOW_HEIGHT/2
+            p2_screen_x::Int32 = Int32(320) + unsafe_trunc(Int32, p2_per_x)
+            p2_screen_y::Int32 = Int32(240) - unsafe_trunc(Int32, p2_per_y)
+            
+            # Step 3: draw the edge
+            llvm_SDL_RenderDrawLine(renderer, p1_screen_x, p1_screen_y, p2_screen_x, p2_screen_y)
+            
+            # Update bounding box using min/max
+            min_x::Int32 = p1_screen_x < p2_screen_x ? p1_screen_x : p2_screen_x
+            max_x::Int32 = p1_screen_x > p2_screen_x ? p1_screen_x : p2_screen_x
+            min_y::Int32 = p1_screen_y < p2_screen_y ? p1_screen_y : p2_screen_y
+            max_y::Int32 = p1_screen_y > p2_screen_y ? p1_screen_y : p2_screen_y
+            
+            if min_x < bmin_x
+                bmin_x = min_x
+            end
+            if max_x > bmax_x
+                bmax_x = max_x
+            end
+            if min_y < bmin_y
+                bmin_y = min_y
+            end
+            if max_y > bmax_y
+                bmax_y = max_y
+            end
+            
+            edge_idx += Int32(1)
+        end
+        
+        # Test if this tie has been hit by lasers
+        if state.cannon_state == Int32(1)
+            target_x::Int32 = state.target_x_screen
+            target_y::Int32 = state.target_y_screen
+            
+            # Simple test: screen coords of bounding box contain laser target
+            if target_x > bmin_x && target_x < bmax_x && target_y > bmin_y && target_y < bmax_y
+                # This tie is dead meat!
+                start_explosion(state, i)
+                # TODO: play sound - DSound_Play(explosion_id)
+                # Increase score
+                state.score += unsafe_trunc(Int32, tie_ptr.z)
+                # Add one more hit
+                state.hits += Int32(1)
+                # Finally reset this tie fighter
+                init_tie(state, i)
+            end
+        end
+        
+        i += Int32(1)
+    end
+    
+    return nothing
+end
+
+# Start explosion when tie fighter is hit
+function start_explosion(state::Ptr{GameState}, tie_index::Int32)::Cvoid
+    # Find a free explosion slot
+    index::Int32 = Int32(0)
+    while index < NUM_EXPLOSIONS
+        expl_ptr::Ptr{Expl} = state.explosions + (index * sizeof(Expl))
+        if expl_ptr.state == Int32(0)
+            # Found free slot, initialize explosion
+            expl_ptr.state = Int32(1)
+            expl_ptr.counter = Int32(0)
+            expl_ptr.color = state.rgb_green
+            
+            # Get the tie fighter that was hit
+            tie_ptr::Ptr{Tie} = state.ties + (tie_index * sizeof(Tie))
+            
+            # Copy edge list to explosion, creating shrapnel
+            edge_idx::Int32 = Int32(0)
+            while edge_idx < NUM_TIE_EDGES
+                edge_ptr::Ptr{Line3D} = state.tie_shape + (edge_idx * sizeof(Line3D))
+                
+                # Get vertices from tie model
+                v1_idx::Int32 = edge_ptr.v1
+                v2_idx::Int32 = edge_ptr.v2
+                v1_ptr::Ptr{Point3D} = state.tie_vlist + (v1_idx * sizeof(Point3D))
+                v2_ptr::Ptr{Point3D} = state.tie_vlist + (v2_idx * sizeof(Point3D))
+                
+                # Start point of edge (world position)
+                p1_ptr::Ptr{Point3D} = expl_ptr.p1 + (edge_idx * sizeof(Point3D))
+                unsafe_store!(p1_ptr, Point3D(
+                    UInt32(0),
+                    tie_ptr.x + v1_ptr.x,
+                    tie_ptr.y + v1_ptr.y,
+                    tie_ptr.z + v1_ptr.z
+                ))
+                
+                # End point of edge (world position)
+                p2_ptr::Ptr{Point3D} = expl_ptr.p2 + (edge_idx * sizeof(Point3D))
+                unsafe_store!(p2_ptr, Point3D(
+                    UInt32(0),
+                    tie_ptr.x + v2_ptr.x,
+                    tie_ptr.y + v2_ptr.y,
+                    tie_ptr.z + v2_ptr.z
+                ))
+                
+                # Compute trajectory vector for edges (random velocity)
+                vel_ptr::Ptr{Vec3D} = expl_ptr.vel + (edge_idx * sizeof(Vec3D))
+                vel_x::Float32 = tie_ptr.xv - Float32(8) + Float32(rand_int(state, Int32(16)))
+                vel_y::Float32 = tie_ptr.yv - Float32(8) + Float32(rand_int(state, Int32(16)))
+                vel_z::Float32 = Float32(-3) + Float32(rand_int(state, Int32(4)))
+                unsafe_store!(vel_ptr, Vec3D(vel_x, vel_y, vel_z))
+                
+                edge_idx += Int32(1)
+            end
+            
+            # Done initializing this explosion
+            return nothing
+        end
+        index += Int32(1)
+    end
+    
+    # No free explosion slot found
+    return nothing
+end
+
+# Process all explosions - update positions
+function process_explosions(state::Ptr{GameState})::Cvoid
+    index::Int32 = Int32(0)
+    while index < NUM_EXPLOSIONS
+        expl_ptr::Ptr{Expl} = state.explosions + (index * sizeof(Expl))
+        
+        # Test if this explosion is active
+        if expl_ptr.state == Int32(1)
+            # Update all edges (shrapnel)
+            edge_idx::Int32 = Int32(0)
+            while edge_idx < NUM_TIE_EDGES
+                # Update start point
+                p1_ptr::Ptr{Point3D} = expl_ptr.p1 + (edge_idx * sizeof(Point3D))
+                vel_ptr::Ptr{Vec3D} = expl_ptr.vel + (edge_idx * sizeof(Vec3D))
+                p1_ptr.x += vel_ptr.x
+                p1_ptr.y += vel_ptr.y
+                p1_ptr.z += vel_ptr.z
+                
+                # Update end point
+                p2_ptr::Ptr{Point3D} = expl_ptr.p2 + (edge_idx * sizeof(Point3D))
+                p2_ptr.x += vel_ptr.x
+                p2_ptr.y += vel_ptr.y
+                p2_ptr.z += vel_ptr.z
+                
+                edge_idx += Int32(1)
+            end
+            
+            # Test for termination of explosion
+            expl_ptr.counter += Int32(1)
+            if expl_ptr.counter > Int32(100)
+                expl_ptr.state = Int32(0)
+                expl_ptr.counter = Int32(0)
+            end
+        end
+        
+        index += Int32(1)
+    end
+    
+    return nothing
+end
+
+# Draw all explosions
+function draw_explosions(state::Ptr{GameState}, renderer::Ptr{SDL_Renderer})::Cvoid
+    index::Int32 = Int32(0)
+    while index < NUM_EXPLOSIONS
+        expl_ptr::Ptr{Expl} = state.explosions + (index * sizeof(Expl))
+        
+        # Test if this explosion is active
+        if expl_ptr.state == Int32(0)
+            index += Int32(1)
+            continue
+        end
+        
+        # Set color for this explosion
+        color_val::UInt32 = expl_ptr.color
+        r::UInt8 = UInt8((color_val >> 16) & UInt32(0xFF))
+        g::UInt8 = UInt8((color_val >> 8) & UInt32(0xFF))
+        b::UInt8 = UInt8(color_val & UInt32(0xFF))
+        llvm_SDL_SetRenderDrawColor(renderer, r, g, b, UInt8(255))
+        
+        # Render each edge of the explosion
+        edge_idx::Int32 = Int32(0)
+        while edge_idx < NUM_TIE_EDGES
+            p1_ptr::Ptr{Point3D} = expl_ptr.p1 + (edge_idx * sizeof(Point3D))
+            p2_ptr::Ptr{Point3D} = expl_ptr.p2 + (edge_idx * sizeof(Point3D))
+            
+            # Test if edge is beyond near clipping plane
+            if p1_ptr.z < Float32(NEAR_Z) && p2_ptr.z < Float32(NEAR_Z)
+                edge_idx += Int32(1)
+                continue
+            end
+            
+            # Step 1: perspective transform each end point
+            p1_per_x::Float32 = Float32(VIEW_DISTANCE) * p1_ptr.x / p1_ptr.z
+            p1_per_y::Float32 = Float32(VIEW_DISTANCE) * p1_ptr.y / p1_ptr.z
+            p2_per_x::Float32 = Float32(VIEW_DISTANCE) * p2_ptr.x / p2_ptr.z
+            p2_per_y::Float32 = Float32(VIEW_DISTANCE) * p2_ptr.y / p2_ptr.z
+            
+            # Step 2: compute screen coords
+            p1_screen_x::Int32 = Int32(320) + unsafe_trunc(Int32, p1_per_x)  # WINDOW_WIDTH/2
+            p1_screen_y::Int32 = Int32(240) - unsafe_trunc(Int32, p1_per_y)  # WINDOW_HEIGHT/2
+            p2_screen_x::Int32 = Int32(320) + unsafe_trunc(Int32, p2_per_x)
+            p2_screen_y::Int32 = Int32(240) - unsafe_trunc(Int32, p2_per_y)
+            
+            # Step 3: draw the edge
+            llvm_SDL_RenderDrawLine(renderer, p1_screen_x, p1_screen_y, p2_screen_x, p2_screen_y)
+            
+            edge_idx += Int32(1)
+        end
+        
+        index += Int32(1)
+    end
+    
+    return nothing
+end
 
 # In j_init_game_state, initialize game state
 function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
@@ -226,6 +696,22 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
         printf(c"Skipping sound loading - audio device not ready\n")
     end
     
+    # Allocate 3D game arrays
+    tie_vlist::Ptr{Point3D} = Ptr{Point3D}(wasm_malloc(UInt32(sizeof(Point3D) * NUM_TIE_VERTS)))
+    tie_shape::Ptr{Line3D} = Ptr{Line3D}(wasm_malloc(UInt32(sizeof(Line3D) * NUM_TIE_EDGES)))
+    ties::Ptr{Tie} = Ptr{Tie}(wasm_malloc(UInt32(sizeof(Tie) * NUM_TIES)))
+    stars::Ptr{Point3D} = Ptr{Point3D}(wasm_malloc(UInt32(sizeof(Point3D) * NUM_STARS)))
+    explosions::Ptr{Expl} = Ptr{Expl}(wasm_malloc(UInt32(sizeof(Expl) * NUM_EXPLOSIONS)))
+    
+    # Initialize explosions arrays (p1, p2, vel for each explosion)
+    for i in 0:(NUM_EXPLOSIONS-1)
+        expl_ptr = explosions + (i * sizeof(Expl))
+        p1_ptr = Ptr{Point3D}(wasm_malloc(UInt32(sizeof(Point3D) * NUM_TIE_EDGES)))
+        p2_ptr = Ptr{Point3D}(wasm_malloc(UInt32(sizeof(Point3D) * NUM_TIE_EDGES)))
+        vel_ptr = Ptr{Vec3D}(wasm_malloc(UInt32(sizeof(Vec3D) * NUM_TIE_EDGES)))
+        unsafe_store!(Ptr{Expl}(expl_ptr), Expl(Int32(0), Int32(0), UInt32(0), p1_ptr, p2_ptr, vel_ptr))
+    end
+    
     game_state_ptr::Ptr{GameState} = Ptr{GameState}(wasm_malloc(UInt32(sizeof(GameState))))
     # Initialize player at ground level (732.0) minus player height (64)
     unsafe_store!(
@@ -253,13 +739,103 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
             false, 
             false, 
             false, 
-            jump_sound
+            jump_sound,
+            # 3D game globals
+            tie_vlist,
+            tie_shape,
+            ties,
+            stars,
+            explosions,
+            UInt16(0),  # rgb_green (will be set when bit depth is known)
+            UInt16(0),  # rgb_white
+            UInt16(0),  # rgb_red
+            UInt16(0),  # rgb_blue
+            Float32(0.0),  # cross_x
+            Float32(0.0),  # cross_y
+            Int32(320),    # cross_x_screen (WINDOW_WIDTH/2)
+            Int32(240),    # cross_y_screen (WINDOW_HEIGHT/2)
+            Int32(320),    # target_x_screen
+            Int32(240),    # target_y_screen
+            Int32(4),      # player_z_vel
+            Int32(0),      # cannon_state
+            Int32(0),      # cannon_count
+            Int32(0),      # misses
+            Int32(0),      # hits
+            Int32(0),      # score
+            Int32(-1),     # main_track_id
+            Int32(-1),     # laser_id
+            Int32(-1),     # explosion_id
+            Int32(-1),     # flyby_id
+            GAME_RUNNING,  # game_state_var
+            UInt32(12345),  # rng_state (seed)
+            UInt32(0),      # frame_count
+            UInt64(0)       # fps_last_time
         )
     )
 
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
+    
+    # Initialize tie fighter model - vertex list (hardcoded, no arrays)
+    v0::Ptr{Point3D} = tie_vlist + (Int32(0) * sizeof(Point3D))
+    unsafe_store!(v0, Point3D(UInt32(0), Float32(-40), Float32(40), Float32(0)))
+    v1::Ptr{Point3D} = tie_vlist + (Int32(1) * sizeof(Point3D))
+    unsafe_store!(v1, Point3D(UInt32(0), Float32(-40), Float32(0), Float32(0)))
+    v2::Ptr{Point3D} = tie_vlist + (Int32(2) * sizeof(Point3D))
+    unsafe_store!(v2, Point3D(UInt32(0), Float32(-40), Float32(-40), Float32(0)))
+    v3::Ptr{Point3D} = tie_vlist + (Int32(3) * sizeof(Point3D))
+    unsafe_store!(v3, Point3D(UInt32(0), Float32(-10), Float32(0), Float32(0)))
+    v4::Ptr{Point3D} = tie_vlist + (Int32(4) * sizeof(Point3D))
+    unsafe_store!(v4, Point3D(UInt32(0), Float32(0), Float32(20), Float32(0)))
+    v5::Ptr{Point3D} = tie_vlist + (Int32(5) * sizeof(Point3D))
+    unsafe_store!(v5, Point3D(UInt32(0), Float32(10), Float32(0), Float32(0)))
+    v6::Ptr{Point3D} = tie_vlist + (Int32(6) * sizeof(Point3D))
+    unsafe_store!(v6, Point3D(UInt32(0), Float32(0), Float32(-20), Float32(0)))
+    v7::Ptr{Point3D} = tie_vlist + (Int32(7) * sizeof(Point3D))
+    unsafe_store!(v7, Point3D(UInt32(0), Float32(40), Float32(40), Float32(0)))
+    v8::Ptr{Point3D} = tie_vlist + (Int32(8) * sizeof(Point3D))
+    unsafe_store!(v8, Point3D(UInt32(0), Float32(40), Float32(0), Float32(0)))
+    v9::Ptr{Point3D} = tie_vlist + (Int32(9) * sizeof(Point3D))
+    unsafe_store!(v9, Point3D(UInt32(0), Float32(40), Float32(-40), Float32(0)))
+    
+    # Initialize tie fighter model - edge list (hardcoded, no arrays)
+    e0::Ptr{Line3D} = tie_shape + (Int32(0) * sizeof(Line3D))
+    unsafe_store!(e0, Line3D(UInt32(0), Int32(0), Int32(2)))
+    e1::Ptr{Line3D} = tie_shape + (Int32(1) * sizeof(Line3D))
+    unsafe_store!(e1, Line3D(UInt32(0), Int32(1), Int32(3)))
+    e2::Ptr{Line3D} = tie_shape + (Int32(2) * sizeof(Line3D))
+    unsafe_store!(e2, Line3D(UInt32(0), Int32(3), Int32(4)))
+    e3::Ptr{Line3D} = tie_shape + (Int32(3) * sizeof(Line3D))
+    unsafe_store!(e3, Line3D(UInt32(0), Int32(4), Int32(5)))
+    e4::Ptr{Line3D} = tie_shape + (Int32(4) * sizeof(Line3D))
+    unsafe_store!(e4, Line3D(UInt32(0), Int32(5), Int32(6)))
+    e5::Ptr{Line3D} = tie_shape + (Int32(5) * sizeof(Line3D))
+    unsafe_store!(e5, Line3D(UInt32(0), Int32(6), Int32(3)))
+    e6::Ptr{Line3D} = tie_shape + (Int32(6) * sizeof(Line3D))
+    unsafe_store!(e6, Line3D(UInt32(0), Int32(5), Int32(8)))
+    e7::Ptr{Line3D} = tie_shape + (Int32(7) * sizeof(Line3D))
+    unsafe_store!(e7, Line3D(UInt32(0), Int32(7), Int32(9)))
+    
+    # Initialize starfield with random positions
+    i = Int32(0)
+    while i < NUM_STARS
+        star_ptr::Ptr{Point3D} = stars + (i * sizeof(Point3D))
+        x::Int32 = rand_int(game_state_ptr, Int32(640))
+        y::Int32 = rand_int(game_state_ptr, Int32(480))
+        z::Int32 = NEAR_Z + rand_int(game_state_ptr, FAR_Z - NEAR_Z)
+        unsafe_store!(star_ptr, Point3D(UInt32(0xFFFFFFFF), Float32(x), Float32(y), Float32(z)))
+        i += Int32(1)
+    end
+    
+    # Initialize all tie fighters
+    i = Int32(0)
+    while i < NUM_TIES
+        init_tie(game_state_ptr, i)
+        i += Int32(1)
+    end
+    
+    printf(c"3D game data initialized\n")
 
     # # --- Load sprite if not loaded ---
     if game_state_ptr.player_sprite == Ptr{Sprite}(C_NULL)
@@ -293,214 +869,98 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     return game_state_ptr
 end
 
-# In game_loop, update game state
+# 3D Game Loop
 function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
     current_time::UInt64 = llvm_SDL_GetPerformanceCounter()
-    delta_time::Float64 = Float64(current_time - game_state.last_frame_time) / Float64(llvm_SDL_GetPerformanceFrequency())
-    game_state.last_frame_time = current_time
+    perf_freq::UInt64 = llvm_SDL_GetPerformanceFrequency()
+    
+    # FPS tracking - print every second
+    if game_state.fps_last_time == UInt64(0)
+        game_state.fps_last_time = current_time
+    end
+    
+    game_state.frame_count += UInt32(1)
+    time_elapsed::UInt64 = current_time - game_state.fps_last_time
+    time_elapsed_seconds::Float64 = Float64(time_elapsed) / Float64(perf_freq)
+    
+    if time_elapsed_seconds >= Float64(1.0)
+        fps::Float64 = Float64(game_state.frame_count) / time_elapsed_seconds
+        printf(c"FPS: %.1f\n", fps)
+        game_state.frame_count = UInt32(0)
+        game_state.fps_last_time = current_time
+    end
+    
     # Use persistent key state from GameState
     keys_down_ptr::Ptr{KeyState_down} = game_state.keys_down  
     keys_up_ptr::Ptr{KeyState_up} = game_state.keys_up
     keys_pressed_ptr::Ptr{KeyState_pressed} = game_state.keys_pressed
     handle_input(keys_down_ptr, keys_up_ptr, keys_pressed_ptr, game_state, window)
     
-    # --- Platformer Physics ---
-    gravity::Float64 = Float64(1500.0)           # Gravity acceleration
-    jump_velocity::Float64 = Float64(-500.0)     # Jump velocity (negative = up)
-    min_x::Float64 = Float64(364)
-    max_x::Float64 = Float64(812)
-    min_y::Float64 = Float64(284)
-    max_y::Float64 = Float64(732.0)              # Ground level
-    move_speed::Float64 = Float64(300.0)         # Horizontal movement speed
-    move_accel::Float64 = Float64(2000.0)        
-    ground_decel::Float64 = Float64(4000.0)      
-    air_decel::Float64 = Float64(1200.0)         
-    max_speed::Float64 = Float64(300.0)          
-    coyote_duration::Float64 = Float64(0.1)      # Time window for coyote time
-    jump_buffer_duration::Float64 = Float64(0.1) # Time window for jump buffering
-    jump_cancel_gravity_scale::Float64 = Float64(0.5) # Reduce gravity when jump button released
-
-    # --- Coyote Time Update ---
-    if game_state.on_ground == Int32(1)
-        game_state.coyote_time = coyote_duration
-    else
-        game_state.coyote_time -= delta_time
-    end
-    
-    # --- Jump Buffering Update ---
-    if keys_pressed_ptr.space  # Jump button pressed this frame
-        game_state.jump_buffer = jump_buffer_duration
-    else
-        game_state.jump_buffer -= delta_time
-    end
-    
-    # --- Horizontal movement (smooth platformer style) ---
-    target_vel_x::Float64 = Float64(0)
-    if keys_down_ptr.a && game_state.player_x > min_x    # A - move left
-        target_vel_x = -move_speed
-    elseif keys_down_ptr.d && game_state.player_x < max_x  # D - move right
-        target_vel_x = move_speed
-    end
-    
-    # Apply acceleration/deceleration
-    if game_state.on_ground == Int32(1)
-        game_state.player_vel_x = move_toward(game_state.player_vel_x, target_vel_x, Float64(move_accel * delta_time))
-    else
-        game_state.player_vel_x = move_toward(game_state.player_vel_x, target_vel_x, Float64(air_decel * delta_time))
-    end
-    
-    # Clamp horizontal velocity
-    if game_state.player_vel_x > max_speed
-        game_state.player_vel_x = max_speed
-    elseif game_state.player_vel_x < -max_speed
-        game_state.player_vel_x = -max_speed
-    end
-    
-    # --- Jumping ---
-    # Jump with coyote time (allows jumping shortly after leaving ground)
-    # and jump buffering (allows pressing jump slightly before landing)
-    if game_state.coyote_time > Float64(0) && game_state.jump_buffer > Float64(0)
-        game_state.player_vel_y = jump_velocity
-        game_state.on_ground = Int32(0)
-        game_state.is_jumping = Int32(1)
-        game_state.coyote_time = Float64(0)  # Consume coyote time
-        game_state.jump_buffer = Float64(0)   # Consume jump buffer
-        
-        # Play jump sound (only if sound is loaded and valid)
-        if game_state.jump_sound != Ptr{Mix_Chunk}(C_NULL)
-            play_result::Int32 = llvm_Mix_PlayChannel(Int32(-1), game_state.jump_sound, Int32(0))
-            if play_result < Int32(0)
-                printf(c"Failed to play jump sound, channel: %d\n", play_result)
-            end
+    # Update cannon state
+    if game_state.cannon_state == Int32(1)
+        game_state.cannon_count += Int32(1)
+        if game_state.cannon_count > Int32(10)  # Fire duration
+            game_state.cannon_state = Int32(0)
+            game_state.cannon_count = Int32(0)
         end
     end
     
-    # Variable jump height (cancel jump when button released)
-    if game_state.is_jumping == Int32(1) && game_state.player_vel_y < Float64(0) && keys_up_ptr.space
-        game_state.player_vel_y *= jump_cancel_gravity_scale
-        game_state.is_jumping = Int32(0)  # Cancel jump
+    # Update crosshair position based on input
+    if keys_down_ptr.w || keys_down_ptr.s
+        if keys_down_ptr.w
+            game_state.cross_y -= Float32(CROSS_VEL)
+        end
+        if keys_down_ptr.s
+            game_state.cross_y += Float32(CROSS_VEL)
+        end
+    end
+    if keys_down_ptr.a || keys_down_ptr.d
+        if keys_down_ptr.a
+            game_state.cross_x -= Float32(CROSS_VEL)
+        end
+        if keys_down_ptr.d
+            game_state.cross_x += Float32(CROSS_VEL)
+        end
     end
     
-    # --- Gravity ---
-    if game_state.on_ground == Int32(0)
-        game_state.player_vel_y += Float64(gravity * delta_time)
-    else
-        game_state.is_jumping = Int32(0)  # Reset jump state only when landing
+    # Update targeter to match crosshair
+    game_state.target_x_screen = game_state.cross_x_screen
+    game_state.target_y_screen = game_state.cross_y_screen
+    
+    # Fire cannon on space
+    if keys_pressed_ptr.space
+        game_state.cannon_state = Int32(1)
+        game_state.cannon_count = Int32(0)
     end
     
-    # --- Update Position ---
-    game_state.player_x += Float64(game_state.player_vel_x * delta_time)
-    game_state.player_y += Float64(game_state.player_vel_y * delta_time)
-    
-    # Clamp horizontal position to bounds
-    if game_state.player_x < min_x
-        game_state.player_x = min_x
-        game_state.player_vel_x = Float64(0)
-    elseif game_state.player_x > max_x
-        game_state.player_x = max_x
-        game_state.player_vel_x = Float64(0)
-    end
-    
-    # --- Ground Collision ---
-    if game_state.player_y >= max_y
-        game_state.player_y = max_y
-        game_state.player_vel_y = Float64(0)
-        game_state.on_ground = Int32(1)
-    else
-        game_state.on_ground = Int32(0)
-    end
-    
-    # --- Camera: Query window size and compute camera offset ---
-    win_w::Int32 = Int32(0)
-    win_h::Int32 = Int32(0)
-    win_w_ptr = Ref{Int32}(0)
-    win_h_ptr = Ref{Int32}(0)
-    llvm_SDL_GetWindowSize(window, Base.unsafe_convert(Ptr{Int32}, win_w_ptr), Base.unsafe_convert(Ptr{Int32}, win_h_ptr))
-    win_w = win_w_ptr[]
-    win_h = win_h_ptr[]
-    player_width::Float64 = 64.0
-    player_height::Float64 = 64.0
-    target_camera_x::Float64 = game_state.player_x - Float64(win_w) / 2.0 + player_width / 2.0
-    target_camera_y::Float64 = game_state.player_y - Float64(win_h) / 2.0 + player_height / 2.0
-    camera_speed::Float64 = 0.15  # Adjust for smoothness
-    game_state.camera_x += (target_camera_x - game_state.camera_x) * camera_speed
-    game_state.camera_y += (target_camera_y - game_state.camera_y) * camera_speed
-
-    # --- Mobile Controls: Define button areas (bottom 25% of screen) ---
-    btn_area_h = win_h / Int32(4)
-    btn_area_y = win_h - btn_area_h
-    btn_w = win_w / Int32(3)
-    left_btn_rect = SDL_FRect(0.0f0, Float32(btn_area_y), Float32(btn_w), Float32(btn_area_h))
-    right_btn_rect = SDL_FRect(Float32(2 * btn_w), Float32(btn_area_y), Float32(btn_w), Float32(btn_area_h))
-    jump_btn_rect = SDL_FRect(Float32(btn_w), Float32(btn_area_y), Float32(btn_w), Float32(btn_area_h))
-    # Store pressed state for visual feedback (optional, could be in GameState)
-    game_state.left_btn_pressed = false
-    game_state.right_btn_pressed = false
-    game_state.jump_btn_pressed = false
+    # Process game objects
+    move_starfield(game_state)
+    process_ties(game_state)
+    process_explosions(game_state)
     
     # --- Render ---
-    # Clear screen to black before drawing
-    
     llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
     llvm_SDL_RenderClear(renderer)
-
-    # Draw ground rectangle (from ground level to bottom of screen)
-    ground_rect::SDL_FRect = SDL_FRect(
-        Float32(0.0 - game_state.camera_x),
-        Float32(max_y - game_state.camera_y),  # Start at ground level
-        Float32(win_w),
-        Float32(win_h - max_y)  # Extend to bottom of screen
-    )
-    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
-    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), ground_rect)
-    llvm_SDL_SetRenderDrawColor(renderer, UInt8(100), UInt8(70), UInt8(50), UInt8(255))  # Brown ground color
-    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
-    wasm_free(Ptr{Cvoid}(rect_ptr))
-
-    # Render background sprite as a world item (affected by camera)
-    if game_state.background_sprite != Ptr{Sprite}(C_NULL)
-        render_sprite(renderer, game_state.background_sprite, Float32(0.0 - game_state.camera_x), Float32(0.0 - game_state.camera_y))
-    end
-    if game_state.player_sprite != Ptr{Sprite}(C_NULL)
-        if game_state.player_sprite.is_flipped && keys_down_ptr.d
-            game_state.player_sprite.is_flipped = false
-            printf(c"Player is facing right\n")
-        elseif !game_state.player_sprite.is_flipped && keys_down_ptr.a
-            game_state.player_sprite.is_flipped = true
-            printf(c"Player is facing left\n")
-        end
-    else
-        # Fallback to rectangle
-        rect::SDL_FRect = SDL_FRect(Float32(game_state.player_x - game_state.camera_x), Float32(game_state.player_y - game_state.camera_y), Float32(64), Float32(64))
-        rect_ptr::Ptr{Cvoid} = wasm_malloc(UInt32(sizeof(SDL_FRect)))
-        unsafe_store!(Ptr{SDL_FRect}(rect_ptr), rect)
-        llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(0), UInt8(0), UInt8(255))
-        llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
-        wasm_free(Ptr{Cvoid}(rect_ptr))
-    end
-    # --- Draw mobile controls (rectangles) ---
-    # Left button
-    llvm_SDL_SetRenderDrawColor(renderer, game_state.left_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(200), UInt8(180))
-    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
-    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), left_btn_rect)
-    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
-    wasm_free(Ptr{Cvoid}(rect_ptr))
-    # Right button
-    llvm_SDL_SetRenderDrawColor(renderer, game_state.right_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(200), UInt8(180))
-    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
-    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), right_btn_rect)
-    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
-    wasm_free(Ptr{Cvoid}(rect_ptr))
-    # Jump button
-    llvm_SDL_SetRenderDrawColor(renderer, UInt8(200), game_state.jump_btn_pressed ? UInt8(100) : UInt8(200), UInt8(200), UInt8(180))
-    rect_ptr = wasm_malloc(UInt32(sizeof(SDL_FRect)))
-    unsafe_store!(Ptr{SDL_FRect}(rect_ptr), jump_btn_rect)
-    llvm_SDL_RenderFillRectF(renderer, Ptr{SDL_FRect}(rect_ptr))
-    wasm_free(Ptr{Cvoid}(rect_ptr))
+    
+    # Draw starfield
+    draw_starfield(game_state, renderer)
+    
+    # Draw tie fighters
+    draw_ties(game_state, renderer)
+    
+    # Draw explosions
+    draw_explosions(game_state, renderer)
+    
+    # Draw crosshair
+    llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(0), UInt8(0), UInt8(255))
+    cross_x_int::Int32 = game_state.cross_x_screen
+    cross_y_int::Int32 = game_state.cross_y_screen
+    llvm_SDL_RenderDrawLine(renderer, cross_x_int - Int32(10), cross_y_int, cross_x_int + Int32(10), cross_y_int)
+    llvm_SDL_RenderDrawLine(renderer, cross_x_int, cross_y_int - Int32(10), cross_x_int, cross_y_int + Int32(10))
     
     llvm_SDL_RenderPresent(renderer)
-    llvm_SDL_Delay(UInt32(16)) # ~60 FPS
-
+    llvm_SDL_Delay(UInt32(5))  # ~60 FPS
+    
     return game_state
 end
 
@@ -658,6 +1118,41 @@ function cleanup(game_state_ptr::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wi
     # Free sprite resources
     if game_state_ptr.player_sprite != Ptr{Sprite}(C_NULL)
         free_sprite(game_state_ptr.player_sprite)
+    end
+    
+    # Free 3D game arrays
+    if game_state_ptr.explosions != Ptr{Expl}(C_NULL)
+        # Free explosion sub-arrays (p1, p2, vel for each explosion)
+        for i in 0:(NUM_EXPLOSIONS-1)
+            expl_ptr = game_state_ptr.explosions + (i * sizeof(Expl))
+            expl = unsafe_load(Ptr{Expl}(expl_ptr))
+            if expl.p1 != Ptr{Point3D}(C_NULL)
+                wasm_free(Ptr{Cvoid}(expl.p1))
+            end
+            if expl.p2 != Ptr{Point3D}(C_NULL)
+                wasm_free(Ptr{Cvoid}(expl.p2))
+            end
+            if expl.vel != Ptr{Vec3D}(C_NULL)
+                wasm_free(Ptr{Cvoid}(expl.vel))
+            end
+        end
+        wasm_free(Ptr{Cvoid}(game_state_ptr.explosions))
+    end
+    
+    if game_state_ptr.stars != Ptr{Point3D}(C_NULL)
+        wasm_free(Ptr{Cvoid}(game_state_ptr.stars))
+    end
+    
+    if game_state_ptr.ties != Ptr{Tie}(C_NULL)
+        wasm_free(Ptr{Cvoid}(game_state_ptr.ties))
+    end
+    
+    if game_state_ptr.tie_shape != Ptr{Line3D}(C_NULL)
+        wasm_free(Ptr{Cvoid}(game_state_ptr.tie_shape))
+    end
+    
+    if game_state_ptr.tie_vlist != Ptr{Point3D}(C_NULL)
+        wasm_free(Ptr{Cvoid}(game_state_ptr.tie_vlist))
     end
     
     wasm_free(Ptr{Cvoid}(game_state_ptr.keys_down))

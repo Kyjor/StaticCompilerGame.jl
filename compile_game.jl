@@ -82,10 +82,42 @@ if build_type == "web"
         # Pass files as separate arguments
         ll_files_str = join(ll_files, " ")
         
-        println(" Linking files: $ll_files_str")
+        println(" Linking LLVM IR files into single module...")
+        combined_ll = joinpath(output_dir, "combined.ll")
+        
+        # Use llvm-link to combine all LLVM IR files into one module
+        # This allows globals to be shared across functions
+        llvm_link_cmd = `llvm-link -S -o $combined_ll $ll_files`
+        try
+            run(llvm_link_cmd)
+            println("✅ Combined LLVM IR: $combined_ll")
+            
+            # Fix target triple for WebAssembly (emcc will handle conversion, but this helps)
+            # Read the file, replace target triple, and write back
+            combined_content = read(combined_ll, String)
+            # Replace any x86_64 target with wasm32-unknown-emscripten
+            combined_content = replace(combined_content, r"target triple = \"[^\"]+\"" => "target triple = \"wasm32-unknown-emscripten\"")
+            write(combined_ll, combined_content)
+            println("✅ Fixed target triple for WebAssembly")
+        catch e
+            println("⚠️  Warning: llvm-link failed, falling back to separate files: $e")
+            println("💡 Install LLVM tools: sudo dnf install llvm (Fedora) or sudo apt install llvm (Ubuntu)")
+            combined_ll = nothing
+        end
+        
+        # Use combined file if available, otherwise use separate files
+        if combined_ll !== nothing && isfile(combined_ll)
+            ll_input = combined_ll
+            println(" Using combined LLVM IR module for shared globals")
+        else
+            ll_input = ll_files
+            println(" Using separate LLVM IR files (globals may not be shared)")
+        end
+        
+        println(" Compiling to WebAssembly...")
         
         # Link Julia LLVM IR with SDL2 C code
-        cmd = `emcc $ll_files SDLCalls/sdl_module.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -O2 -s WASM=1 -s 
+        cmd = `emcc $ll_input SDLCalls/sdl_module.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_game_loop',
         '_j_init_game_state',

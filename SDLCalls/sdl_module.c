@@ -33,3 +33,21 @@ int get_error() {
     printf("SDL_GetError: %s\n", SDL_GetError());
     return 1;
 }
+
+// Static global variable storage for Julia
+// These persist across function calls and are shared between all Julia functions
+static int32_t g_hi = 1;  // Example: hi variable
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+int32_t get_hi(void) {
+    return g_hi;
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void set_hi(int32_t value) {
+    g_hi = value;
+}
