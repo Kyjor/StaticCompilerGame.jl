@@ -9,6 +9,10 @@ struct KeyState_down
     w::Bool
     s::Bool
     space::Bool
+    left::Bool
+    right::Bool
+    up::Bool
+    down::Bool
 end
 
 struct KeyState_up
@@ -17,6 +21,10 @@ struct KeyState_up
     w::Bool
     s::Bool
     space::Bool
+    left::Bool
+    right::Bool
+    up::Bool
+    down::Bool
 end
 
 struct KeyState_pressed
@@ -25,6 +33,10 @@ struct KeyState_pressed
     w::Bool
     s::Bool
     space::Bool
+    left::Bool
+    right::Bool
+    up::Bool
+    down::Bool
 end
 
 struct Sprite
@@ -77,6 +89,10 @@ function Base.getproperty(x::Ptr{KeyState_down}, f::Symbol)
     f === :w && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_down, Val(:w))))
     f === :s && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_down, Val(:s))))
     f === :space && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_down, Val(:space))))
+    f === :left && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_down, Val(:left))))
+    f === :right && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_down, Val(:right))))
+    f === :up && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_down, Val(:up))))
+    f === :down && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_down, Val(:down))))
 end
 
 function Base.setproperty!(x::Ptr{KeyState_down}, f::Symbol, v::Any)
@@ -85,6 +101,10 @@ function Base.setproperty!(x::Ptr{KeyState_down}, f::Symbol, v::Any)
     f === :w && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_down, Val(:w))), v)
     f === :s && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_down, Val(:s))), v)
     f === :space && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_down, Val(:space))), v)
+    f === :left && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_down, Val(:left))), v)
+    f === :right && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_down, Val(:right))), v)
+    f === :up && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_down, Val(:up))), v)
+    f === :down && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_down, Val(:down))), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_up}, f::Symbol)
@@ -93,6 +113,10 @@ function Base.getproperty(x::Ptr{KeyState_up}, f::Symbol)
     f === :w && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_up, Val(:w))))
     f === :s && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_up, Val(:s))))
     f === :space && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_up, Val(:space))))
+    f === :left && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_up, Val(:left))))
+    f === :right && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_up, Val(:right))))
+    f === :up && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_up, Val(:up))))
+    f === :down && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_up, Val(:down))))
 end
 
 function Base.setproperty!(x::Ptr{KeyState_up}, f::Symbol, v::Any)
@@ -101,6 +125,10 @@ function Base.setproperty!(x::Ptr{KeyState_up}, f::Symbol, v::Any)
     f === :w && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:w))), v)
     f === :s && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:s))), v)
     f === :space && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:space))), v)
+    f === :left && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:left))), v)
+    f === :right && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:right))), v)
+    f === :up && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:up))), v)
+    f === :down && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_up, Val(:down))), v)
 end
 
 function Base.getproperty(x::Ptr{KeyState_pressed}, f::Symbol)
@@ -109,6 +137,10 @@ function Base.getproperty(x::Ptr{KeyState_pressed}, f::Symbol)
     f === :w && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:w))))
     f === :s && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:s))))
     f === :space && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:space))))
+    f === :left && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:left))))
+    f === :right && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:right))))
+    f === :up && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:up))))
+    f === :down && return unsafe_load(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:down))))
 end
 
 function Base.setproperty!(x::Ptr{KeyState_pressed}, f::Symbol, v::Any)
@@ -117,6 +149,10 @@ function Base.setproperty!(x::Ptr{KeyState_pressed}, f::Symbol, v::Any)
     f === :w && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:w))), v)
     f === :s && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:s))), v)
     f === :space && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:space))), v)
+    f === :left && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:left))), v)
+    f === :right && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:right))), v)
+    f === :up && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:up))), v)
+    f === :down && return unsafe_store!(Ptr{Bool}(x + offsetof(KeyState_pressed, Val(:down))), v)
 end
 
 function Base.getproperty(x::Ptr{Sprite}, f::Symbol)

@@ -636,11 +636,11 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
         printf(c"Linux\n")
     end
     keys_up::Ptr{KeyState_up} = Ptr{KeyState_up}(wasm_malloc(UInt32(sizeof(KeyState_up))))
-    unsafe_store!(Ptr{KeyState_up}(keys_up), KeyState_up(false, false, false, false, false))
+    unsafe_store!(Ptr{KeyState_up}(keys_up), KeyState_up(false, false, false, false, false, false, false, false, false))
     keys_down::Ptr{KeyState_down} = Ptr{KeyState_down}(wasm_malloc(UInt32(sizeof(KeyState_down))))
-    unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false))
+    unsafe_store!(Ptr{KeyState_down}(keys_down), KeyState_down(false, false, false, false, false, false, false, false, false))
     keys_pressed::Ptr{KeyState_pressed} = Ptr{KeyState_pressed}(wasm_malloc(UInt32(sizeof(KeyState_pressed))))
-    unsafe_store!(Ptr{KeyState_pressed}(keys_pressed), KeyState_pressed(false, false, false, false, false))
+    unsafe_store!(Ptr{KeyState_pressed}(keys_pressed), KeyState_pressed(false, false, false, false, false, false, false, false, false))
 
     sprite_init_result::Int32 = init_sprite_system()
     if sprite_init_result != 0
@@ -896,41 +896,74 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     keys_pressed_ptr::Ptr{KeyState_pressed} = game_state.keys_pressed
     handle_input(keys_down_ptr, keys_up_ptr, keys_pressed_ptr, game_state, window)
     
-    # Update cannon state
+    # Game logic - only if game is running
+    if game_state.game_state_var == GAME_RUNNING
+        # Move player's crosshair (using arrow keys, matching C code)
+        if keys_down_ptr.right
+            # Move crosshair to right
+            game_state.cross_x += Float32(CROSS_VEL)
+            # Test for wraparound
+            if game_state.cross_x > Float32(320)  # WINDOW_WIDTH/2
+                game_state.cross_x = Float32(-320)  # -WINDOW_WIDTH/2
+            end
+        end
+        if keys_down_ptr.left
+            # Move crosshair to left
+            game_state.cross_x -= Float32(CROSS_VEL)
+            # Test for wraparound
+            if game_state.cross_x < Float32(-320)  # -WINDOW_WIDTH/2
+                game_state.cross_x = Float32(320)  # WINDOW_WIDTH/2
+            end
+        end
+        if keys_down_ptr.down
+            # Move crosshair down (note: C code says "up" but uses DOWN key)
+            game_state.cross_y -= Float32(CROSS_VEL)
+            # Test for wraparound
+            if game_state.cross_y < Float32(-240)  # -WINDOW_HEIGHT/2
+                game_state.cross_y = Float32(240)  # WINDOW_HEIGHT/2
+            end
+        end
+        if keys_down_ptr.up
+            # Move crosshair up
+            game_state.cross_y += Float32(CROSS_VEL)
+            # Test for wraparound
+            if game_state.cross_y > Float32(240)  # WINDOW_HEIGHT/2
+                game_state.cross_y = Float32(-240)  # -WINDOW_HEIGHT/2
+            end
+        end
+        
+        # Speed of ship controls (A/S keys)
+        if keys_down_ptr.a
+            game_state.player_z_vel += Int32(1)
+        elseif keys_down_ptr.s
+            game_state.player_z_vel -= Int32(1)
+        end
+        
+        # Test if player is firing laser cannon (only if ready)
+        if keys_pressed_ptr.space && game_state.cannon_state == Int32(0)
+            # Fire the cannon
+            game_state.cannon_state = Int32(1)
+            game_state.cannon_count = Int32(0)
+            # Save last position of targeter (computed below from crosshair)
+            # TODO: play sound - DSound_Play(laser_id)
+        end
+    end
+    
+    # Process cannon, simple FSM ready->firing->cool
+    # Firing phase (state 1)
     if game_state.cannon_state == Int32(1)
         game_state.cannon_count += Int32(1)
-        if game_state.cannon_count > Int32(10)  # Fire duration
+        if game_state.cannon_count > Int32(15)
+            game_state.cannon_state = Int32(2)
+        end
+    end
+    # Cool down phase (state 2)
+    if game_state.cannon_state == Int32(2)
+        game_state.cannon_count += Int32(1)
+        if game_state.cannon_count > Int32(20)
             game_state.cannon_state = Int32(0)
             game_state.cannon_count = Int32(0)
         end
-    end
-    
-    # Update crosshair position based on input
-    if keys_down_ptr.w || keys_down_ptr.s
-        if keys_down_ptr.w
-            game_state.cross_y -= Float32(CROSS_VEL)
-        end
-        if keys_down_ptr.s
-            game_state.cross_y += Float32(CROSS_VEL)
-        end
-    end
-    if keys_down_ptr.a || keys_down_ptr.d
-        if keys_down_ptr.a
-            game_state.cross_x -= Float32(CROSS_VEL)
-        end
-        if keys_down_ptr.d
-            game_state.cross_x += Float32(CROSS_VEL)
-        end
-    end
-    
-    # Update targeter to match crosshair
-    game_state.target_x_screen = game_state.cross_x_screen
-    game_state.target_y_screen = game_state.cross_y_screen
-    
-    # Fire cannon on space
-    if keys_pressed_ptr.space
-        game_state.cannon_state = Int32(1)
-        game_state.cannon_count = Int32(0)
     end
     
     # Process game objects
@@ -951,12 +984,59 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     # Draw explosions
     draw_explosions(game_state, renderer)
     
-    # Draw crosshair
+    # Draw the crosshairs
+    # First compute screen coords of crosshair (note inversion of y-axis)
+    game_state.cross_x_screen = Int32(320) + unsafe_trunc(Int32, game_state.cross_x)  # WINDOW_WIDTH/2
+    game_state.cross_y_screen = Int32(240) - unsafe_trunc(Int32, game_state.cross_y)  # WINDOW_HEIGHT/2
+    
+    # Update targeter to match crosshair (for laser targeting)
+    game_state.target_x_screen = game_state.cross_x_screen
+    game_state.target_y_screen = game_state.cross_y_screen
+    
+    # Draw the crosshair in screen coords
     llvm_SDL_SetRenderDrawColor(renderer, UInt8(255), UInt8(0), UInt8(0), UInt8(255))
-    cross_x_int::Int32 = game_state.cross_x_screen
-    cross_y_int::Int32 = game_state.cross_y_screen
-    llvm_SDL_RenderDrawLine(renderer, cross_x_int - Int32(10), cross_y_int, cross_x_int + Int32(10), cross_y_int)
-    llvm_SDL_RenderDrawLine(renderer, cross_x_int, cross_y_int - Int32(10), cross_x_int, cross_y_int + Int32(10))
+    llvm_SDL_RenderDrawLine(renderer, game_state.cross_x_screen - Int32(16), game_state.cross_y_screen, 
+                            game_state.cross_x_screen + Int32(16), game_state.cross_y_screen)
+    llvm_SDL_RenderDrawLine(renderer, game_state.cross_x_screen, game_state.cross_y_screen - Int32(16),
+                            game_state.cross_x_screen, game_state.cross_y_screen + Int32(16))
+    llvm_SDL_RenderDrawLine(renderer, game_state.cross_x_screen - Int32(16), game_state.cross_y_screen - Int32(4),
+                            game_state.cross_x_screen - Int32(16), game_state.cross_y_screen + Int32(4))
+    llvm_SDL_RenderDrawLine(renderer, game_state.cross_x_screen + Int32(16), game_state.cross_y_screen - Int32(4),
+                            game_state.cross_x_screen + Int32(16), game_state.cross_y_screen + Int32(4))
+    
+    # Draw the laser beams (when firing)
+    if game_state.cannon_state == Int32(1)
+        # Random jitter for laser beam
+        jitter_x::Int32 = Int32(-4) + rand_int(game_state, Int32(8))
+        jitter_y::Int32 = Int32(-4) + rand_int(game_state, Int32(8))
+        target_x_jitter::Int32 = game_state.target_x_screen + jitter_x
+        target_y_jitter::Int32 = game_state.target_y_screen + jitter_y
+        blue_val::UInt8 = UInt8(rand_int(game_state, Int32(256)))
+        
+        if (rand_int(game_state, Int32(2)) == Int32(1))
+            # Right beam (from bottom right corner)
+            llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), blue_val, UInt8(255))
+            llvm_SDL_RenderDrawLine(renderer, Int32(639), Int32(479), target_x_jitter, target_y_jitter)
+        else
+            # Left beam (from bottom left corner)
+            llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), blue_val, UInt8(255))
+            llvm_SDL_RenderDrawLine(renderer, Int32(0), Int32(479), target_x_jitter, target_y_jitter)
+        end
+    end
+    
+    # TODO: Draw the information (score, kills, escaped)
+    # sprintf(buffer, "Score %d Kills %d Escaped %d", score, hits, misses);
+    # Draw_Text_GDI(buffer, 0,0,RGB(0,255,0), lpddsback);
+    
+    # Draw game over message
+    if game_state.game_state_var == GAME_OVER
+        # TODO: Draw_Text_GDI("G A M E O V E R", 320-8*10,240,RGB(255,255,255), lpddsback);
+    end
+    
+    # Check for game state switch
+    if game_state.misses > Int32(100)
+        game_state.game_state_var = GAME_OVER
+    end
     
     llvm_SDL_RenderPresent(renderer)
     llvm_SDL_Delay(UInt32(5))  # ~60 FPS
@@ -982,6 +1062,10 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
     keys_up.w = false
     keys_up.s = false
     keys_up.space = false
+    keys_up.left = false
+    keys_up.right = false
+    keys_up.up = false
+    keys_up.down = false
     
     # Reset key press states for this frame (these are one-time events)
     keys_pressed.a = false
@@ -989,6 +1073,10 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
     keys_pressed.w = false
     keys_pressed.s = false
     keys_pressed.space = false
+    keys_pressed.left = false
+    keys_pressed.right = false
+    keys_pressed.up = false
+    keys_pressed.down = false
 
     event::SDL_Event = SDL_Event()
     event_ptr::Ptr{SDL_Event} = wasm_malloc(UInt32(56))
@@ -1013,6 +1101,18 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
             elseif key == SDLK_SPACE
                 keys_down.space = true
                 keys_pressed.space = true
+            elseif key == SDLK_LEFT
+                keys_down.left = true
+                keys_pressed.left = true
+            elseif key == SDLK_RIGHT
+                keys_down.right = true
+                keys_pressed.right = true
+            elseif key == SDLK_UP
+                keys_down.up = true
+                keys_pressed.up = true
+            elseif key == SDLK_DOWN
+                keys_down.down = true
+                keys_pressed.down = true
             elseif key == SDLK_ESCAPE
                 game_state.quit = true
             elseif key == SDLK_RETURN
@@ -1035,6 +1135,14 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
                 keys_up.s = true
             elseif key == SDLK_SPACE
                 keys_up.space = true
+            elseif key == SDLK_LEFT
+                keys_up.left = true
+            elseif key == SDLK_RIGHT
+                keys_up.right = true
+            elseif key == SDLK_UP
+                keys_up.up = true
+            elseif key == SDLK_DOWN
+                keys_up.down = true
             end
         # --- Mobile Touch Events ---
         elseif eventType == SDL_FINGERDOWN || eventType == SDL_FINGERMOTION

@@ -117,7 +117,7 @@ if build_type == "web"
         println(" Compiling to WebAssembly...")
         
         # Link Julia LLVM IR with SDL2 C code
-        cmd = `emcc $ll_input SDLCalls/sdl_module.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -O2 -s WASM=1 -s 
+        cmd = `emcc $ll_input SDLCalls/sdl_module.c -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_TTF=2 -s USE_FREETYPE=1 -s USE_SDL_MIXER=2 -s USE_OGG=1 -s USE_WEBGL2=1 -O2 -s WASM=1 -s 
         EXPORTED_FUNCTIONS="[
         '_game_loop',
         '_j_init_game_state',
@@ -234,19 +234,19 @@ else
         
         # Determine platform-specific flags
         if Sys.islinux()
-            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer -lGL`
             output_name = "game"
             rpath_flag = `-Wl,-rpath,$(raw"$ORIGIN")`
         elseif Sys.iswindows()
-            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer -lopengl32`
             output_name = "game.exe"
             rpath_flag = ``
         elseif Sys.isapple()
-            sdl_flags = `-I/opt/homebrew/include/SDL2 -L/opt/homebrew/lib -lSDL2 -lSDL2main -lSDL2_image`
+            sdl_flags = `-I/opt/homebrew/include/SDL2 -L/opt/homebrew/lib -lSDL2 -lSDL2main -lSDL2_image -framework OpenGL`
             output_name = "game"
             rpath_flag = `-Wl,-rpath,@loader_path`
         else
-            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer`
+            sdl_flags = `-lSDL2 -lSDL2main -lSDL2_image -lSDL2_mixer -lGL`
             output_name = "game"
             rpath_flag = ``
         end
@@ -268,14 +268,16 @@ else
         
     catch e
         println("❌ Compilation failed: $e")
-        println("💡 Make sure you have SDL2 development libraries installed:")
+        println("💡 Make sure you have SDL2 and OpenGL ES development libraries installed:")
         if Sys.islinux()
-            println("   Ubuntu/Debian: sudo apt-get install libsdl2-dev")
-            println("   Fedora: sudo dnf install SDL2-devel")
+            println("   Ubuntu/Debian: sudo apt-get install libsdl2-dev libgles2-mesa-dev")
+            println("   Fedora: sudo dnf install SDL2-devel mesa-libGLES-devel")
         elseif Sys.iswindows()
             println("   Install SDL2 development libraries for Windows")
+            println("   OpenGL is typically included with Windows")
         elseif Sys.isapple()
             println("   brew install sdl2")
+            println("   OpenGL ES framework is included with macOS")
         end
     end
 end

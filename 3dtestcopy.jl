@@ -1,28 +1,3 @@
-# ============================================================================
-# GAME TEMPLATE - Entry Point & Game Loop
-# ============================================================================
-#
-# HOW TO USE:
-# 1. Copy this file to your game folder: games/mygame/mygame.jl
-# 2. Copy game_state_template.jl to: games/mygame/mygame_state.jl
-# 3. Update the include path for your state file (line ~20)
-# 4. Rename MyGameState references to your state struct name
-# 5. Implement game_init, game_loop, and game_cleanup
-# 6. Compile with: julia compile_game.jl mygame web (or desktop)
-#
-# THE ENGINE PROVIDES:
-# - Window & renderer initialization (init_window, init_renderer)
-# - Input polling (create_input_state, poll_input, free_input_state)
-# - Animation system (create_animation, update_animation, etc.)
-# - Sprite system (load_sprite, render_sprite, free_sprite)
-# - Audio initialization (init_audio)
-# - Utility helpers (move_toward, get_delta_time, get_time)
-#
-# YOUR GAME MUST IMPLEMENT:
-# - game_init(renderer, window) -> Ptr{YourGameState}
-# - game_loop(state, renderer, window, delta_time) -> Ptr{YourGameState}
-# - game_cleanup(state, renderer, window) -> Cvoid
-# ============================================================================
 # combined_game_working.jl
 using StaticTools
 
@@ -38,6 +13,13 @@ include("wallocstring.jl")
 # CONSTANTS
 # ============================================================================
 const NUM_STARS::Int32 = Int32(250)
+
+# OpenGL ES 3.0 Constants
+const GL_COLOR_BUFFER_BIT::UInt32 = UInt32(0x00004000)
+const GL_DEPTH_BUFFER_BIT::UInt32 = UInt32(0x00000100)
+const GL_STENCIL_BUFFER_BIT::UInt32 = UInt32(0x00000400)
+const GL_DEPTH_TEST::UInt32 = UInt32(0x0B71)
+const GL_NO_ERROR::UInt32 = UInt32(0)
 
 struct GameState
     keys_up::Ptr{KeyState_up}
@@ -61,14 +43,41 @@ function Base.setproperty!(x::Ptr{GameState}, f::Symbol, v::Any)
 end
 
 function j_init_window()::Ptr{SDL_Window}
-    window_name = str_ptr(w"3d test")
-    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(480), UInt32(0))
+    # Set OpenGL context attributes before creating window
+    # For desktop: Use full OpenGL 3.0 (better Linux support)
+    # For web: Emscripten will use OpenGL ES 3.0 via WebGL2
+    @static if Sys.islinux() || Sys.iswindows() || Sys.isapple()
+        # Desktop: Use full OpenGL 3.0 Core profile
+        llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_CONTEXT_MAJOR_VERSION), Int32(3))
+        llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_CONTEXT_MINOR_VERSION), Int32(0))
+        llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_CONTEXT_PROFILE_MASK), Int32(SDL_GL_CONTEXT_PROFILE_CORE))
+    else
+        # Web/Other: Use OpenGL ES 3.0
+        llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_CONTEXT_MAJOR_VERSION), Int32(3))
+        llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_CONTEXT_MINOR_VERSION), Int32(0))
+        llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_CONTEXT_PROFILE_MASK), Int32(SDL_GL_CONTEXT_PROFILE_ES))
+    end
+    llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_DOUBLEBUFFER), Int32(1))
+    llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_DEPTH_SIZE), Int32(24))
+    
+    window_name = str_ptr(w"OpenGL")
+    window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(480), UInt32(SDL_WINDOW_OPENGL))
+    context = llvm_SDL_GL_CreateContext(window)
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
         msg_ptr = wasm_malloc(UInt32(100))
         msg = llvm_SDL_GetErrorMsg(msg_ptr, Int32(100))
         printf(c"Error: %s\n", msg)
         wasm_free(Ptr{Cvoid}(msg_ptr))
+    end
+    if context == Ptr{Cvoid}(C_NULL)
+        printf(c"Failed to create OpenGL context\n")
+        msg_ptr = wasm_malloc(UInt32(100))
+        msg = llvm_SDL_GetErrorMsg(msg_ptr, Int32(100))
+        printf(c"GL Error: %s\n", msg)
+        wasm_free(Ptr{Cvoid}(msg_ptr))
+    else
+        printf(c"OpenGL 3.0 context created successfully\n")
     end
     wasm_free(Ptr{Cvoid}(window_name))
     return window
@@ -246,10 +255,22 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     keys_pressed_ptr::Ptr{KeyState_pressed} = game_state.keys_pressed
     handle_input(keys_down_ptr, keys_up_ptr, keys_pressed_ptr, game_state, window)
 
-    # --- Render ---
-    llvm_SDL_SetRenderDrawColor(renderer, UInt8(0), UInt8(0), UInt8(0), UInt8(255))
-    llvm_SDL_RenderClear(renderer)
-    llvm_SDL_RenderPresent(renderer)
+    # --- Render with OpenGL ES 3.0 ---
+    # Get window size for viewport
+    win_w_ptr = Ref{Int32}(0)
+    win_h_ptr = Ref{Int32}(0)
+    llvm_SDL_GetWindowSize(window, Base.unsafe_convert(Ptr{Int32}, win_w_ptr), Base.unsafe_convert(Ptr{Int32}, win_h_ptr))
+    win_w = win_w_ptr[]
+    win_h = win_h_ptr[]
+    
+    # Set viewport
+    llvm_glViewport(Int32(0), Int32(0), win_w, win_h)
+    
+    # Clear screen with magenta color
+    llvm_glClearColor(Float32(0.0), Float32(0.0), Float32(1.0), Float32(1.0))
+    llvm_glClear(GL_COLOR_BUFFER_BIT)
+
+    llvm_SDL_GL_SwapWindow(window)
     llvm_SDL_Delay(UInt32(5))  # ~60 FPS
 
     return game_state
@@ -411,8 +432,11 @@ function pc_main()::Int32
     llvm_SDL_Init(UInt32(32))
 
     window::Ptr{SDL_Window} = j_init_window()
-    renderer::Ptr{SDL_Renderer} = j_init_renderer(window)
+    printf(c"Window created\n")
+    renderer::Ptr{SDL_Renderer} = Ptr{SDL_Renderer}(C_NULL)
+    printf(c"Renderer created\n")
     game_state_ptr::Ptr{GameState} = j_init_game_state(renderer, window)
+    printf(c"Game state created\n")
     while !game_state_ptr.quit
         game_loop(game_state_ptr, renderer, window)
     end
