@@ -6,6 +6,7 @@ include("game_structs.jl")
 include("sprite.jl")
 include("llvm_wrappers.jl")
 include("llvm_bindings.jl")
+include("llvm_bindings_opengl.jl")  # Auto-generated OpenGL bindings
 include("wallocstring.jl")
 
 

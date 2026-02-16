@@ -1,7 +1,7 @@
 # compile_combined_fixed.jl
 using StaticTools
 using StaticCompiler
-compile_file = get(ENV, "FILE", "game.jl")
+compile_file = get(ENV, "FILE", "3dtestcopy.jl")
 include(compile_file)
 # Parse command line arguments
 build_type = "web"  # default to web build
