@@ -10,7 +10,7 @@ by parsing OpenGL header files (similar to generate_sdl_bindings.jl).
 using Dates
 
 # Configuration
-const GL_HEADER_FILE = "emsdk/upstream/emscripten/system/include/GLES/gl.h"
+const GL_HEADER_FILE = "emsdk/upstream/emscripten/system/include/GLES3/gl3.h"
 const OUTPUT_FILE = "llvm_bindings_opengl.jl"
 
 # Type mapping from OpenGL types to Julia/LLVM types
@@ -113,9 +113,9 @@ function parse_opengl_header(header_file::String)
     content = read(header_file, String)
 
     # Match function declarations of the form:
-    # GL_API return_type GL_APIENTRY glFunctionName(params...);
-    # Pattern: GL_API [const] return_type GL_APIENTRY glFunctionName(params);
-    func_pattern = r"GL_API\s+(?:const\s+)?([^\s]+)\s+GL_APIENTRY\s+(gl[a-zA-Z0-9_]+)\s*\(([^)]*)\)\s*;"
+    # GL_APICALL return_type GL_APIENTRY glFunctionName(params...);
+    # Pattern: GL_APICALL [const] return_type GL_APIENTRY glFunctionName(params);
+    func_pattern = r"GL_APICALL\s+(?:const\s+)?([^\s]+)\s+GL_APIENTRY\s+(gl[a-zA-Z0-9_]+)\s*\(([^)]*)\)\s*;"
     matches = eachmatch(func_pattern, content)
 
     for match in matches
@@ -205,7 +205,9 @@ function generate_llvm_call(func_name::String, return_type::String, params::Vect
     param_names = String[]
     param_types = String[]
     for (i, (param_type, param_name)) in enumerate(params)
-        name = isempty(param_name) ? "%p$i" : "%$param_name"
+        # Sanitize parameter name for LLVM IR (use same sanitization as Julia)
+        sanitized = sanitize_param_name(param_name)
+        name = isempty(sanitized) || sanitized == "arg" ? "%p$i" : "%$sanitized"
         push!(param_names, name)
         _, llvm_param = map_gl_type_to_julia(param_type)
         push!(param_types, llvm_param)
@@ -238,16 +240,35 @@ end
 
 function generate_julia_signature(func_name::String, return_type::String, params::Vector{Tuple{String,String}})
     julia_return, _ = map_gl_type_to_julia(return_type)
-
+    
     param_list = String[]
     for (param_type, param_name) in params
         julia_type, _ = map_gl_type_to_julia(param_type)
-        name = isempty(param_name) ? "arg" : param_name
+        name = sanitize_param_name(param_name)
         push!(param_list, "$name::$julia_type")
     end
-
+    
     param_str = isempty(param_list) ? "" : join(param_list, ", ")
     return "function llvm_$func_name($param_str)::$julia_return"
+end
+
+# Julia reserved keywords that need to be renamed
+const JULIA_RESERVED_KEYWORDS = Set([
+    "if", "else", "elseif", "while", "for", "try", "catch", "finally", "return", "break", "continue",
+    "function", "macro", "module", "using", "import", "export", "const", "let", "global", "local",
+    "struct", "mutable", "abstract", "primitive", "type", "end", "begin", "quote", "do", "baremodule",
+    "where", "in", "isa"
+])
+
+function sanitize_param_name(name::String)::String
+    if isempty(name)
+        return "arg"
+    end
+    # If it's a reserved keyword, append underscore
+    if name in JULIA_RESERVED_KEYWORDS
+        return name * "_"
+    end
+    return name
 end
 
 function generate_julia_tuple_type(params::Vector{Tuple{String,String}})
@@ -256,17 +277,17 @@ function generate_julia_tuple_type(params::Vector{Tuple{String,String}})
         julia_type, _ = map_gl_type_to_julia(param_type)
         push!(types, julia_type)
     end
-
+    
     return isempty(types) ? "Tuple{}" : "Tuple{$(join(types, ", "))}"
 end
 
 function generate_julia_param_list(params::Vector{Tuple{String,String}})
     names = String[]
     for (_, param_name) in params
-        name = isempty(param_name) ? "arg" : param_name
+        name = sanitize_param_name(param_name)
         push!(names, name)
     end
-
+    
     return isempty(names) ? "" : join(names, ", ")
 end
 
