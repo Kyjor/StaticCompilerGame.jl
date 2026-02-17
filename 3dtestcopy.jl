@@ -154,7 +154,8 @@ end
 # 3D GAME FUNCTIONS
 # ============================================================================
 # In j_init_game_state, initialize game state
-function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
+# is_web_build: 1 for web builds (WebGL 2.0), 0 for desktop (OpenGL 3.0)
+function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window}, is_web_build::Int32)::Ptr{GameState}
     printf(c"Initializing game state\n")
     @static if Sys.iswindows()
         printf(c"Windows\n")
@@ -247,7 +248,12 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     game_state_ptr.quit = false
 
     printf(c"3D game data initialized\n")
-    vertex_shader_source::Ptr{UInt8} = str_ptr(w"
+    
+    # For web builds (WebGL 2.0), use "300 es". For desktop OpenGL 3.0, use "300 core"
+    vertex_shader_source::Ptr{UInt8} = Ptr{UInt8}(C_NULL)
+    if is_web_build == Int32(0)
+        # Desktop: OpenGL 3.0 Core
+        vertex_shader_source = str_ptr(w"
     #version 300 core
     layout(location = 0) in vec3 aPos;\n 
     void main() \n 
@@ -255,6 +261,17 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n 
     }\0
     ")
+    else
+        # Web: WebGL 2.0 (OpenGL ES 3.0)
+        vertex_shader_source = str_ptr(w"
+    #version 300 es
+    layout(location = 0) in vec3 aPos;\n 
+    void main() \n 
+    {\n 
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n 
+    }\0
+    ")
+    end
 
     vertex_shader = llvm_glCreateShader(GL_VERTEX_SHADER)
     printf(c"Vertex shader created\n")
@@ -269,16 +286,47 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     wasm_free(string_array_ptr)
     printf(c"Vertex shader source set\n")
     llvm_glCompileShader(vertex_shader)
-    printf(c"Vertex shader compiled\n")
+    
+    # Check for compilation errors
+    success_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+    llvm_glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, success_ptr)
+    success = unsafe_load(success_ptr)
+    if success == Int32(0)
+        printf(c"ERROR::SHADER::VERTEX::COMPILATION_FAILED\n")
+        info_log_ptr = Ptr{UInt8}(wasm_malloc(UInt32(512)))
+        length_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+        llvm_glGetShaderInfoLog(vertex_shader, Int32(512), length_ptr, info_log_ptr)
+        printf(c"%s\n", info_log_ptr)
+        wasm_free(Ptr{Cvoid}(info_log_ptr))
+        wasm_free(Ptr{Cvoid}(length_ptr))
+    else
+        printf(c"Vertex shader compiled successfully\n")
+    end
+    wasm_free(Ptr{Cvoid}(success_ptr))
 
-    fragment_shader_source::Ptr{UInt8} = str_ptr(w"
-    #version 300 core \n
+    fragment_shader_source = Ptr{UInt8}(C_NULL)
+    if is_web_build == Int32(0)
+        # Desktop: OpenGL 3.0 Core
+        fragment_shader_source = str_ptr(w"
+    #version 300 core
     out vec4 FragColor;
     void main() \n 
     {\n 
     FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
     }\0
     ")
+    else
+        # Web: WebGL 2.0 (OpenGL ES 3.0)
+        fragment_shader_source = str_ptr(w"
+    #version 300 es
+    precision mediump float;
+    out vec4 FragColor;
+    void main() \n 
+    {\n 
+    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    }\0
+    ")
+    end
 
     fragment_shader = llvm_glCreateShader(GL_FRAGMENT_SHADER)
     printf(c"Fragment shader created\n")
@@ -286,14 +334,48 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
     unsafe_store!(Ptr{Ptr{Cvoid}}(string_array_ptr), fragment_shader_source, 1)
     llvm_glShaderSource(fragment_shader, Int32(1), Ptr{Ptr{Cvoid}}(string_array_ptr), Ptr{Int32}(C_NULL))
     llvm_glCompileShader(fragment_shader)
-    printf(c"Fragment shader compiled\n")
+    
+    # Check for compilation errors
+    success_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+    llvm_glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, success_ptr)
+    success = unsafe_load(success_ptr)
+    if success == Int32(0)
+        printf(c"ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n")
+        info_log_ptr = Ptr{UInt8}(wasm_malloc(UInt32(512)))
+        length_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+        llvm_glGetShaderInfoLog(fragment_shader, Int32(512), length_ptr, info_log_ptr)
+        printf(c"%s\n", info_log_ptr)
+        wasm_free(Ptr{Cvoid}(info_log_ptr))
+        wasm_free(Ptr{Cvoid}(length_ptr))
+    else
+        printf(c"Fragment shader compiled successfully\n")
+    end
+    wasm_free(Ptr{Cvoid}(success_ptr))
     wasm_free(string_array_ptr)
     printf(c"Fragment shader source set\n")
+    
     program = llvm_glCreateProgram()
     llvm_glAttachShader(program, vertex_shader)
     llvm_glAttachShader(program, fragment_shader)
     llvm_glLinkProgram(program)
-    printf(c"Program linked\n")
+    
+    # Check for linking errors
+    success_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+    llvm_glGetProgramiv(program, GL_LINK_STATUS, success_ptr)
+    success = unsafe_load(success_ptr)
+    if success == Int32(0)
+        printf(c"ERROR::SHADER::PROGRAM::LINKING_FAILED\n")
+        info_log_ptr = Ptr{UInt8}(wasm_malloc(UInt32(512)))
+        length_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+        llvm_glGetProgramInfoLog(program, Int32(512), length_ptr, info_log_ptr)
+        printf(c"%s\n", info_log_ptr)
+        wasm_free(Ptr{Cvoid}(info_log_ptr))
+        wasm_free(Ptr{Cvoid}(length_ptr))
+    else
+        printf(c"Program linked successfully\n")
+    end
+    wasm_free(Ptr{Cvoid}(success_ptr))
+    
     llvm_glUseProgram(program)
     printf(c"Program used\n")
     llvm_glDeleteShader(vertex_shader)
@@ -391,13 +473,33 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     # Set viewport
     llvm_glViewport(Int32(0), Int32(0), win_w, win_h)
     
-    # Clear screen with magenta color
-    llvm_glClearColor(Float32(0.0), Float32(0.0), Float32(1.0), Float32(1.0))
+    # Clear screen with blue color (to verify clearing works)
+    llvm_glClearColor(Float32(0.2), Float32(0.3), Float32(0.3), Float32(1.0))
     llvm_glClear(GL_COLOR_BUFFER_BIT)
+    
+    # Check for OpenGL errors
+    gl_error = llvm_glGetError()
+    if gl_error != GL_NO_ERROR
+        printf(c"OpenGL error after clear: %u\n", gl_error)
+    end
 
     llvm_glUseProgram(game_state.shader_program)
+    gl_error = llvm_glGetError()
+    if gl_error != GL_NO_ERROR
+        printf(c"OpenGL error after UseProgram: %u\n", gl_error)
+    end
+    
     llvm_glBindVertexArray(game_state.vao)
+    gl_error = llvm_glGetError()
+    if gl_error != GL_NO_ERROR
+        printf(c"OpenGL error after BindVertexArray: %u\n", gl_error)
+    end
+    
     llvm_glDrawArrays(GL_TRIANGLES, Int32(0), Int32(3))
+    gl_error = llvm_glGetError()
+    if gl_error != GL_NO_ERROR
+        printf(c"OpenGL error after DrawArrays: %u\n", gl_error)
+    end
 
     llvm_SDL_GL_SwapWindow(window)
     #llvm_SDL_Delay(UInt32(5))
@@ -566,7 +668,7 @@ function pc_main()::Int32
     printf(c"Window created\n")
     renderer::Ptr{SDL_Renderer} = Ptr{SDL_Renderer}(C_NULL)
     printf(c"Renderer created\n")
-    game_state_ptr::Ptr{GameState} = j_init_game_state(renderer, window)
+    game_state_ptr::Ptr{GameState} = j_init_game_state(renderer, window, Int32(0))  # 0 = desktop build
     printf(c"Game state created\n")
     while !game_state_ptr.quit
         game_loop(game_state_ptr, renderer, window)
