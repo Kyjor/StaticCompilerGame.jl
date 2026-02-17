@@ -33,6 +33,9 @@ struct GameState
     left_btn_pressed::Bool
     right_btn_pressed::Bool
     jump_btn_pressed::Bool
+    # render data
+    shader_program::UInt32
+    vao::UInt32
 end
 
 function Base.getproperty(x::Ptr{GameState}, f::Symbol)
@@ -63,23 +66,39 @@ function j_init_window()::Ptr{SDL_Window}
     
     window_name = str_ptr(w"OpenGL")
     window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(480), UInt32(SDL_WINDOW_OPENGL))
-    context = llvm_SDL_GL_CreateContext(window)
     if window == Ptr{SDL_Window}(C_NULL)
         printf(c"Failed to create window\n")
         msg_ptr = wasm_malloc(UInt32(100))
         msg = llvm_SDL_GetErrorMsg(msg_ptr, Int32(100))
         printf(c"Error: %s\n", msg)
         wasm_free(Ptr{Cvoid}(msg_ptr))
+        wasm_free(Ptr{Cvoid}(window_name))
+        return Ptr{SDL_Window}(C_NULL)
     end
+    
+    context = llvm_SDL_GL_CreateContext(window)
     if context == Ptr{Cvoid}(C_NULL)
         printf(c"Failed to create OpenGL context\n")
         msg_ptr = wasm_malloc(UInt32(100))
         msg = llvm_SDL_GetErrorMsg(msg_ptr, Int32(100))
         printf(c"GL Error: %s\n", msg)
         wasm_free(Ptr{Cvoid}(msg_ptr))
-    else
-        printf(c"OpenGL 3.0 context created successfully\n")
+        wasm_free(Ptr{Cvoid}(window_name))
+        return window
     end
+    
+    # CRITICAL: Make the context current (equivalent to glfwMakeContextCurrent)
+    make_current_result = llvm_SDL_GL_MakeCurrent(window, context)
+    if make_current_result != Int32(0)
+        printf(c"Failed to make OpenGL context current\n")
+        msg_ptr = wasm_malloc(UInt32(100))
+        msg = llvm_SDL_GetErrorMsg(msg_ptr, Int32(100))
+        printf(c"MakeCurrent Error: %s\n", msg)
+        wasm_free(Ptr{Cvoid}(msg_ptr))
+    else
+        printf(c"OpenGL 3.0 context created and made current successfully\n")
+    end
+    
     wasm_free(Ptr{Cvoid}(window_name))
     return window
 end
@@ -134,7 +153,6 @@ end
 # ============================================================================
 # 3D GAME FUNCTIONS
 # ============================================================================
-
 # In j_init_game_state, initialize game state
 function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})::Ptr{GameState}
     printf(c"Initializing game state\n")
@@ -218,14 +236,118 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window})
             false,
             false,
             false,
+            UInt32(0),
+            UInt32(0),
         )
     )
+
 
     printf(c"Game state initialized\n")
     game_state_ptr.last_frame_time = UInt64(0)
     game_state_ptr.quit = false
 
     printf(c"3D game data initialized\n")
+    vertex_shader_source::Ptr{UInt8} = str_ptr(w"
+    #version 300 core
+    layout(location = 0) in vec3 aPos;\n 
+    void main() \n 
+    {\n 
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n 
+    }\0
+    ")
+
+    vertex_shader = llvm_glCreateShader(GL_VERTEX_SHADER)
+    printf(c"Vertex shader created\n")
+    # glShaderSource expects a pointer to an array of string pointers, not a single string pointer
+    # Allocate memory for an array of 1 string pointer
+    string_array_ptr = wasm_malloc(UInt32(sizeof(Ptr{Cvoid})))
+    # Store the string pointer in the array
+    unsafe_store!(Ptr{Ptr{Cvoid}}(string_array_ptr), vertex_shader_source, 1)
+    # Pass pointer to the array (not the string itself)
+    llvm_glShaderSource(vertex_shader, Int32(1), Ptr{Ptr{Cvoid}}(string_array_ptr), Ptr{Int32}(C_NULL))
+    # Free the array (the string itself is still valid)
+    wasm_free(string_array_ptr)
+    printf(c"Vertex shader source set\n")
+    llvm_glCompileShader(vertex_shader)
+    printf(c"Vertex shader compiled\n")
+
+    fragment_shader_source::Ptr{UInt8} = str_ptr(w"
+    #version 300 core \n
+    out vec4 FragColor;
+    void main() \n 
+    {\n 
+    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    }\0
+    ")
+
+    fragment_shader = llvm_glCreateShader(GL_FRAGMENT_SHADER)
+    printf(c"Fragment shader created\n")
+    string_array_ptr = wasm_malloc(UInt32(sizeof(Ptr{Cvoid})))
+    unsafe_store!(Ptr{Ptr{Cvoid}}(string_array_ptr), fragment_shader_source, 1)
+    llvm_glShaderSource(fragment_shader, Int32(1), Ptr{Ptr{Cvoid}}(string_array_ptr), Ptr{Int32}(C_NULL))
+    llvm_glCompileShader(fragment_shader)
+    printf(c"Fragment shader compiled\n")
+    wasm_free(string_array_ptr)
+    printf(c"Fragment shader source set\n")
+    program = llvm_glCreateProgram()
+    llvm_glAttachShader(program, vertex_shader)
+    llvm_glAttachShader(program, fragment_shader)
+    llvm_glLinkProgram(program)
+    printf(c"Program linked\n")
+    llvm_glUseProgram(program)
+    printf(c"Program used\n")
+    llvm_glDeleteShader(vertex_shader)
+    llvm_glDeleteShader(fragment_shader)
+    printf(c"Shaders deleted\n")
+    wasm_free(Ptr{Cvoid}(vertex_shader_source))
+    wasm_free(Ptr{Cvoid}(fragment_shader_source))
+    printf(c"Shader sources freed\n")
+
+    game_state_ptr.shader_program = program
+    
+    # Create vertex data
+    vertices = MallocArray{Float32}(undef, 9)  # 9 floats (3 vertices × 3 coordinates)
+    vertices[1] = -0.5f0  # Vertex 1: x
+    vertices[2] = -0.5f0  # Vertex 1: y
+    vertices[3] =  0.0f0  # Vertex 1: z
+    vertices[4] =  0.5f0  # Vertex 2: x
+    vertices[5] = -0.5f0  # Vertex 2: y
+    vertices[6] =  0.0f0  # Vertex 2: z
+    vertices[7] =  0.0f0  # Vertex 3: x
+    vertices[8] =  0.5f0  # Vertex 3: y
+    vertices[9] =  0.0f0  # Vertex 3: z
+
+    # Generate VAO and VBO
+    vbo::Ptr{UInt32} = Ptr{UInt32}(wasm_malloc(UInt32(sizeof(UInt32))))
+    vao::Ptr{UInt32} = Ptr{UInt32}(wasm_malloc(UInt32(sizeof(UInt32))))
+    llvm_glGenVertexArrays(Int32(1), vao)
+    llvm_glGenBuffers(Int32(1), vbo)
+    
+    # CRITICAL: Bind VAO FIRST, then set up vertex attributes
+    # The VAO stores the vertex attribute configuration
+    llvm_glBindVertexArray(unsafe_load(vao))
+    
+    # Bind VBO and upload vertex data
+    llvm_glBindBuffer(GL_ARRAY_BUFFER, unsafe_load(vbo))
+    llvm_glBufferData(GL_ARRAY_BUFFER, Int64(sizeof(Float32) * 9), Ptr{Cvoid}(vertices.pointer), GL_STATIC_DRAW)
+    
+    # Set vertex attribute pointer (this is stored in the VAO)
+    llvm_glVertexAttribPointer(UInt32(0), Int32(3), GL_FLOAT, GL_FALSE, Int32(3 * sizeof(Float32)), Ptr{Cvoid}(0))
+    llvm_glEnableVertexAttribArray(UInt32(0))
+    
+    # Unbind VBO (VAO remembers the binding)
+    llvm_glBindBuffer(GL_ARRAY_BUFFER, UInt32(0))
+    
+    # Unbind VAO (optional, but good practice)
+    llvm_glBindVertexArray(UInt32(0))
+    
+    printf(c"Vertex attribute array enabled\n")
+    
+    game_state_ptr.vao = unsafe_load(vao)
+    
+    # Note: vertices MallocArray is not freed here - it should be freed when no longer needed
+    # For now, we keep it alive since the VBO has a copy of the data
+    
     return game_state_ptr
 end
 
@@ -258,11 +380,13 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
 
     # --- Render with OpenGL ES 3.0 ---
     # Get window size for viewport
-    win_w_ptr = Ref{Int32}(0)
-    win_h_ptr = Ref{Int32}(0)
-    llvm_SDL_GetWindowSize(window, Base.unsafe_convert(Ptr{Int32}, win_w_ptr), Base.unsafe_convert(Ptr{Int32}, win_h_ptr))
-    win_w = win_w_ptr[]
-    win_h = win_h_ptr[]
+    win_w_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+    win_h_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+    llvm_SDL_GetWindowSize(window, win_w_ptr, win_h_ptr)
+    win_w = unsafe_load(win_w_ptr)
+    win_h = unsafe_load(win_h_ptr)
+    wasm_free(Ptr{Cvoid}(win_w_ptr))
+    wasm_free(Ptr{Cvoid}(win_h_ptr))
     
     # Set viewport
     llvm_glViewport(Int32(0), Int32(0), win_w, win_h)
@@ -271,8 +395,12 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     llvm_glClearColor(Float32(0.0), Float32(0.0), Float32(1.0), Float32(1.0))
     llvm_glClear(GL_COLOR_BUFFER_BIT)
 
+    llvm_glUseProgram(game_state.shader_program)
+    llvm_glBindVertexArray(game_state.vao)
+    llvm_glDrawArrays(GL_TRIANGLES, Int32(0), Int32(3))
+
     llvm_SDL_GL_SwapWindow(window)
-    llvm_SDL_Delay(UInt32(5))  # ~60 FPS
+    #llvm_SDL_Delay(UInt32(5))
 
     return game_state
 end
@@ -369,11 +497,13 @@ function handle_input(keys_down::Ptr{KeyState_down}, keys_up::Ptr{KeyState_up}, 
             # --- Mobile Touch Events ---
         elseif eventType == SDL_FINGERDOWN || eventType == SDL_FINGERMOTION
             # Get window size and button rects (must match render loop)
-            win_w_ptr = Ref{Int32}(0)
-            win_h_ptr = Ref{Int32}(0)
-            llvm_SDL_GetWindowSize(window, Base.unsafe_convert(Ptr{Int32}, win_w_ptr), Base.unsafe_convert(Ptr{Int32}, win_h_ptr))
-            win_w = win_w_ptr[]
-            win_h = win_h_ptr[]
+            win_w_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+            win_h_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
+            llvm_SDL_GetWindowSize(window, win_w_ptr, win_h_ptr)
+            win_w = unsafe_load(win_w_ptr)
+            win_h = unsafe_load(win_h_ptr)
+            wasm_free(Ptr{Cvoid}(win_w_ptr))
+            wasm_free(Ptr{Cvoid}(win_h_ptr))
             btn_area_h = win_h / Int32(4)
             btn_area_y = win_h - btn_area_h
             btn_w = win_w / Int32(3)

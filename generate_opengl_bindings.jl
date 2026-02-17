@@ -56,28 +56,31 @@ const LLVM_TYPE_MAPPING = Dict(
 function map_gl_type_to_julia(gl_type::String)::Tuple{String,String}
     gl_type = strip(gl_type)
 
-    # Handle const qualifier
-    is_const = startswith(gl_type, "const ")
-    if is_const
-        gl_type = gl_type[7:end]
-    end
+    # Remove all const qualifiers (they can appear anywhere: "const T", "T *const", "const T *const*")
+    # Replace "const " with space, then collapse multiple spaces
+    gl_type = replace(gl_type, r"\bconst\s+" => " ")
+    gl_type = replace(gl_type, r"\s+" => " ")
+    gl_type = strip(gl_type)
 
-    # Count asterisks (handle multiple pointers like void**)
-    asterisk_count = 0
-    temp_type = gl_type
-    while endswith(temp_type, "*")
-        asterisk_count += 1
-        temp_type = strip(temp_type[1:end-1])
-    end
+    # Count ALL asterisks in the type (not just trailing ones)
+    # This handles cases like "T *const*" or "T **"
+    asterisk_count = count(c -> c == '*', gl_type)
 
-    base_type = temp_type
+    # Extract base type by removing all asterisks and spaces around them
+    base_type = replace(gl_type, r"\s*\*\s*" => " ")
+    base_type = strip(base_type)
 
     # Handle pointer types
     if asterisk_count > 0
         if haskey(GL_TYPE_MAPPING, base_type)
             julia_base, _ = GL_TYPE_MAPPING[base_type]
         else
-            julia_base = "Cvoid"
+            # Handle GLchar, GLubyte, etc. as UInt8
+            if base_type == "GLchar" || base_type == "GLubyte"
+                julia_base = "UInt8"
+            else
+                julia_base = "Cvoid"
+            end
         end
 
         # Build nested Ptr types for multiple pointers

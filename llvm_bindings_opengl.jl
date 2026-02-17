@@ -1,5 +1,5 @@
 # Auto-generated OpenGL bindings using llvmcall
-# Generated: 2026-02-16T17:32:17.471
+# Generated: 2026-02-16T18:04:46.789
 # Header: emsdk/upstream/emscripten/system/include/GLES3/gl3.h
 #
 # These functions call OpenGL functions directly via LLVM
@@ -61,7 +61,7 @@ entry:
 end
 
 # Original C signature: void glBindAttribLocation(GLuint program, GLuint index, const GLchar * name)
-function llvm_glBindAttribLocation(program::UInt32, index::UInt32, name::Ptr{Cvoid})::Cvoid
+function llvm_glBindAttribLocation(program::UInt32, index::UInt32, name::Ptr{UInt8})::Cvoid
     Base.llvmcall(("""
     declare void @glBindAttribLocation(i32, i32, i8*) nounwind
 
@@ -70,7 +70,7 @@ entry:
     call void @glBindAttribLocation(i32 %program, i32 %index, i8* %name)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, UInt32, Ptr{Cvoid}}, program, index, name)
+    """, "main"), Cvoid, Tuple{UInt32, UInt32, Ptr{UInt8}}, program, index, name)
 end
 
 # Original C signature: void glBindBuffer(GLenum target, GLuint buffer)
@@ -1166,7 +1166,7 @@ entry:
 end
 
 # Original C signature: void glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name)
-function llvm_glGetActiveAttrib(program::UInt32, index::UInt32, bufSize::Int32, length::Ptr{Int32}, size::Ptr{Int32}, type_::Ptr{UInt32}, name::Ptr{Cvoid})::Cvoid
+function llvm_glGetActiveAttrib(program::UInt32, index::UInt32, bufSize::Int32, length::Ptr{Int32}, size::Ptr{Int32}, type_::Ptr{UInt32}, name::Ptr{UInt8})::Cvoid
     Base.llvmcall(("""
     declare void @glGetActiveAttrib(i32, i32, i32, i8*, i8*, i8*, i8*) nounwind
 
@@ -1175,11 +1175,11 @@ entry:
     call void @glGetActiveAttrib(i32 %program, i32 %index, i32 %bufSize, i8* %length, i8* %size, i8* %type_, i8* %name)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, UInt32, Int32, Ptr{Int32}, Ptr{Int32}, Ptr{UInt32}, Ptr{Cvoid}}, program, index, bufSize, length, size, type_, name)
+    """, "main"), Cvoid, Tuple{UInt32, UInt32, Int32, Ptr{Int32}, Ptr{Int32}, Ptr{UInt32}, Ptr{UInt8}}, program, index, bufSize, length, size, type_, name)
 end
 
 # Original C signature: void glGetActiveUniform(GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name)
-function llvm_glGetActiveUniform(program::UInt32, index::UInt32, bufSize::Int32, length::Ptr{Int32}, size::Ptr{Int32}, type_::Ptr{UInt32}, name::Ptr{Cvoid})::Cvoid
+function llvm_glGetActiveUniform(program::UInt32, index::UInt32, bufSize::Int32, length::Ptr{Int32}, size::Ptr{Int32}, type_::Ptr{UInt32}, name::Ptr{UInt8})::Cvoid
     Base.llvmcall(("""
     declare void @glGetActiveUniform(i32, i32, i32, i8*, i8*, i8*, i8*) nounwind
 
@@ -1188,11 +1188,11 @@ entry:
     call void @glGetActiveUniform(i32 %program, i32 %index, i32 %bufSize, i8* %length, i8* %size, i8* %type_, i8* %name)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, UInt32, Int32, Ptr{Int32}, Ptr{Int32}, Ptr{UInt32}, Ptr{Cvoid}}, program, index, bufSize, length, size, type_, name)
+    """, "main"), Cvoid, Tuple{UInt32, UInt32, Int32, Ptr{Int32}, Ptr{Int32}, Ptr{UInt32}, Ptr{UInt8}}, program, index, bufSize, length, size, type_, name)
 end
 
 # Original C signature: void glGetActiveUniformBlockName(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei * length, GLchar * uniformBlockName)
-function llvm_glGetActiveUniformBlockName(program::UInt32, uniformBlockIndex::UInt32, bufSize::Int32, length::Ptr{Int32}, uniformBlockName::Ptr{Cvoid})::Cvoid
+function llvm_glGetActiveUniformBlockName(program::UInt32, uniformBlockIndex::UInt32, bufSize::Int32, length::Ptr{Int32}, uniformBlockName::Ptr{UInt8})::Cvoid
     Base.llvmcall(("""
     declare void @glGetActiveUniformBlockName(i32, i32, i32, i8*, i8*) nounwind
 
@@ -1201,7 +1201,7 @@ entry:
     call void @glGetActiveUniformBlockName(i32 %program, i32 %uniformBlockIndex, i32 %bufSize, i8* %length, i8* %uniformBlockName)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, UInt32, Int32, Ptr{Int32}, Ptr{Cvoid}}, program, uniformBlockIndex, bufSize, length, uniformBlockName)
+    """, "main"), Cvoid, Tuple{UInt32, UInt32, Int32, Ptr{Int32}, Ptr{UInt8}}, program, uniformBlockIndex, bufSize, length, uniformBlockName)
 end
 
 # Original C signature: void glGetActiveUniformBlockiv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint * params)
@@ -1244,7 +1244,7 @@ entry:
 end
 
 # Original C signature: GLint glGetAttribLocation(GLuint program, const GLchar * name)
-function llvm_glGetAttribLocation(program::UInt32, name::Ptr{Cvoid})::Int32
+function llvm_glGetAttribLocation(program::UInt32, name::Ptr{UInt8})::Int32
     Base.llvmcall(("""
     declare i32 @glGetAttribLocation(i32, i8*) nounwind
 
@@ -1253,7 +1253,7 @@ entry:
     %result = call i32 @glGetAttribLocation(i32 %program, i8* %name)
     ret i32 %result
 }
-    """, "main"), Int32, Tuple{UInt32, Ptr{Cvoid}}, program, name)
+    """, "main"), Int32, Tuple{UInt32, Ptr{UInt8}}, program, name)
 end
 
 # Original C signature: void glGetBooleanv(GLenum pname, GLboolean * data)
@@ -1335,7 +1335,7 @@ entry:
 end
 
 # Original C signature: GLint glGetFragDataLocation(GLuint program, const GLchar * name)
-function llvm_glGetFragDataLocation(program::UInt32, name::Ptr{Cvoid})::Int32
+function llvm_glGetFragDataLocation(program::UInt32, name::Ptr{UInt8})::Int32
     Base.llvmcall(("""
     declare i32 @glGetFragDataLocation(i32, i8*) nounwind
 
@@ -1344,7 +1344,7 @@ entry:
     %result = call i32 @glGetFragDataLocation(i32 %program, i8* %name)
     ret i32 %result
 }
-    """, "main"), Int32, Tuple{UInt32, Ptr{Cvoid}}, program, name)
+    """, "main"), Int32, Tuple{UInt32, Ptr{UInt8}}, program, name)
 end
 
 # Original C signature: void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint * params)
@@ -1439,7 +1439,7 @@ entry:
 end
 
 # Original C signature: void glGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei * length, GLchar * infoLog)
-function llvm_glGetProgramInfoLog(program::UInt32, bufSize::Int32, length::Ptr{Int32}, infoLog::Ptr{Cvoid})::Cvoid
+function llvm_glGetProgramInfoLog(program::UInt32, bufSize::Int32, length::Ptr{Int32}, infoLog::Ptr{UInt8})::Cvoid
     Base.llvmcall(("""
     declare void @glGetProgramInfoLog(i32, i32, i8*, i8*) nounwind
 
@@ -1448,7 +1448,7 @@ entry:
     call void @glGetProgramInfoLog(i32 %program, i32 %bufSize, i8* %length, i8* %infoLog)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Int32}, Ptr{Cvoid}}, program, bufSize, length, infoLog)
+    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Int32}, Ptr{UInt8}}, program, bufSize, length, infoLog)
 end
 
 # Original C signature: void glGetProgramiv(GLuint program, GLenum pname, GLint * params)
@@ -1530,7 +1530,7 @@ entry:
 end
 
 # Original C signature: void glGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * infoLog)
-function llvm_glGetShaderInfoLog(shader::UInt32, bufSize::Int32, length::Ptr{Int32}, infoLog::Ptr{Cvoid})::Cvoid
+function llvm_glGetShaderInfoLog(shader::UInt32, bufSize::Int32, length::Ptr{Int32}, infoLog::Ptr{UInt8})::Cvoid
     Base.llvmcall(("""
     declare void @glGetShaderInfoLog(i32, i32, i8*, i8*) nounwind
 
@@ -1539,7 +1539,7 @@ entry:
     call void @glGetShaderInfoLog(i32 %shader, i32 %bufSize, i8* %length, i8* %infoLog)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Int32}, Ptr{Cvoid}}, shader, bufSize, length, infoLog)
+    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Int32}, Ptr{UInt8}}, shader, bufSize, length, infoLog)
 end
 
 # Original C signature: void glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint * range, GLint * precision)
@@ -1556,7 +1556,7 @@ entry:
 end
 
 # Original C signature: void glGetShaderSource(GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * source)
-function llvm_glGetShaderSource(shader::UInt32, bufSize::Int32, length::Ptr{Int32}, source::Ptr{Cvoid})::Cvoid
+function llvm_glGetShaderSource(shader::UInt32, bufSize::Int32, length::Ptr{Int32}, source::Ptr{UInt8})::Cvoid
     Base.llvmcall(("""
     declare void @glGetShaderSource(i32, i32, i8*, i8*) nounwind
 
@@ -1565,7 +1565,7 @@ entry:
     call void @glGetShaderSource(i32 %shader, i32 %bufSize, i8* %length, i8* %source)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Int32}, Ptr{Cvoid}}, shader, bufSize, length, source)
+    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Int32}, Ptr{UInt8}}, shader, bufSize, length, source)
 end
 
 # Original C signature: void glGetShaderiv(GLuint shader, GLenum pname, GLint * params)
@@ -1621,7 +1621,7 @@ entry:
 end
 
 # Original C signature: void glGetTransformFeedbackVarying(GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLsizei * size, GLenum * type, GLchar * name)
-function llvm_glGetTransformFeedbackVarying(program::UInt32, index::UInt32, bufSize::Int32, length::Ptr{Int32}, size::Ptr{Int32}, type_::Ptr{UInt32}, name::Ptr{Cvoid})::Cvoid
+function llvm_glGetTransformFeedbackVarying(program::UInt32, index::UInt32, bufSize::Int32, length::Ptr{Int32}, size::Ptr{Int32}, type_::Ptr{UInt32}, name::Ptr{UInt8})::Cvoid
     Base.llvmcall(("""
     declare void @glGetTransformFeedbackVarying(i32, i32, i32, i8*, i8*, i8*, i8*) nounwind
 
@@ -1630,11 +1630,11 @@ entry:
     call void @glGetTransformFeedbackVarying(i32 %program, i32 %index, i32 %bufSize, i8* %length, i8* %size, i8* %type_, i8* %name)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, UInt32, Int32, Ptr{Int32}, Ptr{Int32}, Ptr{UInt32}, Ptr{Cvoid}}, program, index, bufSize, length, size, type_, name)
+    """, "main"), Cvoid, Tuple{UInt32, UInt32, Int32, Ptr{Int32}, Ptr{Int32}, Ptr{UInt32}, Ptr{UInt8}}, program, index, bufSize, length, size, type_, name)
 end
 
 # Original C signature: GLuint glGetUniformBlockIndex(GLuint program, const GLchar * uniformBlockName)
-function llvm_glGetUniformBlockIndex(program::UInt32, uniformBlockName::Ptr{Cvoid})::UInt32
+function llvm_glGetUniformBlockIndex(program::UInt32, uniformBlockName::Ptr{UInt8})::UInt32
     Base.llvmcall(("""
     declare i32 @glGetUniformBlockIndex(i32, i8*) nounwind
 
@@ -1643,11 +1643,11 @@ entry:
     %result = call i32 @glGetUniformBlockIndex(i32 %program, i8* %uniformBlockName)
     ret i32 %result
 }
-    """, "main"), UInt32, Tuple{UInt32, Ptr{Cvoid}}, program, uniformBlockName)
+    """, "main"), UInt32, Tuple{UInt32, Ptr{UInt8}}, program, uniformBlockName)
 end
 
 # Original C signature: void glGetUniformIndices(GLuint program, GLsizei uniformCount, const GLchar *const* uniformNames, GLuint * uniformIndices)
-function llvm_glGetUniformIndices(program::UInt32, uniformCount::Int32, uniformNames::Ptr{Cvoid}, uniformIndices::Ptr{UInt32})::Cvoid
+function llvm_glGetUniformIndices(program::UInt32, uniformCount::Int32, uniformNames::Ptr{Ptr{Cvoid}}, uniformIndices::Ptr{UInt32})::Cvoid
     Base.llvmcall(("""
     declare void @glGetUniformIndices(i32, i32, i8*, i8*) nounwind
 
@@ -1656,11 +1656,11 @@ entry:
     call void @glGetUniformIndices(i32 %program, i32 %uniformCount, i8* %uniformNames, i8* %uniformIndices)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Cvoid}, Ptr{UInt32}}, program, uniformCount, uniformNames, uniformIndices)
+    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Ptr{Cvoid}}, Ptr{UInt32}}, program, uniformCount, uniformNames, uniformIndices)
 end
 
 # Original C signature: GLint glGetUniformLocation(GLuint program, const GLchar * name)
-function llvm_glGetUniformLocation(program::UInt32, name::Ptr{Cvoid})::Int32
+function llvm_glGetUniformLocation(program::UInt32, name::Ptr{UInt8})::Int32
     Base.llvmcall(("""
     declare i32 @glGetUniformLocation(i32, i8*) nounwind
 
@@ -1669,7 +1669,7 @@ entry:
     %result = call i32 @glGetUniformLocation(i32 %program, i8* %name)
     ret i32 %result
 }
-    """, "main"), Int32, Tuple{UInt32, Ptr{Cvoid}}, program, name)
+    """, "main"), Int32, Tuple{UInt32, Ptr{UInt8}}, program, name)
 end
 
 # Original C signature: void glGetUniformfv(GLuint program, GLint location, GLfloat * params)
@@ -2232,7 +2232,7 @@ entry:
 end
 
 # Original C signature: void glShaderSource(GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
-function llvm_glShaderSource(shader::UInt32, count::Int32, string::Ptr{Cvoid}, length::Ptr{Int32})::Cvoid
+function llvm_glShaderSource(shader::UInt32, count::Int32, string::Ptr{Ptr{Cvoid}}, length::Ptr{Int32})::Cvoid
     Base.llvmcall(("""
     declare void @glShaderSource(i32, i32, i8*, i8*) nounwind
 
@@ -2241,7 +2241,7 @@ entry:
     call void @glShaderSource(i32 %shader, i32 %count, i8* %string, i8* %length)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Cvoid}, Ptr{Int32}}, shader, count, string, length)
+    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Ptr{Cvoid}}, Ptr{Int32}}, shader, count, string, length)
 end
 
 # Original C signature: void glStencilFunc(GLenum func, GLint ref, GLuint mask)
@@ -2453,7 +2453,7 @@ entry:
 end
 
 # Original C signature: void glTransformFeedbackVaryings(GLuint program, GLsizei count, const GLchar *const* varyings, GLenum bufferMode)
-function llvm_glTransformFeedbackVaryings(program::UInt32, count::Int32, varyings::Ptr{Cvoid}, bufferMode::UInt32)::Cvoid
+function llvm_glTransformFeedbackVaryings(program::UInt32, count::Int32, varyings::Ptr{Ptr{Cvoid}}, bufferMode::UInt32)::Cvoid
     Base.llvmcall(("""
     declare void @glTransformFeedbackVaryings(i32, i32, i8*, i32) nounwind
 
@@ -2462,7 +2462,7 @@ entry:
     call void @glTransformFeedbackVaryings(i32 %program, i32 %count, i8* %varyings, i32 %bufferMode)
     ret void
 }
-    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Cvoid}, UInt32}, program, count, varyings, bufferMode)
+    """, "main"), Cvoid, Tuple{UInt32, Int32, Ptr{Ptr{Cvoid}}, UInt32}, program, count, varyings, bufferMode)
 end
 
 # Original C signature: void glUniform1f(GLint location, GLfloat v0)
