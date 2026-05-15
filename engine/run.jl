@@ -4,7 +4,7 @@ function sc_game_loop(renderer::Ptr{SDL_Renderer})
     while running != Int32(0)
         if llvm_game_should_continue() == Int32(0)
             running = Int32(0)
-        elseif poll_quit_requested() != Int32(0)
+        elseif poll_events() != Int32(0)
             running = Int32(0)
         else
             begin_frame(renderer)

@@ -8,6 +8,7 @@ include("engine/graphics.jl")
 include("engine/c_hooks.jl")
 include("engine/context.jl")
 include("engine/frame.jl")
+include("engine/input.jl")
 include("engine/draw.jl")
 include("engine/run.jl")
 

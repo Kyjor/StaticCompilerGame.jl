@@ -24,6 +24,30 @@ function llvm_game_update()
     """, "main"), Cvoid, Tuple{},)
 end
 
+function llvm_game_key_pressed(key::Int32)
+    Base.llvmcall(("""
+    declare void @game_key_pressed(i32) nounwind
+
+    define void @main(i32 %key) {
+    entry:
+        call void @game_key_pressed(i32 %key)
+        ret void
+    }
+    """, "main"), Cvoid, Tuple{Int32}, key)
+end
+
+function llvm_game_key_released(key::Int32)
+    Base.llvmcall(("""
+    declare void @game_key_released(i32) nounwind
+
+    define void @main(i32 %key) {
+    entry:
+        call void @game_key_released(i32 %key)
+        ret void
+    }
+    """, "main"), Cvoid, Tuple{Int32}, key)
+end
+
 function llvm_game_draw()
     Base.llvmcall(("""
     declare void @game_draw() nounwind

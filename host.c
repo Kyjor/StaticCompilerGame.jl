@@ -3,6 +3,8 @@
 #include "lib_desktop/sc_game.h"
 
 static int g_running = 1;
+int square_x = 100;
+int square_y = 0;
 
 void game_load(void)
 {
@@ -15,8 +17,30 @@ void game_update(void)
 
 void game_draw(void)
 {
-    if (j_fill_rect(100, 0, 128, 128, 200, 80, 80, 255) != 0)
+    if (j_fill_rect(square_x, square_y, 128, 128, 200, 80, 80, 255) != 0)
         fprintf(stderr, "j_fill_rect failed\n");
+}
+
+void game_key_pressed(int32_t key)
+{
+    if (key == 'q')
+        fprintf(stderr, "pressed q\n");
+    if (key == SC_KEY_ESCAPE)
+        g_running = 0;
+    if (key == 'a')
+        square_x -= 10;
+    if (key == 'd')
+        square_x += 10;
+    if (key == 'w')
+        square_y -= 10;
+    if (key == 's')
+        square_y += 10;
+}
+
+void game_key_released(int32_t key)
+{
+    if (key == 'z')
+        fprintf(stderr, "released z\n");
 }
 
 int32_t game_should_continue(void)
