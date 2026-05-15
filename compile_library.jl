@@ -38,6 +38,9 @@ functions_to_compile = [
     (j_sdl_init, (), "j_sdl_init"),
     (j_init_window, (), "j_init_window"),
     (j_init_renderer, (Ptr{SDL_Window},), "j_init_renderer"),
+    (sc_game_loop, (Ptr{SDL_Renderer},), "sc_game_loop"),
+    (sc_run, (), "sc_run"),
+    (j_fill_rect, (Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32), "j_fill_rect"),
 ]
 
 for (func, types, name) in functions_to_compile
@@ -73,6 +76,10 @@ function write_c_header(path::String)
         println(io, "int32_t j_sdl_init(void);")
         println(io, "SDL_Window *j_init_window(void);")
         println(io, "SDL_Renderer *j_init_renderer(SDL_Window *window);")
+        println(io, "int32_t sc_run(void);")
+        println(io, "/* Pass -1 for r,g,b,a to use 255 (opaque white). */")
+        println(io, "int32_t j_fill_rect(int32_t x, int32_t y, int32_t w, int32_t h,")
+        println(io, "                    int32_t r, int32_t g, int32_t b, int32_t a);")
         println(io, "")
         println(io, "#ifdef __cplusplus")
         println(io, "}")
@@ -194,7 +201,7 @@ else
         println()
         println("💡 Build C host: ./build_host.sh")
         println("   Package zip:  ./package_host.sh")
-        println("   # Call j_sdl_init() before j_init_window().")
+        println("   # main() in host.c calls sc_run(); game hooks live in host.c.")
     catch e
         println("❌ Native library build failed: $e")
         if Sys.islinux()

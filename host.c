@@ -1,45 +1,37 @@
 #include <stdio.h>
-#include <stdbool.h>
-#include <SDL2/SDL.h>
+#include <stdint.h>
 #include "lib_desktop/sc_game.h"
+
+static int g_running = 1;
+
+void game_load(void)
+{
+    g_running = 1;
+}
+
+void game_update(void)
+{
+}
+
+void game_draw(void)
+{
+    j_fill_rect(100, 0, 128, 128, 255, 255, 255, 255);
+    printf("game_draw\n");
+}
+
+int32_t game_should_continue(void)
+{
+    return g_running ? 1 : 0;
+}
+
+void game_shutdown(void)
+{
+}
 
 int main(void)
 {
-    if (j_sdl_init() != 0) {
-        fprintf(stderr, "j_sdl_init failed\n");
-        return 1;
-    }
-
-    SDL_Window *window = j_init_window();
-    if (!window) {
-        fprintf(stderr, "j_init_window failed\n");
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Renderer *renderer = j_init_renderer(window);
-    if (!renderer) {
-        fprintf(stderr, "j_init_renderer failed\n");
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-
-    bool running = true;
-    while (running) {
-        SDL_Event e;
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT)
-                running = false;
-        }
-
-        SDL_SetRenderDrawColor(renderer, 40, 44, 52, 255);
-        SDL_RenderClear(renderer);
-        SDL_RenderPresent(renderer);
-    }
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    return 0;
+    int32_t code = sc_run();
+    if (code != 0)
+        fprintf(stderr, "sc_run failed (%d)\n", code);
+    return code;
 }

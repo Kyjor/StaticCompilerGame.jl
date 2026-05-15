@@ -23,7 +23,23 @@ This project uses **StaticCompiler.jl** to compile Julia code to LLVM IR and the
    - ❌ Module imports at runtime
    - ❌ `@assert` macros (they generate runtime checks)
 
-3. **NO standard library functions that allocate**
+3. **Do NOT annotate compiled engine/game functions with `::Cvoid`**
+   - ❌ `function foo()::Cvoid` in code you pass to `StaticCompiler.generate_obj` — often emits `ijl_invoke` / `julia_convert_*` and breaks the link
+   - ✅ Omit the return type, or use `::Int32` (etc.) with an explicit `return`
+   ```julia
+   # ❌ Bad for StaticCompiler
+   function begin_frame(renderer::Ptr{SDL_Renderer})::Cvoid
+       llvm_SDL_RenderClear(renderer)
+   end
+
+   # ✅ Good
+   function begin_frame(renderer::Ptr{SDL_Renderer})
+       llvm_SDL_RenderClear(renderer)
+   end
+   ```
+   (`llvm_bindings.jl` wrappers may still use `::Cvoid`; don't copy that pattern in `engine/`.)
+
+4. **NO standard library functions that allocate**
    - ❌ `push!`, `append!`, `pop!` on standard arrays
    - ❌ `map`, `filter`, `reduce` (they allocate)
    - ❌ `split`, `join`, `replace` on strings
@@ -208,10 +224,9 @@ This project uses **StaticCompiler.jl** to compile Julia code to LLVM IR and the
        # implicit return causes issues
    end
    
-   # ❌ Bad: no explicit return for Cvoid
+   # ❌ Bad: ::Cvoid on compiled game code (see FORBIDDEN §3)
    function update_state(ptr::Ptr{GameState})::Cvoid
        ptr.counter = ptr.counter + Int32(1)
-       # missing return nothing
    end
    ```
 
@@ -367,6 +382,10 @@ functions_to_compile = [
 - **Cause**: Using Julia runtime features
 - **Solution**: Remove GC-dependent code, use manual memory management
 
+### Error: `undefined reference to ijl_invoke` / `julia_convert_*` when linking `host`
+- **Cause**: `::Cvoid` on a function compiled with StaticCompiler (especially with no explicit return)
+- **Solution**: Remove `::Cvoid` from `engine/` and game code; use untyped fall-through or `::Int32` + `return`
+
 ### Error: "ccall not supported"
 - **Cause**: Direct ccall in code to be compiled
 - **Solution**: Use llvmcall wrappers instead (see `llvm_wrappers.jl`)
@@ -389,6 +408,7 @@ functions_to_compile = [
 - [ ] No String literals (use `WallocString` with `w"..."`)
 - [ ] No println/print (use `printf` with `c"..."`)
 - [ ] All functions have explicit return types `::Type`
+- [ ] No `::Cvoid` on `engine/` or game functions compiled with StaticCompiler
 - [ ] All variables have explicit type annotations `::Type`
 - [ ] No variable type redeclarations in the same function (declare once at top, assign in branches)
 - [ ] All allocations use `wasm_malloc` and are freed with `wasm_free`

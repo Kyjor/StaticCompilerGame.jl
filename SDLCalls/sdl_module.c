@@ -51,3 +51,19 @@ EMSCRIPTEN_KEEPALIVE
 void set_hi(int32_t value) {
     g_hi = value;
 }
+
+static void *g_renderer = NULL;
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void sc_set_renderer(void *renderer) {
+    g_renderer = renderer;
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void *sc_get_renderer(void) {
+    return g_renderer;
+}

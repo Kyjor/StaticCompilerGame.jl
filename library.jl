@@ -5,6 +5,11 @@ include("llvm_wrappers.jl")
 include("llvm_bindings.jl")
 include("wallocstring.jl")
 include("engine/graphics.jl")
+include("engine/c_hooks.jl")
+include("engine/context.jl")
+include("engine/frame.jl")
+include("engine/draw.jl")
+include("engine/run.jl")
 
 function j_sdl_init()::Int32
     return llvm_SDL_Init(UInt32(SDL_INIT_VIDEO))

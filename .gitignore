@@ -36,3 +36,15 @@ game_desktop/
 emsdk
 
 sc-game-web.zip
+
+.idea/
+
+deps/sdl2/
+
+dist/
+
+sc-game-x86_64/
+
+lib_desktop/
+
+*.zip

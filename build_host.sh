@@ -11,8 +11,8 @@ if [[ ! -f "$LIB_A" ]]; then
     exit 1
 fi
 
-if ! nm "$LIB_A" 2>/dev/null | grep -q ' T j_sdl_init'; then
-    echo "❌ $LIB_A has no compiled Julia symbols (j_sdl_init missing)"
+if ! nm "$LIB_A" 2>/dev/null | grep -q ' T sc_run'; then
+    echo "❌ $LIB_A has no compiled Julia symbols (sc_run missing)"
     echo "   Use Julia 1.10 or below — see README.md"
     exit 1
 fi
