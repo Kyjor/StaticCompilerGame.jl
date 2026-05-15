@@ -15,8 +15,8 @@ void game_update(void)
 
 void game_draw(void)
 {
-    j_fill_rect(100, 0, 128, 128, 255, 255, 255, 255);
-    printf("game_draw\n");
+    if (j_fill_rect(100, 0, 128, 128, 200, 80, 80, 255) != 0)
+        fprintf(stderr, "j_fill_rect failed\n");
 }
 
 int32_t game_should_continue(void)
