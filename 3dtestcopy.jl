@@ -63,7 +63,7 @@ function j_init_window()::Ptr{SDL_Window}
     end
     llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_DOUBLEBUFFER), Int32(1))
     llvm_SDL_GL_SetAttribute(UInt32(SDL_GL_DEPTH_SIZE), Int32(24))
-    
+
     window_name = str_ptr(w"OpenGL")
     window::Ptr{SDL_Window} = llvm_SDL_CreateWindow(window_name, Int32(0), Int32(0), Int32(640), Int32(480), UInt32(SDL_WINDOW_OPENGL))
     if window == Ptr{SDL_Window}(C_NULL)
@@ -75,7 +75,7 @@ function j_init_window()::Ptr{SDL_Window}
         wasm_free(Ptr{Cvoid}(window_name))
         return Ptr{SDL_Window}(C_NULL)
     end
-    
+
     context = llvm_SDL_GL_CreateContext(window)
     if context == Ptr{Cvoid}(C_NULL)
         printf(c"Failed to create OpenGL context\n")
@@ -86,7 +86,7 @@ function j_init_window()::Ptr{SDL_Window}
         wasm_free(Ptr{Cvoid}(window_name))
         return window
     end
-    
+
     # CRITICAL: Make the context current (equivalent to glfwMakeContextCurrent)
     make_current_result = llvm_SDL_GL_MakeCurrent(window, context)
     if make_current_result != Int32(0)
@@ -98,7 +98,7 @@ function j_init_window()::Ptr{SDL_Window}
     else
         printf(c"OpenGL 3.0 context created and made current successfully\n")
     end
-    
+
     wasm_free(Ptr{Cvoid}(window_name))
     return window
 end
@@ -248,27 +248,27 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window},
     game_state_ptr.quit = false
 
     printf(c"3D game data initialized\n")
-    
+
     # For web builds (WebGL 2.0), use "300 es". For desktop OpenGL 3.0, use "300 core"
     vertex_shader_source::Ptr{UInt8} = Ptr{UInt8}(C_NULL)
     if is_web_build == Int32(0)
         # Desktop: OpenGL 3.0 Core
         vertex_shader_source = str_ptr(w"
     #version 300 core
-    layout(location = 0) in vec3 aPos;\n 
-    void main() \n 
-    {\n 
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n 
+    layout(location = 0) in vec3 aPos;\n
+    void main() \n
+    {\n
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n
     }\0
     ")
     else
         # Web: WebGL 2.0 (OpenGL ES 3.0)
         vertex_shader_source = str_ptr(w"
     #version 300 es
-    layout(location = 0) in vec3 aPos;\n 
-    void main() \n 
-    {\n 
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n 
+    layout(location = 0) in vec3 aPos;\n
+    void main() \n
+    {\n
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n
     }\0
     ")
     end
@@ -286,7 +286,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window},
     wasm_free(string_array_ptr)
     printf(c"Vertex shader source set\n")
     llvm_glCompileShader(vertex_shader)
-    
+
     # Check for compilation errors
     success_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
     llvm_glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, success_ptr)
@@ -308,10 +308,10 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window},
     if is_web_build == Int32(0)
         # Desktop: OpenGL 3.0 Core
         fragment_shader_source = str_ptr(w"
-    #version 300 core
+    #version 300 es
     out vec4 FragColor;
-    void main() \n 
-    {\n 
+    void main() \n
+    {\n
     FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
     }\0
     ")
@@ -321,8 +321,8 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window},
     #version 300 es
     precision mediump float;
     out vec4 FragColor;
-    void main() \n 
-    {\n 
+    void main() \n
+    {\n
     FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
     }\0
     ")
@@ -334,7 +334,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window},
     unsafe_store!(Ptr{Ptr{Cvoid}}(string_array_ptr), fragment_shader_source, 1)
     llvm_glShaderSource(fragment_shader, Int32(1), Ptr{Ptr{Cvoid}}(string_array_ptr), Ptr{Int32}(C_NULL))
     llvm_glCompileShader(fragment_shader)
-    
+
     # Check for compilation errors
     success_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
     llvm_glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, success_ptr)
@@ -353,12 +353,12 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window},
     wasm_free(Ptr{Cvoid}(success_ptr))
     wasm_free(string_array_ptr)
     printf(c"Fragment shader source set\n")
-    
+
     program = llvm_glCreateProgram()
     llvm_glAttachShader(program, vertex_shader)
     llvm_glAttachShader(program, fragment_shader)
     llvm_glLinkProgram(program)
-    
+
     # Check for linking errors
     success_ptr = Ptr{Int32}(wasm_malloc(UInt32(sizeof(Int32))))
     llvm_glGetProgramiv(program, GL_LINK_STATUS, success_ptr)
@@ -375,7 +375,7 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window},
         printf(c"Program linked successfully\n")
     end
     wasm_free(Ptr{Cvoid}(success_ptr))
-    
+
     llvm_glUseProgram(program)
     printf(c"Program used\n")
     llvm_glDeleteShader(vertex_shader)
@@ -386,50 +386,50 @@ function j_init_game_state(renderer::Ptr{SDL_Renderer}, window::Ptr{SDL_Window},
     printf(c"Shader sources freed\n")
 
     game_state_ptr.shader_program = program
-    
+
     # Create vertex data
     vertices = MallocArray{Float32}(undef, 9)  # 9 floats (3 vertices × 3 coordinates)
     vertices[1] = -0.5f0  # Vertex 1: x
     vertices[2] = -0.5f0  # Vertex 1: y
-    vertices[3] =  0.0f0  # Vertex 1: z
-    vertices[4] =  0.5f0  # Vertex 2: x
+    vertices[3] = 0.0f0  # Vertex 1: z
+    vertices[4] = 0.5f0  # Vertex 2: x
     vertices[5] = -0.5f0  # Vertex 2: y
-    vertices[6] =  0.0f0  # Vertex 2: z
-    vertices[7] =  0.0f0  # Vertex 3: x
-    vertices[8] =  0.5f0  # Vertex 3: y
-    vertices[9] =  0.0f0  # Vertex 3: z
+    vertices[6] = 0.0f0  # Vertex 2: z
+    vertices[7] = 0.0f0  # Vertex 3: x
+    vertices[8] = 0.5f0  # Vertex 3: y
+    vertices[9] = 0.0f0  # Vertex 3: z
 
     # Generate VAO and VBO
     vbo::Ptr{UInt32} = Ptr{UInt32}(wasm_malloc(UInt32(sizeof(UInt32))))
     vao::Ptr{UInt32} = Ptr{UInt32}(wasm_malloc(UInt32(sizeof(UInt32))))
     llvm_glGenVertexArrays(Int32(1), vao)
     llvm_glGenBuffers(Int32(1), vbo)
-    
+
     # CRITICAL: Bind VAO FIRST, then set up vertex attributes
     # The VAO stores the vertex attribute configuration
     llvm_glBindVertexArray(unsafe_load(vao))
-    
+
     # Bind VBO and upload vertex data
     llvm_glBindBuffer(GL_ARRAY_BUFFER, unsafe_load(vbo))
     llvm_glBufferData(GL_ARRAY_BUFFER, Int64(sizeof(Float32) * 9), Ptr{Cvoid}(vertices.pointer), GL_STATIC_DRAW)
-    
+
     # Set vertex attribute pointer (this is stored in the VAO)
     llvm_glVertexAttribPointer(UInt32(0), Int32(3), GL_FLOAT, GL_FALSE, Int32(3 * sizeof(Float32)), Ptr{Cvoid}(0))
     llvm_glEnableVertexAttribArray(UInt32(0))
-    
+
     # Unbind VBO (VAO remembers the binding)
     llvm_glBindBuffer(GL_ARRAY_BUFFER, UInt32(0))
-    
+
     # Unbind VAO (optional, but good practice)
     llvm_glBindVertexArray(UInt32(0))
-    
+
     printf(c"Vertex attribute array enabled\n")
-    
+
     game_state_ptr.vao = unsafe_load(vao)
-    
+
     # Note: vertices MallocArray is not freed here - it should be freed when no longer needed
     # For now, we keep it alive since the VBO has a copy of the data
-    
+
     return game_state_ptr
 end
 
@@ -469,37 +469,37 @@ function game_loop(game_state::Ptr{GameState}, renderer::Ptr{SDL_Renderer}, wind
     win_h = unsafe_load(win_h_ptr)
     wasm_free(Ptr{Cvoid}(win_w_ptr))
     wasm_free(Ptr{Cvoid}(win_h_ptr))
-    
+
     # Set viewport
     llvm_glViewport(Int32(0), Int32(0), win_w, win_h)
-    
+
     # Clear screen with blue color (to verify clearing works)
     llvm_glClearColor(Float32(0.2), Float32(0.3), Float32(0.3), Float32(1.0))
     llvm_glClear(GL_COLOR_BUFFER_BIT)
-    
+
     # Check for OpenGL errors
     gl_error = llvm_glGetError()
-    if gl_error != GL_NO_ERROR
-        printf(c"OpenGL error after clear: %u\n", gl_error)
-    end
+    # if gl_error != GL_NO_ERROR
+    #     printf(c"OpenGL error after clear: %u\n", gl_error)
+    # end
 
     llvm_glUseProgram(game_state.shader_program)
-    gl_error = llvm_glGetError()
-    if gl_error != GL_NO_ERROR
-        printf(c"OpenGL error after UseProgram: %u\n", gl_error)
-    end
-    
+    # gl_error = llvm_glGetError()
+    # if gl_error != GL_NO_ERROR
+    #     printf(c"OpenGL error after UseProgram: %u\n", gl_error)
+    # end
+
     llvm_glBindVertexArray(game_state.vao)
-    gl_error = llvm_glGetError()
-    if gl_error != GL_NO_ERROR
-        printf(c"OpenGL error after BindVertexArray: %u\n", gl_error)
-    end
-    
+    # gl_error = llvm_glGetError()
+    # if gl_error != GL_NO_ERROR
+    #     printf(c"OpenGL error after BindVertexArray: %u\n", gl_error)
+    # end
+
     llvm_glDrawArrays(GL_TRIANGLES, Int32(0), Int32(3))
-    gl_error = llvm_glGetError()
-    if gl_error != GL_NO_ERROR
-        printf(c"OpenGL error after DrawArrays: %u\n", gl_error)
-    end
+    # gl_error = llvm_glGetError()
+    # if gl_error != GL_NO_ERROR
+    #     printf(c"OpenGL error after DrawArrays: %u\n", gl_error)
+    # end
 
     llvm_SDL_GL_SwapWindow(window)
     #llvm_SDL_Delay(UInt32(5))
