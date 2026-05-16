@@ -12,11 +12,25 @@ URL="https://github.com/libsdl-org/SDL/releases/download/release-${VERSION}/SDL2
 
 mkdir -p "$DEPS"
 
+print_build_dep_hints() {
+    case "$(uname -s)" in
+    Darwin)
+        echo "   macOS: brew install cmake   (curl is built-in; gcc/clang: xcode-select --install)"
+        ;;
+    Linux)
+        echo "   Fedora: sudo dnf install cmake gcc curl"
+        echo "   Debian: sudo apt install cmake gcc curl"
+        ;;
+    *)
+        echo "   Install: cmake, a C compiler, and curl"
+        ;;
+    esac
+}
+
 for cmd in cmake gcc curl; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "❌ Missing: $cmd"
-        echo "   Fedora: sudo dnf install cmake gcc curl"
-        echo "   Debian: sudo apt install cmake gcc curl"
+        print_build_dep_hints
         exit 1
     fi
 done
@@ -38,7 +52,8 @@ cmake -S "$SRCDIR" -B "$DEPS/build" \
     -DSDL_STATIC=ON \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 
-cmake --build "$DEPS/build" -j"$(nproc)"
+NPROC="$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 4)"
+cmake --build "$DEPS/build" -j"$NPROC"
 cmake --install "$DEPS/build"
 
 if [[ -f "$PREFIX/lib64/libSDL2.a" ]]; then

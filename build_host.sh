@@ -11,9 +11,11 @@ if [[ ! -f "$LIB_A" ]]; then
     exit 1
 fi
 
-if ! nm "$LIB_A" 2>/dev/null | grep -q ' T sc_run'; then
-    echo "❌ $LIB_A has no compiled Julia symbols (sc_run missing)"
-    echo "   Use Julia 1.10 or below — see README.md"
+# Linux (GNU nm): " T sc_run" — macOS (Mach-O): " T _sc_run"
+if ! nm "$LIB_A" 2>/dev/null | grep -qE '[[:space:]]T[[:space:]]+_?sc_run$'; then
+    echo "❌ $LIB_A has no compiled Julia symbols (sc_run missing from nm)"
+    echo "   Run: julia compile_library.jl desktop"
+    echo "   If the archive is up to date and this persists: StaticCompiler may need Julia ≤1.10 — see README.md"
     exit 1
 fi
 
@@ -23,9 +25,10 @@ if [[ -z "$SDL2_LIBDIR" || ! -f "$SDL2_LIBDIR/libSDL2.a" ]]; then
     source "$ROOT/deps/sdl2_paths.sh"
 fi
 
-SDL2_A="$SDL2_LIBDIR/libSDL2.a"
 SDL2_CONFIG="$SDL2_PREFIX/bin/sdl2-config"
-mapfile -t SDL_CFLAGS < <("$SDL2_CONFIG" --cflags)
+read -r -a SDL_CFLAGS <<< "$("$SDL2_CONFIG" --cflags)"
+# Full static SDL line from sdl2-config (Linux: transitive -l…; macOS: -framework… + libSDL2.a).
+read -r -a SDL_STATIC_LIBS <<< "$("$SDL2_CONFIG" --static-libs)"
 
 LINK_FLAGS=()
 if [[ "${STATIC:-0}" == "1" ]]; then
@@ -38,13 +41,13 @@ if [[ "${STATIC:-0}" == "1" ]]; then
     LINK_FLAGS=(-static)
     echo "🔨 Fully static link (no glibc version lock on target) ..."
 else
-    echo "🔨 Linking host with static SDL2 ($SDL2_A) ..."
+    echo "🔨 Linking host with static SDL2 ($SDL2_LIBDIR/libSDL2.a) ..."
 fi
 
-# Link order: objects, then archive, then libSDL2.a (resolves SDL symbols for both host.c and libsc_game.a)
-gcc "${LINK_FLAGS[@]}" -o "$ROOT/host" "$ROOT/host.c" "${SDL_CFLAGS[@]}" \
+# bash 3.2 + set -u: empty "${arr[@]}" errors; bash 4.4+ allows it. ${arr[@]+…} is portable.
+gcc "${LINK_FLAGS[@]+"${LINK_FLAGS[@]}"}" -o "$ROOT/host" "$ROOT/host.c" "${SDL_CFLAGS[@]+"${SDL_CFLAGS[@]}"}" \
     "$LIB_A" \
-    "$SDL2_A" \
+    "${SDL_STATIC_LIBS[@]+"${SDL_STATIC_LIBS[@]}"}" \
     -pthread -lm -ldl
 
 if ldd "$ROOT/host" 2>/dev/null | grep -q libSDL; then
@@ -60,9 +63,12 @@ if [[ "${STATIC:-0}" == "1" ]]; then
     ldd "$ROOT/host" 2>&1 || echo "   (static binary — not a dynamic executable)"
 else
     ldd "$ROOT/host" 2>/dev/null || true
-    max_glibc="$(objdump -T "$ROOT/host" 2>/dev/null | grep -oP 'GLIBC_[0-9.]+' | sort -V | tail -1 || true)"
-    if [[ -n "$max_glibc" ]]; then
-        echo "   requires $max_glibc on target (built on this machine's glibc)"
-        echo "   older VMs: build on target, or: STATIC=1 ./build_host.sh (needs glibc-static)"
+    # GNU grep -oP only; glibc symbol scan is Linux ELF anyway.
+    if [[ "$(uname -s)" == Linux ]]; then
+        max_glibc="$(objdump -T "$ROOT/host" 2>/dev/null | grep -oP 'GLIBC_[0-9.]+' | sort -V | tail -1 || true)"
+        if [[ -n "$max_glibc" ]]; then
+            echo "   requires $max_glibc on target (built on this machine's glibc)"
+            echo "   older VMs: build on target, or: STATIC=1 ./build_host.sh (needs glibc-static)"
+        fi
     fi
 fi

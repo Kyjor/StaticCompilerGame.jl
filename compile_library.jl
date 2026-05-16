@@ -205,7 +205,9 @@ else
             system_libs = String[]
         elseif Sys.isapple()
             lib_name = "lib$(lib_base).dylib"
-            system_libs = String[]
+            # game_* hooks live in the host executable; ELF .so allows undefined refs,
+            # but macOS dylib link fails unless we defer resolution to load time.
+            system_libs = ["-Wl,-undefined,dynamic_lookup"]
         else
             lib_name = "lib$(lib_base).so"
             system_libs = ["-ldl", "-lpthread", "-lm"]
