@@ -11,14 +11,19 @@ include("engine/context.jl")
 include("engine/frame.jl")
 include("engine/input.jl")
 include("engine/draw.jl")
+include("engine/sound.jl")
 include("engine/run.jl")
 
 function j_sdl_init()::Int32
-    if llvm_SDL_Init(UInt32(SDL_INIT_VIDEO)) != Int32(0)
+    init_flags::UInt32 = UInt32(SDL_INIT_VIDEO) | UInt32(SDL_INIT_AUDIO)
+    if llvm_SDL_Init(init_flags) != Int32(0)
         return Int32(-1)
     end
     # IMG_INIT_PNG = 2
     if llvm_IMG_Init(Int32(2)) == Int32(0)
+        return Int32(-1)
+    end
+    if llvm_Mix_OpenAudio(Int32(44100), UInt16(0x8010), Int32(2), Int32(2048)) != Int32(0)
         return Int32(-1)
     end
     return Int32(0)

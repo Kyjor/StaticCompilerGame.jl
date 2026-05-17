@@ -31,6 +31,12 @@ if [[ -z "$SDL2_IMAGE_LIBDIR" || ! -f "$SDL2_IMAGE_LIBDIR/libSDL2_image.a" ]]; t
     source "$ROOT/deps/sdl2_paths.sh"
 fi
 
+if [[ -z "$SDL2_MIXER_LIBDIR" || ! -f "$SDL2_MIXER_LIBDIR/libSDL2_mixer.a" ]]; then
+    echo "ℹ️  Vendored SDL2_mixer not built — running deps/build_sdl2_mixer.sh"
+    "$ROOT/deps/build_sdl2_mixer.sh"
+    source "$ROOT/deps/sdl2_paths.sh"
+fi
+
 SDL2_CONFIG="$SDL2_PREFIX/bin/sdl2-config"
 read -r -a SDL_CFLAGS <<< "$("$SDL2_CONFIG" --cflags)"
 # Full static SDL line from sdl2-config (Linux: transitive -l…; macOS: -framework… + libSDL2.a).
@@ -46,6 +52,16 @@ else
     SDL2_IMAGE_STATIC_LIBS=("$SDL2_IMAGE_LIBDIR/libSDL2_image.a")
 fi
 
+SDL2_MIXER_STATIC_LIBS=()
+if [[ -n "${SDL2_MIXER_PKGCONFIG:-}" && -f "$SDL2_MIXER_PKGCONFIG/SDL2_mixer.pc" ]] \
+    && command -v pkg-config >/dev/null 2>&1; then
+    PKG_CONFIG_PATH="${SDL2_MIXER_PKGCONFIG}:${SDL2_IMAGE_PKGCONFIG:-}:${SDL2_PKGCONFIG:-}${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+    export PKG_CONFIG_PATH
+    read -r -a SDL2_MIXER_STATIC_LIBS <<< "$(pkg-config --static --libs SDL2_mixer)"
+else
+    SDL2_MIXER_STATIC_LIBS=("$SDL2_MIXER_LIBDIR/libSDL2_mixer.a")
+fi
+
 LINK_FLAGS=()
 if [[ "${STATIC:-0}" == "1" ]]; then
     if [[ ! -f /usr/lib64/libc.a && ! -f /usr/lib/x86_64-linux-gnu/libc.a ]]; then
@@ -57,12 +73,13 @@ if [[ "${STATIC:-0}" == "1" ]]; then
     LINK_FLAGS=(-static)
     echo "🔨 Fully static link (no glibc version lock on target) ..."
 else
-    echo "🔨 Linking host with static SDL2 + SDL2_image ..."
+    echo "🔨 Linking host with static SDL2 + SDL2_image + SDL2_mixer ..."
 fi
 
 # bash 3.2 + set -u: empty "${arr[@]}" errors; bash 4.4+ allows it. ${arr[@]+…} is portable.
 gcc "${LINK_FLAGS[@]+"${LINK_FLAGS[@]}"}" -o "$ROOT/host" "$ROOT/host.c" "${SDL_CFLAGS[@]+"${SDL_CFLAGS[@]}"}" \
     "$LIB_A" \
+    "${SDL2_MIXER_STATIC_LIBS[@]+"${SDL2_MIXER_STATIC_LIBS[@]}"}" \
     "${SDL2_IMAGE_STATIC_LIBS[@]+"${SDL2_IMAGE_STATIC_LIBS[@]}"}" \
     "${SDL_STATIC_LIBS[@]+"${SDL_STATIC_LIBS[@]}"}" \
     -pthread -lm -ldl
@@ -73,7 +90,7 @@ if ldd "$ROOT/host" 2>/dev/null | grep -q libSDL; then
     exit 1
 fi
 
-echo "✅ Built: $ROOT/host (SDL2 + SDL2_image static, no SDL3)"
+echo "✅ Built: $ROOT/host (SDL2 + SDL2_image + SDL2_mixer static, no SDL3)"
 ls -lh "$ROOT/host"
 if [[ "${STATIC:-0}" == "1" ]]; then
     echo "   fully static — should run on older Linux VMs"

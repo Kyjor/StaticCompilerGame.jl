@@ -41,6 +41,7 @@ sc-game-web.zip
 
 deps/sdl2/
 deps/sdl2_image/
+deps/sdl2_mixer/
 
 dist/
 

@@ -6,11 +6,13 @@ static int g_running = 1;
 int square_x = 100;
 int square_y = 0;
 SDL_Texture *texture = NULL;
+Mix_Chunk *sound = NULL;
 
 void game_load(void)
 {
     g_running = 1;
     texture = j_load_image("assets/images/fly.png");
+    sound = j_load_sound("assets/Jump.wav");
 }
 
 void game_update(void)
@@ -45,6 +47,8 @@ void game_key_pressed(int32_t key)
         square_y -= 10;
     if (key == 's')
         square_y += 10;
+    if (key == SC_KEY_SPACE)
+        j_play_sound(sound);
 }
 
 void game_key_released(int32_t key)
