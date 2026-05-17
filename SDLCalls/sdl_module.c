@@ -71,30 +71,3 @@ EMSCRIPTEN_KEEPALIVE
 void *sc_get_renderer(void) {
     return g_renderer;
 }
-
-static uint8_t sc_color_byte(int32_t v) {
-    return (v < 0) ? (uint8_t)255 : (uint8_t)v;
-}
-
-#ifdef __EMSCRIPTEN__
-EMSCRIPTEN_KEEPALIVE
-#endif
-int32_t sc_fill_rect(int32_t x, int32_t y, int32_t w, int32_t h,
-                     int32_t r, int32_t g, int32_t b, int32_t a) {
-    SDL_Renderer *ren;
-    SDL_Rect rect;
-
-    if (g_renderer == NULL) {
-        return -1;
-    }
-    ren = (SDL_Renderer *)g_renderer;
-    if (SDL_SetRenderDrawColor(ren, sc_color_byte(r), sc_color_byte(g),
-                               sc_color_byte(b), sc_color_byte(a)) != 0) {
-        return -1;
-    }
-    rect.x = x;
-    rect.y = y;
-    rect.w = w;
-    rect.h = h;
-    return SDL_RenderFillRect(ren, &rect) == 0 ? 0 : -1;
-}

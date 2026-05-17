@@ -5,20 +5,30 @@
 static int g_running = 1;
 int square_x = 100;
 int square_y = 0;
+SDL_Texture *texture = NULL;
 
 void game_load(void)
 {
     g_running = 1;
+    texture = j_load_image("assets/images/fly.png");
 }
 
 void game_update(void)
 {
+   
 }
 
 void game_draw(void)
 {
-    if (j_fill_rect(square_x, square_y, 128, 128, 200, 80, 80, 255) != 0)
-        fprintf(stderr, "j_fill_rect failed\n");
+   
+    if (texture != NULL)
+    {
+        j_draw(texture, square_x, square_y, 64, 64);
+    }
+    else
+    {
+        fprintf(stderr, "texture is NULL\n");
+    }
 }
 
 void game_key_pressed(int32_t key)

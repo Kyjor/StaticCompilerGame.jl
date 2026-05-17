@@ -88,7 +88,6 @@ end
 
 # SDL_RenderClear / Present via engine lib internals — use sc_fill_rect + manual present
 # Export present/clear from lib if missing: call through fill + we need begin/end frame.
-# sc_fill_rect only fills; use SDL directly for clear/present in runtime host.
 
 function sdl_set_draw_color(r, g, b, a)
     ren = sc_get_renderer()

@@ -41,6 +41,8 @@ functions_to_compile = [
     (sc_game_loop, (Ptr{SDL_Renderer},), "sc_game_loop"),
     (sc_run, (), "sc_run"),
     (j_fill_rect, (Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32), "j_fill_rect"),
+    (j_load_image, (Ptr{UInt8},), "j_load_image"),
+    (j_draw, (Ptr{SDL_Texture}, Int32, Int32, Int32, Int32), "j_draw"),
 ]
 
 for (func, types, name) in functions_to_compile
@@ -72,6 +74,7 @@ function write_c_header(path::String)
         println(io, "")
         println(io, "typedef struct SDL_Window SDL_Window;")
         println(io, "typedef struct SDL_Renderer SDL_Renderer;")
+        println(io, "typedef struct SDL_Texture SDL_Texture;")
         println(io, "")
         println(io, "int32_t j_sdl_init(void);")
         println(io, "SDL_Window *j_init_window(void);")
@@ -80,6 +83,8 @@ function write_c_header(path::String)
         println(io, "/* Pass -1 for r,g,b,a to use 255 (opaque white). */")
         println(io, "int32_t j_fill_rect(int32_t x, int32_t y, int32_t w, int32_t h,")
         println(io, "                    int32_t r, int32_t g, int32_t b, int32_t a);")
+        println(io, "SDL_Texture *j_load_image(char *file_path);")
+        println(io, "int32_t j_draw(SDL_Texture *texture, int32_t x, int32_t y, int32_t w, int32_t h);")
         println(io, "")
         println(io, "/* SDL_KeyCode values — see https://wiki.libsdl.org/SDL2/SDL_KeyCode */")
         println(io, "/* Printable keys: compare with char literals, e.g. if (key == 'q') */")
