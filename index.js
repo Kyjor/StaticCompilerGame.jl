@@ -1,51 +1,23 @@
-// Ensure SDL initializes after WebAssembly is loaded
-// Set up the callback for when the WASM module is ready
-window.onModuleReady = function() {
-    console.log("Module is ready, initializing SDL...");
-    console.log("Module object:", Module);
-    console.log("Available functions:", Object.keys(Module).filter(key => key.startsWith('_')));
-    
-    // Initialize SDL drawing first
-    let window = Module._j_init_window();
-    let renderer = Module._j_init_renderer(window);
-    
-    // Test if SDL is working
-    if (!window || !renderer) {
-        console.error("Failed to initialize SDL");
+// Framework web: init once, then one sc_frame per requestAnimationFrame.
+window.onModuleReady = function () {
+    if (typeof Module._sc_engine_init !== "function" ||
+        typeof Module._sc_frame !== "function") {
+        console.error("Missing engine exports — rebuild with ./build_web.sh");
         return;
     }
-    console.log("SDL initialized successfully");
 
-    let game_state_ptr = Module._j_init_game_state(renderer, window, 1);  // 1 = web build
-    console.log("Game state pointer:", game_state_ptr);
-    if (game_state_ptr) {
-        console.log("Game state pointer is not null");
-    } else {
-        console.error("Game state pointer is null");
+    if (Module._sc_engine_init() !== 0) {
+        console.error("sc_engine_init failed");
+        return;
     }
-    
-    let frameCount = 0;
-    function runMainLoop() {
-        frameCount++;
-        // Call the C/C++ main_loop function
-        Module._game_loop(game_state_ptr, renderer, window);
-        // Continue the loop
-        requestAnimationFrame(runMainLoop);
+
+    function frame() {
+        if (Module._sc_frame() !== 0) {
+            requestAnimationFrame(frame);
+        } else {
+            Module._sc_engine_shutdown();
+        }
     }
-    
-    runMainLoop();
+
+    requestAnimationFrame(frame);
 };
-
-// Check if Module is already available
-console.log("Script loaded, checking Module...");
-if (window.Module) {
-    console.log("Module exists:", window.Module);
-    if (window.Module._main_loop) {
-        console.log("Module already ready, starting main loop");
-        window.onModuleReady();
-    } else {
-        console.log("Module exists but _main_loop not ready yet");
-    }
-} else {
-    console.log("Module not found yet, waiting...");
-}

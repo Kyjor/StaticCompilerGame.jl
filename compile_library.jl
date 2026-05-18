@@ -38,7 +38,9 @@ functions_to_compile = [
     (j_sdl_init, (), "j_sdl_init"),
     (j_init_window, (), "j_init_window"),
     (j_init_renderer, (Ptr{SDL_Window},), "j_init_renderer"),
-    (sc_game_loop, (Ptr{SDL_Renderer},), "sc_game_loop"),
+    (sc_engine_init, (), "sc_engine_init"),
+    (sc_frame, (), "sc_frame"),
+    (sc_engine_shutdown, (), "sc_engine_shutdown"),
     (sc_run, (), "sc_run"),
     (j_fill_rect, (Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32), "j_fill_rect"),
     (j_load_image, (Ptr{UInt8},), "j_load_image"),
@@ -74,22 +76,35 @@ function write_c_header(path::String)
         println(io, "extern \"C\" {")
         println(io, "#endif")
         println(io, "")
+        println(io, "#ifdef __EMSCRIPTEN__")
+        println(io, "/* Wasm: Julia StaticCompiler uses i64 for Ptr; match with uint64_t handles */")
+        println(io, "uint64_t j_init_window(void);")
+        println(io, "uint64_t j_init_renderer(uint64_t window);")
+        println(io, "uint64_t j_load_image(uint64_t file_path);")
+        println(io, "int32_t j_draw(uint64_t texture, int32_t x, int32_t y, int32_t w, int32_t h);")
+        println(io, "uint64_t j_load_sound(uint64_t file_path);")
+        println(io, "int32_t j_play_sound(uint64_t sound);")
+        println(io, "#else")
         println(io, "typedef struct SDL_Window SDL_Window;")
         println(io, "typedef struct SDL_Renderer SDL_Renderer;")
         println(io, "typedef struct SDL_Texture SDL_Texture;")
         println(io, "typedef struct Mix_Chunk Mix_Chunk;")
-        println(io, "")
-        println(io, "int32_t j_sdl_init(void);")
         println(io, "SDL_Window *j_init_window(void);")
         println(io, "SDL_Renderer *j_init_renderer(SDL_Window *window);")
-        println(io, "int32_t sc_run(void);")
-        println(io, "/* Pass -1 for r,g,b,a to use 255 (opaque white). */")
-        println(io, "int32_t j_fill_rect(int32_t x, int32_t y, int32_t w, int32_t h,")
-        println(io, "                    int32_t r, int32_t g, int32_t b, int32_t a);")
         println(io, "SDL_Texture *j_load_image(char *file_path);")
         println(io, "int32_t j_draw(SDL_Texture *texture, int32_t x, int32_t y, int32_t w, int32_t h);")
         println(io, "Mix_Chunk *j_load_sound(char *file_path);")
         println(io, "int32_t j_play_sound(Mix_Chunk *sound);")
+        println(io, "#endif")
+        println(io, "")
+        println(io, "int32_t j_sdl_init(void);")
+        println(io, "int32_t sc_engine_init(void);")
+        println(io, "int32_t sc_frame(void);")
+        println(io, "int32_t sc_engine_shutdown(void);")
+        println(io, "int32_t sc_run(void);")
+        println(io, "/* Pass -1 for r,g,b,a to use 255 (opaque white). */")
+        println(io, "int32_t j_fill_rect(int32_t x, int32_t y, int32_t w, int32_t h,")
+        println(io, "                    int32_t r, int32_t g, int32_t b, int32_t a);")
         println(io, "")
         println(io, "/* SDL_KeyCode values — see https://wiki.libsdl.org/SDL2/SDL_KeyCode */")
         println(io, "/* Printable keys: compare with char literals, e.g. if (key == 'q') */")
@@ -127,7 +142,12 @@ write_c_header(header_path)
 println("✅ Generated C header: $header_path")
 
 if build_type == "web"
-    println("\n🔨 Linking WebAssembly side module...")
+    println("\n🔨 Linking framework WebAssembly (engine + host.c)...")
+
+    game_wasm_dir = "game_wasm"
+    if !isdir(game_wasm_dir)
+        mkdir(game_wasm_dir)
+    end
 
     try
         ll_files = String[]
@@ -151,16 +171,34 @@ if build_type == "web"
             println("⚠️  llvm-link failed, using separate .ll files: $e")
         end
 
-        exported = ["'_$(name)'" for (_, _, name) in functions_to_compile]
-        exported_str = "[" * join(exported, ", ") * "]"
+        host_c = joinpath(@__DIR__, "host.c")
+        isfile(host_c) || error("Missing host.c at $host_c")
 
-        wasm_out = joinpath(output_dir, "$(lib_base).wasm")
-        cmd = `emcc $ll_input SDLCalls/sdl_module.c -s USE_SDL=2 -O2 -s WASM=1 -s SIDE_MODULE=2 -s EXPORTED_FUNCTIONS=$exported_str -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=33554432 -s ALLOW_TABLE_GROWTH=1 -s STACK_SIZE=1048576 -o $wasm_out`
+        game_js = joinpath(game_wasm_dir, "game.js")
+        cmd = `emcc $ll_input SDLCalls/sdl_module.c $host_c -DSC_HOST_MAIN -I$output_dir -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' -s USE_SDL_MIXER=2 -s USE_OGG=1 -s USE_WEBGL2=1 -O2 -s WASM=1 -s
+        EXPORTED_FUNCTIONS="['_main','_malloc','_free','_sc_engine_init','_sc_frame','_sc_engine_shutdown']"
+        -s EXPORTED_RUNTIME_METHODS="['cwrap']"
+        -s ALLOW_MEMORY_GROWTH=1
+        -s INITIAL_MEMORY=33554432
+        -s ALLOW_TABLE_GROWTH=1
+        -s STACK_SIZE=1048576
+        -o $game_js
+        --preload-file ./assets
+        --use-preload-plugins`
         run(cmd)
-        println("✅ WebAssembly library: $wasm_out")
-        println("💡 Load from JS/C with emscripten's dynamic linking (SIDE_MODULE) or wasm-ld.")
+        println("✅ Framework WebAssembly: $game_js")
+        println("   - $(game_wasm_dir)/game.wasm")
+
+        game_data = joinpath(game_wasm_dir, "game.data")
+        if isfile(game_data)
+            cp(game_data, "./game.data"; force=true)
+            println("✅ Copied game.data to repo root")
+        end
+
+        println("💡 Serve the repo root and open index.html (e.g. python3 -m http.server)")
     catch e
         println("❌ Web library build failed: $e")
+        rethrow()
     end
 
 else

@@ -1,5 +1,5 @@
 #ifdef __EMSCRIPTEN__
-#include "../emsdk/upstream/emscripten/cache/ports/sdl2/SDL-release-2.32.0/include/SDL.h"
+#include <SDL.h>
 #else
 #include <SDL2/SDL.h>
 #endif
@@ -24,11 +24,9 @@ int print_string(const char* str) {
     return 1;
 }
 
-#ifdef __EMSCRIPTEN__
-// Original main function - kept for compatibility but not used
-// Renamed to avoid conflict with pc_main.c
+#if defined(__EMSCRIPTEN__) && !defined(SC_HOST_MAIN)
+/* Stub main for legacy builds without host.c; framework web links host.c with -DSC_HOST_MAIN */
 int main(void) {
-
     return 0;
 }
 #endif
@@ -56,18 +54,49 @@ void set_hi(int32_t value) {
     g_hi = value;
 }
 
-static void *g_renderer = NULL;
+/* uint64_t handles: Julia wasm uses i64 for Ptr at the FFI boundary */
+static uint64_t g_window = 0;
+static uint64_t g_renderer = 0;
+static int32_t g_frames_rendered = 0;
 
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
 #endif
-void sc_set_renderer(void *renderer) {
+void sc_set_window(uint64_t window) {
+    g_window = window;
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+uint64_t sc_get_window(void) {
+    return g_window;
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void sc_set_renderer(uint64_t renderer) {
     g_renderer = renderer;
 }
 
 #ifdef __EMSCRIPTEN__
 EMSCRIPTEN_KEEPALIVE
 #endif
-void *sc_get_renderer(void) {
+uint64_t sc_get_renderer(void) {
     return g_renderer;
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+int32_t sc_get_frames_rendered(void) {
+    return g_frames_rendered;
+}
+
+#ifdef __EMSCRIPTEN__
+EMSCRIPTEN_KEEPALIVE
+#endif
+void sc_note_frame_rendered(void) {
+    g_frames_rendered += 1;
 }

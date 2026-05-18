@@ -77,7 +77,7 @@ else
 fi
 
 # bash 3.2 + set -u: empty "${arr[@]}" errors; bash 4.4+ allows it. ${arr[@]+…} is portable.
-gcc "${LINK_FLAGS[@]+"${LINK_FLAGS[@]}"}" -o "$ROOT/host" "$ROOT/host.c" "${SDL_CFLAGS[@]+"${SDL_CFLAGS[@]}"}" \
+gcc "${LINK_FLAGS[@]+"${LINK_FLAGS[@]}"}" -o "$ROOT/host" "$ROOT/host.c" -I"$ROOT/lib_desktop" "${SDL_CFLAGS[@]+"${SDL_CFLAGS[@]}"}" \
     "$LIB_A" \
     "${SDL2_MIXER_STATIC_LIBS[@]+"${SDL2_MIXER_STATIC_LIBS[@]}"}" \
     "${SDL2_IMAGE_STATIC_LIBS[@]+"${SDL2_IMAGE_STATIC_LIBS[@]}"}" \

@@ -10,7 +10,10 @@ function poll_events()::Int32
         event_type::UInt32 = event_ptr.type
         key::Int32 = Int32(0)
         if event_type == SDL_EVENT_QUIT
-            quit = Int32(1)
+            # Emscripten may deliver spurious QUIT before the first present
+            if llvm_sc_get_frames_rendered() != Int32(0)
+                quit = Int32(1)
+            end
         elseif event_type == SDL_EVENT_KEYDOWN
             key = Int32(event_ptr.key.keysym.sym)
             llvm_game_key_pressed(key)

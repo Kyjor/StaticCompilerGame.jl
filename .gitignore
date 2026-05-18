@@ -50,3 +50,5 @@ sc-game-x86_64/
 lib_desktop/
 
 *.zip
+
+lib_wasm/

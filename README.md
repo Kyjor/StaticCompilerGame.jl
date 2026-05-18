@@ -22,17 +22,47 @@ Pkg.add(["StaticCompiler", "StaticTools"])
 ```
 
 ### 2. Build for Web (WASM)
-- Make sure Emscripten is installed and `emcc` is in your PATH. Instructions here: https://emscripten.org/docs/getting_started/downloads.html
-- Run:
+
+Make sure Emscripten is installed and `emcc` is in your PATH. Instructions: https://emscripten.org/docs/getting_started/downloads.html
+
+Also install `llvm-link` (e.g. `sudo dnf install llvm` on Fedora).
+
+#### Framework (recommended): `host.c` + engine (`sc_run`)
+
 ```bash
-# Remember, julia 1.10 or below
+# Julia 1.10 or below
+./build_web.sh
+# or: julia compile_library.jl web
+```
+
+Output: `game_wasm/game.js`, `game_wasm/game.wasm`, `game.data` (assets preloaded).
+
+Serve the **repo root** (not only `game_wasm/`) and open `index.html`:
+
+```bash
+python3 -m http.server
+# http://localhost:8000/index.html
+```
+
+#### Legacy demo (old monolithic game)
+
+```bash
 julia compile_game.jl web
 ```
-- Output will be in the `game_wasm/` directory:
-  - `game.js`, `game.wasm`
-- You can serve this directory with any static web server (e.g., `python3 -m http.server`)
+
+Same `game_wasm/` layout, but uses the legacy `game_loop` / `j_init_game_state` API — see `index.js` if you switch between builds.
 
 ### 3. Build for Desktop (Linux, macOS, Windows)
+
+#### Framework: `host.c` + static engine
+
+```bash
+./build_all.sh
+# or: julia compile_library.jl desktop && ./build_host.sh
+./host
+```
+
+#### Legacy demo
 - Make sure SDL2 shared libraries are available in `SDLCalls/lib` or `libs` (see below).
 - Run:
 ```bash
